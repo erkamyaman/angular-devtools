@@ -1,0 +1,6 @@
+node_modules
+dist
+.angular
+pnpm-lock.yaml
+extension/ui
+packages/ng-devtools-assets/dist
