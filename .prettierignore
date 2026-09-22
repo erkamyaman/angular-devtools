@@ -4,3 +4,4 @@ dist
 pnpm-lock.yaml
 extension/ui
 packages/ng-devtools-assets/dist
+docs/privacy-policy.html
