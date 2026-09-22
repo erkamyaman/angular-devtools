@@ -31,8 +31,11 @@ jobs:
       - name: Check formatting
         run: pnpm format:check
 
-      - name: Test
+      - name: Test host app
         run: pnpm test
+
+      - name: Test devtools package
+        run: pnpm test:devtools
 
       - name: Build devtools UI
         run: pnpm devtools:build
