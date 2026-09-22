@@ -28,8 +28,11 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Test
+      - name: Test host app
         run: pnpm test
+
+      - name: Test devtools package
+        run: pnpm test:devtools
 
       - name: Build devtools UI
         run: pnpm devtools:build
