@@ -78,7 +78,7 @@ Add `agent: { description }` to any RPC function, or use `ctx.agent.registerTool
 ```sh
 pnpm test            # host app
 pnpm test:devtools   # devtools package
-pnpm typecheck       # every tsconfig, including the devtools package and its tests
+pnpm typecheck       # host app + specs, devtools UI, devtools package + its tests
 pnpm format:check
 ```
 
