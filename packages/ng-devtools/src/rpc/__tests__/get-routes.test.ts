@@ -20,6 +20,151 @@ describe('get-routes', () => {
     ]);
   });
 
+  it('reads redirectTo on redirection routes', async () => {
+    const routes = await routesFor(`[
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'home', redirectTo: '/dashboard' },
+      { path: 'login', redirectTo: \`auth/login\` },
+    ]`);
+    expect(routes.map((r) => [r.path, r.redirectTo])).toEqual([
+      ['', 'dashboard'],
+      ['home', '/dashboard'],
+      ['login', 'auth/login'],
+    ]);
+  });
+
+  it('reads title on route definitions', async () => {
+    const routes = await routesFor(`[
+      { path: 'home', component: HomeComponent, title: 'Home Page' },
+      { path: 'settings', component: SettingsComponent, title: "Settings | App" },
+      { path: 'about', title: 'About {us}', component: AboutComponent },
+    ]`);
+    expect(routes.map((r) => [r.path, r.title])).toEqual([
+      ['home', 'Home Page'],
+      ['settings', 'Settings | App'],
+      ['about', 'About {us}'],
+    ]);
+  });
+
+  it('reads full route configuration with redirectTo and title', async () => {
+    const routes = await routesFor(`[
+      { path: '', redirectTo: 'home', pathMatch: 'full' },
+      { path: 'home', component: HomeComponent, title: 'Home' },
+      {
+        path: 'dashboard',
+        component: DashboardComponent,
+        title: 'Dashboard',
+        children: [{ path: 'stats', component: StatsComponent }],
+      },
+    ]`);
+    expect(routes).toEqual([
+      {
+        path: '',
+        redirectTo: 'home',
+        hasChildren: false,
+        file: 'src/app.routes.ts',
+      },
+      {
+        path: 'home',
+        component: 'HomeComponent',
+        title: 'Home',
+        hasChildren: false,
+        file: 'src/app.routes.ts',
+      },
+      {
+        path: 'dashboard',
+        component: 'DashboardComponent',
+        title: 'Dashboard',
+        hasChildren: true,
+        file: 'src/app.routes.ts',
+      },
+      {
+        path: 'stats',
+        component: 'StatsComponent',
+        hasChildren: false,
+        file: 'src/app.routes.ts',
+      },
+    ]);
+  });
+
+  it('marks function or expression title / redirectTo as (dynamic)', async () => {
+    const routes = await routesFor(`[
+      { path: 'custom-title', component: HomeComponent, title: customTitleResolver },
+      { path: 'custom-redirect', redirectTo: () => '/fallback' },
+      { path: 'template-title', component: HomeComponent, title: \`Home \${id}\` },
+    ]`);
+    expect(routes.map((r) => [r.path, r.title, r.redirectTo])).toEqual([
+      ['custom-title', '(dynamic)', undefined],
+      ['custom-redirect', undefined, '(dynamic)'],
+      ['template-title', '(dynamic)', undefined],
+    ]);
+  });
+
+  it('handles string literal escapes, unescapes, and concatenated non-literals', async () => {
+    const routes = await routesFor(`[
+      { path: 'about', title: 'It\\'s "special"', redirectTo: "my/\\"path\\"" },
+      { path: '\\u0068ome', title: 'Line1\\nLine2', redirectTo: \`Price \\\${amount}\` },
+      { path: 'a' + 'b', component: Nope },
+    ]`);
+    expect(routes).toEqual([
+      {
+        path: 'about',
+        title: 'It\'s "special"',
+        redirectTo: 'my/"path"',
+        hasChildren: false,
+        file: 'src/app.routes.ts',
+      },
+      {
+        path: 'home',
+        title: 'Line1\nLine2',
+        redirectTo: 'Price ${amount}',
+        hasChildren: false,
+        file: 'src/app.routes.ts',
+      },
+    ]);
+  });
+
+  it('reads redirectTo and title on nested child routes and wildcard routes', async () => {
+    const routes = await routesFor(`[
+      {
+        path: 'admin',
+        title: 'Admin Panel',
+        children: [
+          { path: '', redirectTo: 'overview', pathMatch: 'full' },
+          { path: 'overview', component: AdminOverview, title: 'Overview' },
+        ],
+      },
+      { path: '**', redirectTo: '' },
+    ]`);
+    expect(routes).toEqual([
+      {
+        path: 'admin',
+        title: 'Admin Panel',
+        hasChildren: true,
+        file: 'src/app.routes.ts',
+      },
+      {
+        path: '',
+        redirectTo: 'overview',
+        hasChildren: false,
+        file: 'src/app.routes.ts',
+      },
+      {
+        path: 'overview',
+        component: 'AdminOverview',
+        title: 'Overview',
+        hasChildren: false,
+        file: 'src/app.routes.ts',
+      },
+      {
+        path: '**',
+        redirectTo: '',
+        hasChildren: false,
+        file: 'src/app.routes.ts',
+      },
+    ]);
+  });
+
   it('reads the export name of a lazy component', async () => {
     const routes = await routesFor(`[
       { path: '', loadComponent: () => import('./home').then(m => m.Home) },
