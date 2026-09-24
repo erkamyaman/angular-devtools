@@ -63,25 +63,49 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   };
 }
 
-function collectComponentTree() {
+export interface AngularDebugApi {
+  getComponent(el: Element): unknown;
+  getInjector?(el: Element): unknown;
+  ɵgetSignalGraph?(injector: unknown): unknown;
+}
+
+function findAngularElements(): Element[] {
+  const versionEls = Array.from(document.querySelectorAll('[ng-version]'));
+  const allEls = Array.from(document.querySelectorAll('*'));
+  const hostEls = allEls.filter((el) =>
+    Array.from(el.attributes).some((a) => a.name.startsWith('_nghost')),
+  );
+  return Array.from(new Set([...versionEls, ...hostEls]));
+}
+
+export function collectComponentTree() {
   const nodes: ComponentTreeNode[] = [];
-  const roots = document.querySelectorAll('[ng-version], [_nghost-ng-c]');
+  const allRoots = findAngularElements();
+  const roots = allRoots.filter(
+    (root) => !allRoots.some((other) => other !== root && other.contains(root)),
+  );
 
   // Use Angular's debug utilities if available
-  const ng = (window as any).ng;
+  const ng = (window as unknown as { ng?: AngularDebugApi }).ng;
   if (ng?.getComponent) {
-    for (const root of roots) {
-      walkAngularTree(root, nodes, ng);
+    if (roots.length > 0) {
+      for (const root of roots) {
+        walkAngularTree(root, nodes, ng);
+      }
+    } else if (typeof document !== 'undefined' && document.body) {
+      walkAngularTree(document.body, nodes, ng);
     }
   } else {
     // Fallback: walk DOM for Angular component host elements
-    walkDom(document.body, nodes);
+    if (typeof document !== 'undefined' && document.body) {
+      walkDom(document.body, nodes);
+    }
   }
 
   return nodes;
 }
 
-interface ComponentTreeNode {
+export interface ComponentTreeNode {
   id: string;
   selector: string;
   tagName: string;
@@ -89,28 +113,34 @@ interface ComponentTreeNode {
   inputs?: Record<string, unknown>;
 }
 
-function walkAngularTree(el: Element, out: ComponentTreeNode[], ng: any) {
+export function walkAngularTree(el: Element, out: ComponentTreeNode[], ng: AngularDebugApi) {
   const component = ng.getComponent(el);
-  if (!component) return;
 
-  const node: ComponentTreeNode = {
-    id: generateId(el),
-    selector: el.tagName.toLowerCase(),
-    tagName: el.tagName.toLowerCase(),
-    children: [],
-    inputs: tryGetInputs(component),
-  };
+  if (component) {
+    const node: ComponentTreeNode = {
+      id: generateId(el),
+      selector: el.tagName.toLowerCase(),
+      tagName: el.tagName.toLowerCase(),
+      children: [],
+      inputs: tryGetInputs(component),
+    };
 
-  for (const child of el.querySelectorAll(':scope > *')) {
-    walkAngularTree(child, node.children, ng);
+    for (const child of el.children) {
+      walkAngularTree(child, node.children, ng);
+    }
+
+    out.push(node);
+  } else {
+    for (const child of el.children) {
+      walkAngularTree(child, out, ng);
+    }
   }
-
-  out.push(node);
 }
 
 function walkDom(el: Element, out: ComponentTreeNode[]) {
   const tagName = el.tagName.toLowerCase();
-  const isComponent = tagName.includes('-') || el.hasAttribute('_nghost-ng-c');
+  const isComponent =
+    tagName.includes('-') || Array.from(el.attributes).some((a) => a.name.startsWith('_nghost'));
 
   if (isComponent) {
     const node: ComponentTreeNode = {
@@ -130,15 +160,28 @@ function walkDom(el: Element, out: ComponentTreeNode[]) {
   }
 }
 
-function tryGetInputs(component: any): Record<string, unknown> | undefined {
+function isSignal(val: unknown): val is () => unknown {
+  if (typeof val !== 'function') return false;
+  if (val.name === 'signalValueFn') return true;
+  const symbols = Object.getOwnPropertySymbols(val);
+  return symbols.some((s) => s.description === 'SIGNAL' || s.toString().includes('SIGNAL'));
+}
+
+function tryGetInputs(component: unknown): Record<string, unknown> | undefined {
+  if (!component || typeof component !== 'object') return undefined;
   try {
     const inputs: Record<string, unknown> = {};
-    for (const key of Object.keys(component)) {
-      const val = component[key];
-      if (typeof val === 'function' && val.name === 'signalValueFn') {
-        inputs[key] = val();
+    const comp = component as Record<string, unknown>;
+    for (const key of Object.keys(comp)) {
+      const val = comp[key];
+      if (isSignal(val)) {
+        try {
+          inputs[key] = serializeValue(val());
+        } catch {
+          // skip
+        }
       } else if (typeof val !== 'function') {
-        inputs[key] = val;
+        inputs[key] = serializeValue(val);
       }
     }
     return Object.keys(inputs).length > 0 ? inputs : undefined;
@@ -532,8 +575,11 @@ function safeSerialize(val: unknown): unknown {
   }
 }
 
-// Auto-init when loaded as a script
-if (typeof document !== 'undefined') {
+// Auto-init when loaded as a script (skip during test environment)
+if (
+  typeof document !== 'undefined' &&
+  !(typeof process !== 'undefined' && process.env?.['VITEST'])
+) {
   initOverlay().catch(console.error);
   import('./popup.ts').then((m) => m.createDevtoolsPopup()).catch(console.error);
 }
