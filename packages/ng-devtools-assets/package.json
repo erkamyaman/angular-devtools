@@ -1,6 +1,6 @@
 {
   "name": "@santoshyadavdev/ng-devtools-assets",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Built UI assets for Angular DevTools (devframe)",
   "license": "MIT",
   "type": "module",
