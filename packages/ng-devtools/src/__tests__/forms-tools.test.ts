@@ -202,6 +202,7 @@ describe('mergePageReport', () => {
     );
     expect(both.forms.map((f) => f.id)).toEqual(['form-1@aaaa', 'form-1@bbbb']);
     expect(both.events.map((e) => e.timestamp)).toEqual([3, 5]);
+    expect(both.reportedAt).toBe(1_000);
 
     const later = mergePageReport(pages, { pageId: 'bbbb', forms: [b], events: [] }, 200_000);
     expect(later.forms.map((f) => f.id)).toEqual(['form-1@bbbb']);
@@ -225,7 +226,7 @@ describe('value hiding and resource size', () => {
             {
               kind: 'min',
               message: 'must be at least 13 (is 12)',
-              params: { min: 13, actual: 12 },
+              params: { min: 13, actual: 12, value: 12, custom: 'x12' },
             },
           ],
         }),
@@ -249,10 +250,20 @@ describe('value hiding and resource size', () => {
     const big = form(
       group(Array.from({ length: 100 }, (_, i) => control(`f${i}`, { value: 'x'.repeat(2000) }))),
     );
-    const text = formsResourceText({ forms: [big], events: [], reportedAt: 1 });
+    const events = Array.from({ length: 60 }, (_, i) => ({
+      formId: 'form-1',
+      path: 'f0',
+      type: 'value' as const,
+      detail: 'y'.repeat(500),
+      timestamp: i,
+    }));
+    const text = formsResourceText({ forms: [big], events, reportedAt: 1 });
     const parsed = JSON.parse(text);
     expect(parsed.truncated).toBe(true);
     expect(parsed.forms[0]).toMatchObject({ id: 'form-1', fields: 101 });
+    expect(parsed.events).toHaveLength(50);
+    expect(parsed.events[0].timestamp).toBe(10);
+    expect(parsed.events[0].detail.length).toBeLessThanOrEqual(201);
   });
 });
 
@@ -301,6 +312,9 @@ describe('isPageReport', () => {
       child({ ...control('email'), errors: [{ kind: 'required' }] }),
       child({ ...control('email'), children: 'x' }),
       child({ ...control('email'), disabledReasons: [1] }),
+      child({ ...control('email'), touched: undefined }),
+      child({ ...control('email'), dirty: 'no' }),
+      child({ ...control('email'), bound: undefined }),
     ]) {
       expect(isPageReport(report)).toBe(false);
     }

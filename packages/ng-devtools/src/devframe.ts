@@ -362,7 +362,8 @@ const ngDevtools = defineDevframe({
           },
           includeValues: {
             type: 'boolean',
-            description: "Include field values in this tool's output (default true).",
+            description:
+              "Include field values in this tool's output (default true). When false, values and value-bearing error params are left out; a custom error message that quotes the value is still returned as is.",
           },
         },
       },
