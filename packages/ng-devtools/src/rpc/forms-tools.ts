@@ -207,6 +207,75 @@ export function formsResourceText(state: FormsState): string {
   });
 }
 
+function isRecord(value: unknown): value is object {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): boolean {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function isFieldError(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const error: Partial<FormFieldError> = value;
+  return (
+    typeof error.kind === 'string' &&
+    typeof error.message === 'string' &&
+    (error.params === undefined || isRecord(error.params))
+  );
+}
+
+function isFieldNode(value: unknown, depth = 0): boolean {
+  if (!isRecord(value) || depth >= 64) return false;
+  const node: Partial<FormFieldNode> = value;
+  return (
+    typeof node.key === 'string' &&
+    typeof node.path === 'string' &&
+    typeof node.type === 'string' &&
+    typeof node.status === 'string' &&
+    Array.isArray(node.errors) &&
+    node.errors.every(isFieldError) &&
+    (node.disabledReasons === undefined || isStringArray(node.disabledReasons)) &&
+    (node.children === undefined ||
+      (Array.isArray(node.children) &&
+        node.children.every((child) => isFieldNode(child, depth + 1))))
+  );
+}
+
+function isCollectedForm(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const form: Partial<CollectedForm> = value;
+  return (
+    typeof form.id === 'string' &&
+    typeof form.label === 'string' &&
+    typeof form.kind === 'string' &&
+    isFieldNode(form.root)
+  );
+}
+
+function isFormEvent(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const event: Partial<FormEvent> = value;
+  return (
+    typeof event.formId === 'string' &&
+    typeof event.path === 'string' &&
+    typeof event.type === 'string' &&
+    typeof event.timestamp === 'number'
+  );
+}
+
+export function isPageReport(value: unknown): value is PageReport {
+  if (!isRecord(value)) return false;
+  const report: Partial<PageReport> = value;
+  return (
+    typeof report.pageId === 'string' &&
+    Array.isArray(report.forms) &&
+    report.forms.every(isCollectedForm) &&
+    Array.isArray(report.events) &&
+    report.events.every(isFormEvent)
+  );
+}
+
 type Pages = Map<string, PageReport & { reportedAt: number }>;
 
 export function currentForms(pages: Pages): FormsState {

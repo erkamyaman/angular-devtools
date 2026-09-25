@@ -8,6 +8,7 @@ import {
   explainFormsText,
   formsResourceText,
   inspectFormsText,
+  isPageReport,
   mergePageReport,
 } from '../rpc/forms-tools.ts';
 
@@ -266,5 +267,42 @@ describe('disabled reasons', () => {
       }),
     );
     expect(text.match(/is disabled: locked/g)).toHaveLength(1);
+  });
+});
+
+describe('isPageReport', () => {
+  const valid = {
+    pageId: 'a',
+    forms: [form(control('', { type: 'group', children: [control('email')] }))],
+    events: [{ formId: 'form-1', path: 'email', type: 'value', timestamp: 1 }],
+  };
+
+  it('accepts a report the overlay sends', () => {
+    expect(isPageReport(valid)).toBe(true);
+    expect(isPageReport({ pageId: 'a', forms: [], events: [] })).toBe(true);
+  });
+
+  it('rejects reports the tools cannot read', () => {
+    const child = (node: object) => ({
+      ...valid,
+      forms: [form(control('', { type: 'group', children: [node as FormFieldNode] }))],
+    });
+    for (const report of [
+      null,
+      [],
+      { ...valid, pageId: 1 },
+      { ...valid, events: undefined },
+      { ...valid, events: [null] },
+      { ...valid, events: [{ formId: 'form-1', path: '', type: 'value' }] },
+      { ...valid, forms: {} },
+      { ...valid, forms: [{ ...valid.forms[0], root: {} }] },
+      { ...valid, forms: [{ ...valid.forms[0], label: undefined }] },
+      child({ ...control('email'), errors: undefined }),
+      child({ ...control('email'), errors: [{ kind: 'required' }] }),
+      child({ ...control('email'), children: 'x' }),
+      child({ ...control('email'), disabledReasons: [1] }),
+    ]) {
+      expect(isPageReport(report)).toBe(false);
+    }
   });
 });

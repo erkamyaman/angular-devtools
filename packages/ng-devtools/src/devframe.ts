@@ -13,6 +13,7 @@ import {
   currentForms,
   expirePages,
   inspectFormsText,
+  isPageReport,
   mergePageReport,
   type PageReport,
   type FormsState,
@@ -100,16 +101,8 @@ const ngDevtools = defineDevframe({
       name: 'push-forms',
       type: 'action',
       jsonSerializable: true,
-      handler: (report: PageReport) => {
-        if (
-          typeof report?.pageId !== 'string' ||
-          !Array.isArray(report.forms) ||
-          !Array.isArray(report.events) ||
-          !report.forms.every((f) => typeof f?.root === 'object' && f.root !== null) ||
-          !report.events.every((e) => typeof e?.timestamp === 'number')
-        ) {
-          return;
-        }
+      handler: (report: unknown) => {
+        if (!isPageReport(report)) return;
         applyForms(mergePageReport(formPages, report));
       },
     });
