@@ -15,7 +15,7 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 const auth = process.env['NG_DEVTOOLS_AUTH'] === 'true';
-const devtools = initDevframe(ngDevtools, { base: '/__ng-devtools/', auth });
+const devtools = initDevframe(ngDevtools, { base: '/__ng-devtools/', ws: false, auth, allowedOrigins: false });
 app.use(devtools.nodeMiddleware);
 
 /**
