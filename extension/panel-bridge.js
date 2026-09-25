@@ -7,43 +7,54 @@ const status = document.getElementById('status');
 const tabId = chrome.devtools.inspectedWindow.tabId;
 const LOCAL_HOSTS = ['localhost', '127.0.0.1'];
 
-// Try to find the devframe connection on the inspected page
-function detectConnection() {
-  // Try common devframe mount paths
-  const paths = ['/__ng-devtools/', '/__devframe/', '/'];
+// Where devframe may be mounted.
+const PATHS = ['/__ng-devtools/', '/__devframe/', '/'];
+const CONNECTION_FILES = ['__devframe/__connection.json', '__connection.json'];
 
-  chrome.devtools.inspectedWindow.eval(
-    `(function() {
-      const paths = ${JSON.stringify(paths)};
-      for (const base of paths) {
-        try {
-          const xhr = new XMLHttpRequest();
-          xhr.open('GET', base + '__devframe/__connection.json', false);
-          xhr.send();
-          if (xhr.status === 200) {
-            return { base: base, connection: JSON.parse(xhr.responseText) };
-          }
-        } catch(e) {}
-        try {
-          const xhr = new XMLHttpRequest();
-          xhr.open('GET', base + '__connection.json', false);
-          xhr.send();
-          if (xhr.status === 200) {
-            return { base: base, connection: JSON.parse(xhr.responseText) };
-          }
-        } catch(e) {}
+// Look for a devframe connection, but only on a loopback page: nothing else
+// can be connected to, so nothing else is worth probing.
+function detectConnection() {
+  chrome.devtools.inspectedWindow.eval('location.origin', (origin, error) => {
+    if (error || typeof origin !== 'string') {
+      loadPanel(null);
+      return;
+    }
+
+    let hostname;
+    try {
+      hostname = new URL(origin).hostname;
+    } catch {
+      loadPanel(null);
+      return;
+    }
+
+    if (!LOCAL_HOSTS.includes(hostname)) {
+      loadPanel(null);
+      return;
+    }
+
+    findConnection(origin).then(loadPanel);
+  });
+}
+
+// The first mount path that answers with a connection file, or null.
+async function findConnection(origin) {
+  for (const base of PATHS) {
+    for (const file of CONNECTION_FILES) {
+      try {
+        const response = await fetch(new URL(base + file, origin), {
+          credentials: 'omit',
+          cache: 'no-store',
+        });
+        if (!response.ok) continue;
+        await response.json();
+        return base;
+      } catch {
+        // Not mounted here; try the next one.
       }
-      return null;
-    })()`,
-    (result, err) => {
-      if (result && paths.includes(result.base)) {
-        loadPanel(result.base);
-      } else {
-        // No live devframe found — load in standalone/static mode
-        loadPanel(null);
-      }
-    },
-  );
+    }
+  }
+  return null;
 }
 
 function loadPanel(baseURL) {
