@@ -9,13 +9,13 @@ type Convertible = Parameters<typeof toStandardJsonSchema>[0];
  *
  * Devframe stays validator neutral: it describes an RPC `returns` schema with
  * the validator's own converter, and valibot does not ship one by default.
- * Without it devframe falls back to a permissive object schema and advertises
- * that as the MCP `outputSchema`, so a tool returning an array fails every
- * `tools/call` against the schema the server itself published.
+ * Since devframe 1.1.0 a `returns` schema it cannot convert simply advertises
+ * no MCP `outputSchema`, so this is not a workaround for array returns any
+ * more; those are correct either way.
  *
- * With the converter attached, an object return is described accurately, and
- * an array return advertises no output schema at all, since MCP only allows an
- * object there. Either way the response matches what was advertised.
+ * What it still buys is accuracy for the tools that return an object: with the
+ * converter attached they advertise their real shape rather than a permissive
+ * one, so a client can tell what a call will hand back.
  */
 export function describable<T extends Convertible>(schema: T): T {
   const described = { ...schema, ...toStandardJsonSchema(schema) } as T;
