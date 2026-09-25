@@ -15,7 +15,8 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 const isDev = process.env['NODE_ENV'] === 'development';
-const devtools = initDevframe(ngDevtools, { base: '/__ng-devtools/', ws: false, auth: !isDev });
+const isDemo = process.env['NG_DEVTOOLS_PUBLIC'] === 'true';
+const devtools = initDevframe(ngDevtools, { base: '/__ng-devtools/', ws: false, auth: !isDev && !isDemo });
 app.use(devtools.nodeMiddleware);
 
 /**
