@@ -20,6 +20,8 @@ import {
   type InspectFormsArgs,
 } from './rpc/forms-tools.ts';
 
+import { registerAnalog } from './rpc/analog-register.ts';
+
 import pkg from '../package.json' with { type: 'json' };
 
 const clientAssets: RemoteAssets = {
@@ -390,6 +392,8 @@ const ngDevtools = defineDevframe({
         return { markdown: explainFormsText(state, args) };
       },
     });
+
+    await registerAnalog(my as never, ctx as never);
   },
 });
 
