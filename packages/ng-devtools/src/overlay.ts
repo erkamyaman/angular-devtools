@@ -1,4 +1,5 @@
 import { connectDevframe } from 'devframe/client';
+import { attachAnalog } from './analog-runtime.ts';
 import {
   collectForms,
   diffForms,
@@ -110,6 +111,7 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   }
 
   const { id: pageId, release: releasePageId } = await claimPageId();
+  const stopAnalog = attachAnalog(my, pageId, getNg);
   const idOf = (root: object) => `${formIdFor(root)}@${pageId}`;
   let lastForms: CollectedForm[] = [];
   let lastPayload = '';
@@ -281,6 +283,7 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     clearInterval(interval);
     removeEventListener('pagehide', leave);
     for (const { stop } of watched.values()) stop();
+    stopAnalog();
     releasePageId();
     watched.clear();
     clearHighlight();
