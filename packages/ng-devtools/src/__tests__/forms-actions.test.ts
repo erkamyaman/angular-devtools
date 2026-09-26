@@ -316,6 +316,94 @@ describe('secret safety for group writes', () => {
   });
 });
 
+class Security {
+  form = new FormGroup({
+    question: new FormControl('first pet'),
+    answer: new FormControl('rex'),
+  });
+}
+Component({
+  selector: 'security-form',
+  imports: [ReactiveFormsModule],
+  template: `
+    <form [formGroup]="form">
+      <input id="question" formControlName="question" />
+      <input id="answer" type="password" formControlName="answer" />
+    </form>
+  `,
+})(Security);
+
+describe('protected descendants', () => {
+  it('finds a secret nested deeper than any fixed limit', async () => {
+    const fixture = await render(Signup);
+    const ctx = contextFor(fixture.nativeElement);
+    let inner: FormGroup = new FormGroup({ apiKey: new FormControl('k') });
+    const value: Record<string, unknown> = { apiKey: 'stolen' };
+    let wrapped: Record<string, unknown> = value;
+    for (let i = 0; i < 15; i++) {
+      inner = new FormGroup({ level: inner });
+      wrapped = { level: wrapped };
+    }
+    ctx.forms.set('deep', { kind: 'reactive', root: inner as never, owner: null });
+    const result = await runFormAction(ctx, {
+      action: 'set-value',
+      formId: 'deep',
+      path: '',
+      value: wrapped,
+    });
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(inner.getRawValue())).toContain('"apiKey":"k"');
+  });
+
+  it('keeps a password-input field on restore even when its name looks harmless', async () => {
+    const fixture = await render(Security);
+    document.body.appendChild(fixture.nativeElement);
+    const ctx = contextFor(fixture.nativeElement);
+    const form = fixture.componentInstance.form;
+    const snap = await runFormAction(ctx, { action: 'snapshot', formId: 'form-1' });
+    form.controls.answer.setValue('fido');
+    form.controls.question.setValue('first car');
+    await runFormAction(ctx, {
+      action: 'restore',
+      formId: 'form-1',
+      snapshot: snap.snapshot,
+      confirm: true,
+    });
+    expect(form.controls.question.value).toBe('first pet');
+    expect(form.controls.answer.value).toBe('fido');
+    fixture.nativeElement.remove();
+  });
+
+  it('refuses a group write that changes a hidden Signal Forms child, and restore keeps it', async () => {
+    const fixture = await render(Profile);
+    const ctx = contextFor(fixture.nativeElement);
+    const component = fixture.componentInstance;
+    const refused = await runFormAction(ctx, {
+      action: 'set-value',
+      formId: 'form-1',
+      path: '',
+      value: { name: 'Ada', promo: 'FREE' },
+    });
+    expect(refused.error).toContain('would change promo, which is hidden');
+    const allowed = await runFormAction(ctx, {
+      action: 'set-value',
+      formId: 'form-1',
+      path: '',
+      value: { name: 'Ada', promo: '' },
+    });
+    expect(allowed.ok).toBe(true);
+    const snap = await runFormAction(ctx, { action: 'snapshot', formId: 'form-1' });
+    component.model.set({ name: 'Bob', promo: 'LATER' });
+    await runFormAction(ctx, {
+      action: 'restore',
+      formId: 'form-1',
+      snapshot: snap.snapshot,
+      confirm: true,
+    });
+    expect(component.model()).toEqual({ name: 'Ada', promo: 'LATER' });
+  });
+});
+
 describe('request validation', () => {
   it('accepts known actions and rejects the rest', () => {
     expect(isFormAction({ action: 'focus', formId: 'form-1' })).toBe(true);

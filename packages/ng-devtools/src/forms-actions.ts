@@ -90,27 +90,84 @@ const snapshots = new Map<
   { root: object; formId: string; value: unknown; shape: string }
 >();
 
-export function secretInside(value: unknown, prefix = '', depth = 0): string | null {
-  if (!value || typeof value !== 'object' || value instanceof Date || depth > 12) return null;
+const MAX_GUARDED_NODES = 5000;
+
+export function secretInside(
+  value: unknown,
+  prefix = '',
+  seen: WeakSet<object> = new WeakSet(),
+): string | null {
+  if (!value || typeof value !== 'object' || value instanceof Date || seen.has(value)) return null;
+  seen.add(value);
   for (const [key, child] of Object.entries(value as AnyRecord)) {
     const path = prefix ? `${prefix}.${key}` : key;
     if (!/^\d+$/.test(key) && isSecretKey(key)) return path;
-    const nested = secretInside(child, path, depth + 1);
+    const nested = secretInside(child, path, seen);
     if (nested) return nested;
   }
   return null;
 }
 
-export function keepSecrets(saved: unknown, current: unknown, depth = 0): unknown {
-  if (!saved || typeof saved !== 'object' || saved instanceof Date || depth > 12) return saved;
+export function keepSecrets(
+  saved: unknown,
+  current: unknown,
+  seen: WeakSet<object> = new WeakSet(),
+): unknown {
+  if (!saved || typeof saved !== 'object' || saved instanceof Date || seen.has(saved)) return saved;
   if (!current || typeof current !== 'object') return saved;
+  seen.add(saved);
   const out: AnyRecord = Array.isArray(saved) ? [...saved] : { ...(saved as AnyRecord) };
   for (const key of Object.keys(out)) {
     const now = (current as AnyRecord)[key];
-    out[key] = !/^\d+$/.test(key) && isSecretKey(key) ? now : keepSecrets(out[key], now, depth + 1);
+    out[key] = !/^\d+$/.test(key) && isSecretKey(key) ? now : keepSecrets(out[key], now, seen);
   }
   return out;
 }
+
+function keysOf(path: string): string[] {
+  return path ? path.split('.') : [];
+}
+
+export function valueAt(value: unknown, path: string): unknown {
+  let current = value;
+  for (const key of keysOf(path)) {
+    if (!current || typeof current !== 'object') return undefined;
+    current = (current as AnyRecord)[key];
+  }
+  return current;
+}
+
+function hasPath(value: unknown, path: string): boolean {
+  let current = value;
+  for (const key of keysOf(path)) {
+    if (!current || typeof current !== 'object' || !(key in (current as object))) return false;
+    current = (current as AnyRecord)[key];
+  }
+  return true;
+}
+
+export function setAt(value: unknown, path: string, next: unknown): unknown {
+  const keys = keysOf(path);
+  if (!keys.length) return next;
+  if (!value || typeof value !== 'object') return value;
+  const copy: AnyRecord = Array.isArray(value) ? [...value] : { ...(value as AnyRecord) };
+  copy[keys[0]] = setAt(copy[keys[0]], keys.slice(1).join('.'), next);
+  return copy;
+}
+
+function sameValue(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+}
+
+function relativePath(path: string, base: string): string {
+  return base ? path.slice(base.length + 1) : path;
+}
+
 let snapshotSeq = 0;
 
 function read<T>(fn: () => T, fallback: T): T {
@@ -196,6 +253,60 @@ function refusal(
   return null;
 }
 
+function childrenOf(found: FoundForm, node: AnyRecord): [string, AnyRecord][] {
+  if (found.kind === 'signal') {
+    const value = read(() => node['value'](), undefined);
+    if (!value || typeof value !== 'object' || value instanceof Date) return [];
+    const tree = read(() => node['fieldTree'] as AnyRecord, null);
+    if (!tree) return [];
+    return Object.keys(value).flatMap((key) => {
+      const child = read(() => tree[key]?.() as AnyRecord | undefined, undefined);
+      return child ? [[key, child] as [string, AnyRecord]] : [];
+    });
+  }
+  const controls = read(() => node['controls'], null);
+  if (!controls || typeof controls !== 'object') return [];
+  return Array.isArray(controls)
+    ? controls.map((child, index) => [String(index), child] as [string, AnyRecord])
+    : Object.entries(controls as AnyRecord);
+}
+
+export interface GuardedField {
+  path: string;
+  reason: string;
+}
+
+export function guardedFields(
+  ctx: ActionContext,
+  found: FoundForm,
+  node: AnyRecord,
+  path: string,
+  force = false,
+): GuardedField[] | null {
+  const out: GuardedField[] = [];
+  const seen = new WeakSet<object>();
+  let count = 0;
+  let overflow = false;
+  const visit = (current: AnyRecord, currentPath: string) => {
+    if (overflow || !current || seen.has(current)) return;
+    seen.add(current);
+    if (++count > MAX_GUARDED_NODES) {
+      overflow = true;
+      return;
+    }
+    const reason = currentPath !== path ? refusal(ctx, found, current, currentPath, force) : null;
+    if (reason) {
+      out.push({ path: currentPath, reason });
+      return;
+    }
+    for (const [key, child] of childrenOf(found, current)) {
+      visit(child, currentPath ? `${currentPath}.${key}` : key);
+    }
+  };
+  visit(node, path);
+  return overflow ? null : out;
+}
+
 function nativeWrite(element: Element, value: unknown): boolean {
   if (element instanceof HTMLInputElement) {
     if (element.type === 'file') return false;
@@ -247,9 +358,20 @@ function writeValue(
   const refused = refusal(ctx, found, node, path, force);
   if (refused) return refused;
   const current = rawValue(found, node);
-  const secret = secretInside(value) ?? secretInside(current);
+  const secret = secretInside(value);
   if (secret) {
     return `contains the secret field "${secret}"; DevTools never writes secret fields`;
+  }
+  if (current && typeof current === 'object' && !(current instanceof Date)) {
+    const guarded = guardedFields(ctx, found, node, path, force);
+    if (!guarded) return 'is too large to check for protected fields; write the fields one by one';
+    for (const field of guarded) {
+      const rel = relativePath(field.path, path);
+      if (found.kind !== 'signal' && !hasPath(value, rel)) continue;
+      if (!sameValue(valueAt(value, rel), valueAt(current, rel))) {
+        return `would change ${field.path}, which ${field.reason}`;
+      }
+    }
   }
   if (current && typeof current === 'object' && shapeOf(current) !== shapeOf(value)) {
     if (!value || typeof value !== 'object') return 'is a group or array; pass an object or array';
@@ -618,7 +740,12 @@ async function perform(
           'The form structure changed since the snapshot (arrays or groups differ), so it cannot be restored.',
         );
       }
-      const restored = keepSecrets(structuredCloneSafe(saved.value), currentValue);
+      const guarded = guardedFields(ctx, found, found.root, '');
+      if (!guarded) return fail('The form is too large to check for protected fields.');
+      let restored = keepSecrets(structuredCloneSafe(saved.value), currentValue);
+      for (const field of guarded) {
+        restored = setAt(restored, field.path, valueAt(currentValue, field.path));
+      }
       if (signal) found.root['value'].set(restored);
       else found.root['patchValue'](restored);
       return { ok: true, message: `Restored snapshot ${request.snapshot}.` };
