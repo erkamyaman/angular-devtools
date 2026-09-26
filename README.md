@@ -88,19 +88,29 @@ When embedded in Express, the MCP endpoint is also available over HTTP at `/__ng
 
 MCP clients see these with an underscore, as `ng-devtools_get-routes`.
 
-| Tool                               | Description                                                 |
-| ---------------------------------- | ----------------------------------------------------------- |
-| `ng-devtools:get-routes`           | List Angular routes from source                             |
-| `ng-devtools:get-components`       | Discover components and directives, with inputs and outputs |
-| `ng-devtools:get-signals`          | Signal declarations from source                             |
-| `ng-devtools:get-providers`        | DI providers from source                                    |
-| `ng-devtools:build-meta`           | Angular/TS versions, SSR status                             |
-| `ng-devtools:highlight`            | Highlight a component in the page                           |
-| `ng-devtools:inspect-signals`      | Signal graph a connected page reported                      |
-| `ng-devtools:inspect-providers`    | Injector tree a connected page reported                     |
-| `ng-devtools:get-ngrx-store`       | Scan source for NgRx store patterns                         |
-| `ng-devtools:inspect-forms`        | Forms on the page with every field's state and errors       |
-| `ng-devtools:explain-form-invalid` | Which fields make a form invalid, and why                   |
+| Tool                                | Description                                                 |
+| ----------------------------------- | ----------------------------------------------------------- |
+| `ng-devtools:get-routes`            | List Angular routes from source                             |
+| `ng-devtools:get-components`        | Discover components and directives, with inputs and outputs |
+| `ng-devtools:get-signals`           | Signal declarations from source                             |
+| `ng-devtools:get-providers`         | DI providers from source                                    |
+| `ng-devtools:build-meta`            | Angular/TS versions, SSR status                             |
+| `ng-devtools:highlight`             | Highlight a component in the page                           |
+| `ng-devtools:inspect-signals`       | Signal graph a connected page reported                      |
+| `ng-devtools:inspect-providers`     | Injector tree a connected page reported                     |
+| `ng-devtools:get-ngrx-store`        | Scan source for NgRx store patterns                         |
+| `ng-devtools:inspect-forms`         | Forms on the page with every field's state and errors       |
+| `ng-devtools:explain-form-invalid`  | Which fields make a form invalid, and why                   |
+| `ng-devtools:analog-routes`         | Analog file routes with their page, layout and server files |
+| `ng-devtools:analog-explain-url`    | Which Analog files render a URL, or why nothing matches     |
+| `ng-devtools:analog-current-page`   | The open page's files, load() data and hydration state      |
+| `ng-devtools:analog-server-calls`   | Page renders, load(), server function and API calls         |
+| `ng-devtools:analog-api-routes`     | Server routes with method, URL and file                     |
+| `ng-devtools:analog-call-api`       | Send a request to a server route (non-GET needs confirm)    |
+| `ng-devtools:analog-render-modes`   | SSR, prerendered or client only, per page                   |
+| `ng-devtools:analog-prerender-plan` | prerender.routes compared with pages and build output       |
+| `ng-devtools:analog-content`        | Markdown content with slug and frontmatter                  |
+| `ng-devtools:analog-lint`           | Analog routing, server, prerender and content mistakes      |
 
 #### Forms
 
@@ -112,6 +122,36 @@ The Forms tab and the forms tools read Signal Forms, reactive forms and template
 - Both tools note when the page last reported, so an agent can tell when the data is stale.
 
 Form values leave the page: they are sent to the devtools server, shown in the Forms tab and returned to agents. Values of password fields, fields with a password, one-time-code or credit-card `autocomplete`, and fields whose name looks secret (password, token, card, cvv and similar) are replaced with `[redacted]`. Other values are sent as they are, so keep real credentials out of forms you inspect, and don't expose the dev server beyond localhost.
+
+#### Analog
+
+For [Analog](https://analogjs.org) apps, add the Vite plugin next to `analog()` and load the overlay in `main.ts`:
+
+```ts
+// vite.config.ts
+import analog from '@analogjs/platform';
+import ngDevtools from '@santoshyadavdev/ng-devtools/vite';
+
+export default defineConfig({
+  plugins: [analog(), ngDevtools()],
+});
+```
+
+```ts
+// src/main.ts
+bootstrapApplication(App, appConfig).then(() => {
+  if (import.meta.env.DEV) void import('@santoshyadavdev/ng-devtools/overlay');
+});
+```
+
+The panel is then at `/__ng-devtools/` on the Vite dev server, and the MCP endpoint at `/__ng-devtools/__mcp`. The Analog tab shows:
+
+- Routes: every page, layout and markdown file with its URL, route groups, `[param]` and catch-all segments, `.server.ts` files and routeMeta. Test a URL to see which files render it.
+- Server: page renders (server rendered or client only), `load()` fetches, server functions and API calls with status, time and a redacted preview, plus a request playground for API routes. A `load()` that runs on the server and again in the browser is flagged.
+- Render: SSR, prerendered or client only per page, from config, build output and the last request.
+- Content and Lint: markdown files, and checks for duplicate URLs, missing default exports, layouts without `<router-outlet>`, orphan `.server.ts` files, API method suffixes, prerender entries and frontmatter.
+
+The Analog tab appears only in Analog apps, and the Routes tab and Dashboard switch to Analog's file routes and SSR setting there. Tested with Analog 2.7 on Angular 20 (a fresh app from the official template, npm and pnpm) and Angular 22. The demo lives in `examples/analog` (`pnpm analog:dev`).
 
 #### Agent Resources
 
