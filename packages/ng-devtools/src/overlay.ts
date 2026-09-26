@@ -1,5 +1,6 @@
 import { connectDevframe } from 'devframe/client';
 import { attachForms } from './forms-collector.ts';
+import { createSignalHistory, type RawSignalNode } from './signal-history.ts';
 
 let highlightEl: HTMLElement | null = null;
 let highlightTimer: ReturnType<typeof setTimeout> | undefined;
@@ -60,9 +61,20 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     await my.rpc.call('push-component-tree', tree);
   }
 
+  const signalHistory = createSignalHistory(serializeValue);
+  const restoreSignalHook = await installSignalWriteHook(signalHistory.onWrite);
+
+  // Set from the Components tab; null follows the routed component.
+  let signalTarget: string | null = null;
+
   async function pushSignalGraph() {
-    const graph = collectSignalGraph();
-    if (graph) await my.rpc.call('push-signal-graph', graph);
+    const graph = collectSignalGraph(signalTarget);
+    if (!graph) return;
+    await my.rpc.call('push-signal-graph', {
+      ...graph,
+      pageId,
+      history: signalHistory.collect(graph.nodes),
+    });
   }
 
   async function pushInjectorTree() {
@@ -110,11 +122,22 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     },
   });
 
+  my.rpc.register({
+    name: 'select-signal-component',
+    type: 'event',
+    jsonSerializable: true,
+    handler: (selector: string | null) => {
+      signalTarget = typeof selector === 'string' && selector.length < 500 ? selector : null;
+      void pushSignalGraph();
+    },
+  });
+
   const leave = () => void my.rpc.call('forget-forms-page', pageId).catch(() => {});
   addEventListener('pagehide', leave);
 
   return () => {
     clearInterval(interval);
+    restoreSignalHook();
     removeEventListener('pagehide', leave);
     forms.stop();
     releasePageId();
@@ -294,16 +317,74 @@ function clearHighlight() {
 }
 
 // --- Signal Graph collection using Angular's debug API ---
+type SignalSetHook = ((node: RawSignalNode) => void) | null;
+
+export async function installSignalWriteHook(
+  onWrite: (node: RawSignalNode) => void,
+  load: () => Promise<{ setPostSignalSetFn: (fn: SignalSetHook) => SignalSetHook }> = () =>
+    import('@angular/core/primitives/signals') as never,
+): Promise<() => void> {
+  let setHook: (fn: SignalSetHook) => SignalSetHook;
+  try {
+    ({ setPostSignalSetFn: setHook } = await load());
+  } catch {
+    // Without the hook, history falls back to poll samples only.
+    return () => {};
+  }
+  let prev: SignalSetHook = null;
+  let active = true;
+  const hook = (node: RawSignalNode) => {
+    prev?.(node);
+    if (!active) return;
+    try {
+      onWrite(node);
+    } catch {
+      return;
+    }
+  };
+  prev = setHook(hook);
+  return () => {
+    active = false;
+    const current = setHook(prev);
+    // Someone chained after us; keep theirs, our hook now just forwards.
+    if (current !== hook) setHook(current);
+  };
+}
 
 function getNg(): any {
   return (window as any).ng;
 }
 
-function collectSignalGraph() {
+function queryTarget(selector: string | null): Element | null {
+  if (!selector) return null;
+  // The selector comes from the devtools or an agent, so it may not be valid CSS.
+  try {
+    return document.querySelector(selector);
+  } catch {
+    return null;
+  }
+}
+
+/** The component the deepest `<router-outlet>` rendered, if any. */
+function routedComponent(): Element | null {
+  const ng = getNg();
+  const outlets = Array.from(document.querySelectorAll('router-outlet'));
+  for (const outlet of outlets.reverse()) {
+    const el = outlet.nextElementSibling;
+    if (el && ng?.getComponent?.(el)) return el;
+  }
+  return null;
+}
+
+export function collectSignalGraph(target: string | null = null) {
   const ng = getNg();
   if (!ng?.ɵgetSignalGraph) return null;
 
-  // Get the first component root and its injector
+  for (const el of [queryTarget(target), routedComponent()]) {
+    const graph = el && getSignalGraphForElement(el);
+    if (graph) return graph;
+  }
+
   const roots = document.querySelectorAll('[ng-version], [_nghost-ng-c]');
   for (const root of roots) {
     const graph = getSignalGraphForElement(root);
