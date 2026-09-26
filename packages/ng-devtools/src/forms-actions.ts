@@ -1,4 +1,5 @@
 import {
+  controlPathOf,
   directivesOf,
   findFieldElement,
   isAbstractControl,
@@ -7,7 +8,7 @@ import {
   type FormsDebugApi,
   type FoundForm,
 } from './forms.ts';
-import { redactReason } from './forms-privacy.ts';
+import { isSecretKey, redactReason } from './forms-privacy.ts';
 import { fieldPath, submitSetup } from './forms-read.ts';
 
 type AnyRecord = Record<string, any>;
@@ -84,7 +85,32 @@ export function isDevtoolsAction(): boolean {
   return devtoolsDepth > 0;
 }
 
-const snapshots = new Map<string, { formId: string; value: unknown; shape: string }>();
+const snapshots = new Map<
+  string,
+  { root: object; formId: string; value: unknown; shape: string }
+>();
+
+export function secretInside(value: unknown, prefix = '', depth = 0): string | null {
+  if (!value || typeof value !== 'object' || value instanceof Date || depth > 12) return null;
+  for (const [key, child] of Object.entries(value as AnyRecord)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (!/^\d+$/.test(key) && isSecretKey(key)) return path;
+    const nested = secretInside(child, path, depth + 1);
+    if (nested) return nested;
+  }
+  return null;
+}
+
+export function keepSecrets(saved: unknown, current: unknown, depth = 0): unknown {
+  if (!saved || typeof saved !== 'object' || saved instanceof Date || depth > 12) return saved;
+  if (!current || typeof current !== 'object') return saved;
+  const out: AnyRecord = Array.isArray(saved) ? [...saved] : { ...(saved as AnyRecord) };
+  for (const key of Object.keys(out)) {
+    const now = (current as AnyRecord)[key];
+    out[key] = !/^\d+$/.test(key) && isSecretKey(key) ? now : keepSecrets(out[key], now, depth + 1);
+  }
+  return out;
+}
 let snapshotSeq = 0;
 
 function read<T>(fn: () => T, fallback: T): T {
@@ -221,6 +247,10 @@ function writeValue(
   const refused = refusal(ctx, found, node, path, force);
   if (refused) return refused;
   const current = rawValue(found, node);
+  const secret = secretInside(value) ?? secretInside(current);
+  if (secret) {
+    return `contains the secret field "${secret}"; DevTools never writes secret fields`;
+  }
   if (current && typeof current === 'object' && shapeOf(current) !== shapeOf(value)) {
     if (!value || typeof value !== 'object') return 'is a group or array; pass an object or array';
   }
@@ -342,27 +372,13 @@ export function locateElement(ctx: ActionContext, target: Element): FormActionRe
       }
       const control = read(() => dir['control'] as unknown, undefined);
       if (isAbstractControl(control) && read(() => control['root'], null) === found.root) {
-        return { ok: true, message: 'Found', formId, path: controlPath(found.root, control) };
+        const path = controlPathOf(found.root, control);
+        if (!path && control !== found.root) continue;
+        return { ok: true, message: 'Found', formId, path };
       }
     }
   }
   return null;
-}
-
-function controlPath(root: AnyRecord, target: AnyRecord): string {
-  const keys: string[] = [];
-  let current: AnyRecord | null = target;
-  for (let guard = 0; current && current !== root && guard < 64; guard++) {
-    const parent: AnyRecord | null = read(() => current!['parent'], null);
-    if (!parent) break;
-    const controls = read(() => parent['controls'], {});
-    const key = Array.isArray(controls)
-      ? String(controls.indexOf(current))
-      : Object.keys(controls).find((k) => controls[k] === current);
-    keys.unshift(key ?? '?');
-    current = parent;
-  }
-  return keys.join('.');
 }
 
 export async function runFormAction(
@@ -581,6 +597,7 @@ async function perform(
       const value = rawValue(found, found.root);
       const id = `s${++snapshotSeq}`;
       snapshots.set(id, {
+        root: found.root,
         formId: request.formId ?? '',
         value: structuredCloneSafe(value),
         shape: shapeOf(value),
@@ -592,13 +609,18 @@ async function perform(
       const saved = request.snapshot ? snapshots.get(request.snapshot) : undefined;
       if (!saved)
         return fail(`No snapshot ${request.snapshot ?? ''} (snapshots live until reload).`);
-      if (shapeOf(rawValue(found, found.root)) !== saved.shape) {
+      if (saved.root !== found.root) {
+        return fail(`Snapshot ${request.snapshot} was taken from another form.`);
+      }
+      const currentValue = rawValue(found, found.root);
+      if (shapeOf(currentValue) !== saved.shape) {
         return fail(
           'The form structure changed since the snapshot (arrays or groups differ), so it cannot be restored.',
         );
       }
-      if (signal) found.root['value'].set(structuredCloneSafe(saved.value));
-      else found.root['patchValue'](saved.value);
+      const restored = keepSecrets(structuredCloneSafe(saved.value), currentValue);
+      if (signal) found.root['value'].set(restored);
+      else found.root['patchValue'](restored);
       return { ok: true, message: `Restored snapshot ${request.snapshot}.` };
     }
     default:

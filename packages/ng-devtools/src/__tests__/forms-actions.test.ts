@@ -13,7 +13,13 @@ import { FormField, FormRoot, form, hidden, required } from '@angular/forms/sign
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { afterEach, describe, expect, it } from 'vitest';
 import { findForms } from '../forms.ts';
-import { isFormAction, runFormAction, type ActionContext } from '../forms-actions.ts';
+import {
+  isFormAction,
+  keepSecrets,
+  runFormAction,
+  secretInside,
+  type ActionContext,
+} from '../forms-actions.ts';
 
 try {
   TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
@@ -252,6 +258,61 @@ describe('form actions on template-driven and Signal Forms', () => {
     expect(submitted.message).toContain('the action runs');
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(component.saved).toEqual([{ name: 'Ada', promo: '' }]);
+  });
+});
+
+describe('secret safety for group writes', () => {
+  it('refuses a group write that would touch a secret field', async () => {
+    const fixture = await render(Signup);
+    const ctx = contextFor(fixture.nativeElement);
+    const account = new FormGroup({
+      account: new FormGroup({ name: new FormControl('a'), apiKey: new FormControl('k') }),
+    });
+    ctx.forms.set('form-3', { kind: 'reactive', root: account as never, owner: null });
+    const result = await runFormAction(ctx, {
+      action: 'set-value',
+      formId: 'form-3',
+      path: 'account',
+      value: { name: 'b', apiKey: 'stolen' },
+    });
+    expect(result.error).toContain('secret field "apiKey"');
+    expect(account.controls.account.controls.apiKey.value).toBe('k');
+    const allowed = await runFormAction(ctx, {
+      action: 'set-value',
+      formId: 'form-3',
+      path: 'account.name',
+      value: 'b',
+    });
+    expect(allowed.ok).toBe(true);
+  });
+
+  it('finds secrets inside values and keeps them on restore', () => {
+    expect(secretInside({ account: { apiKey: 'x' } })).toBe('account.apiKey');
+    expect(secretInside({ items: [{ name: 'a' }] })).toBeNull();
+    expect(keepSecrets({ name: 'old', password: 'old' }, { name: 'new', password: 'now' })).toEqual(
+      {
+        name: 'old',
+        password: 'now',
+      },
+    );
+  });
+
+  it('refuses to restore a snapshot into another form', async () => {
+    const fixture = await render(Signup);
+    const ctx = contextFor(fixture.nativeElement);
+    const other = {
+      ...ctx.forms.get('form-1')!,
+      root: new FormGroup({ name: new FormControl('') }),
+    };
+    ctx.forms.set('form-2', other as never);
+    const snap = await runFormAction(ctx, { action: 'snapshot', formId: 'form-1' });
+    const result = await runFormAction(ctx, {
+      action: 'restore',
+      formId: 'form-2',
+      snapshot: snap.snapshot,
+      confirm: true,
+    });
+    expect(result.error).toContain('another form');
   });
 });
 

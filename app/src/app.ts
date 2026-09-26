@@ -79,7 +79,11 @@ type Tab = 'dashboard' | 'components' | 'routes' | 'signals' | 'injectors' | 'st
           <app-store-inspector [rpc]="rpc()" />
         }
         @case ('forms') {
-          <app-forms-inspector [rpc]="rpc()" [focus]="formFocus()" />
+          <app-forms-inspector
+            [rpc]="rpc()"
+            [focus]="formFocus()"
+            (focusHandled)="formFocus.set(null)"
+          />
         }
       }
     </main>
@@ -199,10 +203,10 @@ export class App implements OnInit, OnDestroy {
     // cleanup handled by devframe client
   }
 
-  formFocus = signal<string | null>(null);
+  formFocus = signal<{ id: string } | null>(null);
 
   showForm(formId: string) {
-    this.formFocus.set(formId);
+    this.formFocus.set({ id: formId });
     this.switchTab('forms');
   }
 

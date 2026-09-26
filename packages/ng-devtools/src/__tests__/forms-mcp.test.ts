@@ -174,7 +174,10 @@ async function withForms() {
     pageId: 'pg1',
     forms: [signup],
     events,
-    setupErrors: ["NG01203: No value accessor for form control name: 'age'"],
+    setupErrors: [
+      "NG01203: No value accessor for form control name: 'age'",
+      'NG01050: formControlName in page header must be inside a formGroup',
+    ],
   });
   await booted.push('push-forms', { pageId: 'pg2', forms: [profile], events: [] });
   return booted;
@@ -379,6 +382,7 @@ describe('forms MCP tools', () => {
     expect(text).toContain('has no setDisabledState');
     expect(text).toContain('Drift:');
     expect(text).toContain('NG01203');
+    expect(text).not.toContain('NG01050');
   });
 
   it('export-form writes a snapshot or a fixture with the secret still redacted', async () => {

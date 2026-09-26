@@ -492,9 +492,14 @@ export function explainCustomControlText(state: FormsState, args: FieldArgs): st
       'The value changed but the field was never touched: check that onTouched is called on blur.',
     );
   }
+  const pageId = form.id.split('@')[1];
+  const keyPattern = node.key
+    ? new RegExp(`(^|[^\\w])${node.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\w]|$)`)
+    : null;
   const setup = (state.setupErrors ?? [])
+    .filter((e) => !pageId || e.pageId === pageId)
     .map((e) => e.message)
-    .filter((m) => !node.key || m.includes(node.key));
+    .filter((m) => !keyPattern || keyPattern.test(m));
   if (setup.length) lines.push('Setup errors:', ...setup.map((m) => `- ${m}`));
   return `${UNTRUSTED}\n\n${code(node.path || '(form)')} in ${code(form.label)}\n${lines.join('\n')}`;
 }

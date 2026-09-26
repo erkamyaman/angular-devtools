@@ -5,6 +5,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   untracked,
 } from '@angular/core';
@@ -654,7 +655,8 @@ function countFields(node: FormFieldNode): number {
 })
 export class FormsInspector {
   rpc = input<DevframeRpcClient | null>(null);
-  focus = input<string | null>(null);
+  focus = input<{ id: string } | null>(null);
+  readonly focusHandled = output<void>();
 
   readonly forms = signal<CollectedForm[]>([]);
   readonly events = signal<FormEvent[]>([]);
@@ -737,7 +739,11 @@ export class FormsInspector {
     });
     effect(() => {
       const focus = this.focus();
-      if (focus) untracked(() => this.selectForm(focus));
+      if (!focus) return;
+      untracked(() => {
+        this.selectForm(focus.id);
+        this.focusHandled.emit();
+      });
     });
     this.destroyRef.onDestroy(() => {
       this.unsubscribe?.();
