@@ -6,7 +6,7 @@ import { getBuildMeta } from './rpc/build-meta.ts';
 import { getSignals } from './rpc/get-signals.ts';
 import { getProviders } from './rpc/get-providers.ts';
 import { getNgrxStore } from './rpc/get-ngrx-store.ts';
-import type { NgrxRuntimeAction } from './types.ts';
+import type { NgrxRuntimeAction, SignalGraph } from './types.ts';
 import {
   explainFormsText,
   formsResourceText,
@@ -24,10 +24,13 @@ import { registerAnalog } from './rpc/analog-register.ts';
 
 import pkg from '../package.json' with { type: 'json' };
 
+type PageGraph = SignalGraph & { pageId?: string };
+
 const clientAssets: RemoteAssets = {
   package: pkg.name,
   version: pkg.version,
   path: 'dist/public',
+  resolveFrom: import.meta.url,
 };
 
 const ngDevtools = defineDevframe({
@@ -68,10 +71,12 @@ const ngDevtools = defineDevframe({
 
     const signalGraphState = await my.rpc.sharedState('signal-graph', {
       initialValue: {
-        graph: null as any,
+        graph: null as PageGraph | null,
+        pages: {} as Record<string, PageGraph>,
         selectedNodeId: null as string | null,
       },
     });
+    const signalPages = new Map<string, { graph: PageGraph; reportedAt: number }>();
 
     const injectorTreeState = await my.rpc.sharedState('injector-tree', {
       initialValue: {
@@ -111,6 +116,18 @@ const ngDevtools = defineDevframe({
     });
 
     const expiry = setInterval(() => {
+      const stale = [...signalPages].filter(([, p]) => Date.now() - p.reportedAt > 15_000);
+      if (stale.length) {
+        for (const [id] of stale) signalPages.delete(id);
+        signalGraphState.mutate((draft) => {
+          for (const [id] of stale) delete draft.pages[id];
+          const ownerId = draft.graph?.pageId;
+          if (ownerId && stale.some(([id]) => id === ownerId)) {
+            const latest = [...signalPages.values()].sort((a, b) => b.reportedAt - a.reportedAt)[0];
+            draft.graph = latest?.graph ?? null;
+          }
+        });
+      }
       const next = expirePages(formPages);
       if (next) applyForms(next);
     }, 5000);
@@ -159,6 +176,11 @@ const ngDevtools = defineDevframe({
         componentTree.mutate((draft) => {
           draft.selectedId = id;
         });
+        void my.rpc.broadcast({
+          method: 'select-signal-component',
+          args: [id],
+          optional: true,
+        });
       },
     });
 
@@ -166,9 +188,15 @@ const ngDevtools = defineDevframe({
       name: 'push-signal-graph',
       type: 'action',
       jsonSerializable: true,
-      handler: (graph: unknown) => {
+      handler: (graph: PageGraph) => {
+        const pageId = graph?.pageId;
+        if (typeof pageId === 'string' && pageId.length < 50) {
+          signalPages.set(pageId, { graph, reportedAt: Date.now() });
+        }
         signalGraphState.mutate((draft) => {
-          draft.graph = graph as any;
+          draft.graph = graph;
+          // Every open page pushes, so one shared graph would flip between them.
+          draft.pages = Object.fromEntries([...signalPages].map(([id, page]) => [id, page.graph]));
         });
       },
     });
@@ -211,7 +239,7 @@ const ngDevtools = defineDevframe({
       id: 'ng-devtools:signal-graph',
       name: 'Angular Signal Graph',
       description:
-        'Live signal dependency graph: nodes (signal, computed, effect, linkedSignal) and edges (producer→consumer). Read this to understand reactive data flow.',
+        'Live signal dependency graph: nodes (signal, computed, effect, linkedSignal), edges (producer→consumer) and recent value history per node. Read this to understand reactive data flow.',
       mimeType: 'application/json',
       read: () => ({ text: JSON.stringify(signalGraphState.value(), null, 2) }),
     });
@@ -279,7 +307,7 @@ const ngDevtools = defineDevframe({
     ctx.agent.registerTool({
       id: 'ng-devtools:inspect-signals',
       description:
-        'Get the signal graph the running page last reported: signal nodes (signal, computed, linkedSignal, effect) and their dependency edges. The page reports one graph, for its root component, so a selector that does not match it returns what is available instead.',
+        'Get the signal graph the running page last reported: signal nodes (signal, computed, linkedSignal, effect), their dependency edges, and `history` (recent value changes per node id; `write` entries are exact, `sample` entries come from polling and `missed` counts values that went unseen). The page reports one graph: the component selected in the Components tab (or via ng-devtools:highlight), otherwise the component rendered by the deepest router outlet, otherwise the root. A selector that does not match it returns what is available instead; call ng-devtools:highlight with the selector first to switch the graph to it.',
       safety: 'read',
       inputSchema: {
         type: 'object',
