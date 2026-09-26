@@ -52,6 +52,7 @@ async function findConnection(origin) {
         const response = await fetch(new URL(base + file, origin), {
           credentials: 'omit',
           cache: 'no-store',
+          redirect: 'error',
           signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
         });
         if (!response.ok) continue;
