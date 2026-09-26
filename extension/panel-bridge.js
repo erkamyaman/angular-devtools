@@ -10,11 +10,16 @@ const LOCAL_HOSTS = ['localhost', '127.0.0.1'];
 // Where devframe may be mounted.
 const PATHS = ['/__ng-devtools/', '/__devframe/', '/'];
 const CONNECTION_FILES = ['__devframe/__connection.json', '__connection.json'];
+const PROBE_TIMEOUT_MS = 1500;
+
+let detection = 0;
 
 // Look for a devframe connection, but only on a loopback page: nothing else
 // can be connected to, so nothing else is worth probing.
 function detectConnection() {
+  const run = ++detection;
   chrome.devtools.inspectedWindow.eval('location.origin', (origin, error) => {
+    if (run !== detection) return;
     if (error || typeof origin !== 'string') {
       loadPanel(null);
       return;
@@ -33,7 +38,9 @@ function detectConnection() {
       return;
     }
 
-    findConnection(origin).then(loadPanel);
+    findConnection(origin).then((base) => {
+      if (run === detection) loadPanel(base, origin);
+    });
   });
 }
 
@@ -45,6 +52,7 @@ async function findConnection(origin) {
         const response = await fetch(new URL(base + file, origin), {
           credentials: 'omit',
           cache: 'no-store',
+          signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
         });
         if (!response.ok) continue;
         await response.json();
@@ -57,26 +65,21 @@ async function findConnection(origin) {
   return null;
 }
 
-function loadPanel(baseURL) {
+function loadPanel(baseURL, origin) {
   status.classList.add('hidden');
   frame.style.display = 'block';
 
   // The SPA is bundled inside the extension at ui/index.html
   const panelUrl = chrome.runtime.getURL('ui/index.html');
 
-  if (baseURL) {
-    // Get the inspected page's origin to build the full baseURL
-    chrome.devtools.inspectedWindow.eval('location.origin', (origin) => {
-      const url = new URL(baseURL, origin);
-      if (!LOCAL_HOSTS.includes(url.hostname)) {
-        frame.src = panelUrl;
-        return;
-      }
-      frame.src = `${panelUrl}?baseURL=${encodeURIComponent(url.href)}`;
-    });
-  } else {
+  if (!baseURL || !origin) {
     frame.src = panelUrl;
+    return;
   }
+  const url = new URL(baseURL, origin);
+  frame.src = LOCAL_HOSTS.includes(url.hostname)
+    ? `${panelUrl}?baseURL=${encodeURIComponent(url.href)}`
+    : panelUrl;
 }
 
 // Start detection after a short delay to let the page settle
