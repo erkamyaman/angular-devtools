@@ -34,8 +34,9 @@ describe('describable', () => {
     };
     expect(returnToJsonSchema(describable(v.object({ ok: v.boolean() })))?.type).toBe('object');
     expect(returnToJsonSchema(describable(v.array(v.string())))?.type).toBe('array');
-    // Without the converter devframe cannot tell an array from an object.
-    expect(returnToJsonSchema(v.array(v.string()))).toMatchObject({ type: 'object' });
+    // Since devframe 1.1.0 a schema it cannot convert is simply not
+    // advertised, rather than described as a permissive object.
+    expect(returnToJsonSchema(v.array(v.string()))).toBeUndefined();
   });
 
   it('converts for the draft devframe asks for', () => {
