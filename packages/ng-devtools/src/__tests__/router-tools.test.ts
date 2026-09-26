@@ -87,6 +87,23 @@ describe('router events', () => {
     ]);
   });
 
+  it('links a redirect to the navigation it started, in either event order', () => {
+    const early: NavigationRecord[] = [];
+    applyRouterEvent(early, { type: 0, id: 1, url: '/admin' }, 0);
+    applyRouterEvent(early, { type: 2, id: 1, code: 0, reason: 'Redirecting' }, 1);
+    applyRouterEvent(early, { type: 0, id: 2, url: '/login' }, 2);
+    applyRouterEvent(early, { url: '/login', navigationBehaviorOptions: {} }, 3);
+    expect(early[1]).toMatchObject({ url: '/login', redirectedFrom: 1 });
+    expect(early[0].redirectTo).toBe('/login');
+
+    const late: NavigationRecord[] = [];
+    applyRouterEvent(late, { type: 0, id: 1, url: '/admin' }, 0);
+    applyRouterEvent(late, { type: 2, id: 1, code: 0, reason: 'Redirecting' }, 1);
+    applyRouterEvent(late, { url: '/login', navigationBehaviorOptions: {} }, 2);
+    applyRouterEvent(late, { type: 0, id: 2, url: '/login' }, 3);
+    expect(late[1]).toMatchObject({ url: '/login', redirectedFrom: 1 });
+  });
+
   it('does not blame guards for a navigation replaced by a newer one', () => {
     const navigations: NavigationRecord[] = [];
     applyRouterEvent(navigations, { type: 0, id: 1, url: '/a' }, 0);
