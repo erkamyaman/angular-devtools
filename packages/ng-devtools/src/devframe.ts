@@ -193,13 +193,18 @@ const ngDevtools = defineDevframe({
       },
     });
 
+    const defaultPageId = () => {
+      const state = routerState.value() as RouterState;
+      return (state.pages.find((p) => p.snapshot) ?? state.pages[0])?.pageId;
+    };
+
     my.rpc.register({
       name: 'request-router-action',
       type: 'action',
       jsonSerializable: true,
       handler: (message: { pageId?: string; request?: unknown }) =>
         requestRouterAction(
-          typeof message?.pageId === 'string' ? message.pageId : undefined,
+          typeof message?.pageId === 'string' ? message.pageId : defaultPageId(),
           message?.request,
         ),
     });
@@ -521,11 +526,6 @@ const ngDevtools = defineDevframe({
     const pageProperty = {
       type: 'string',
       description: 'Page id, when more than one tab reports. Defaults to the most recent.',
-    };
-
-    const defaultPageId = () => {
-      const state = routerState.value() as RouterState;
-      return (state.pages.find((p) => p.snapshot) ?? state.pages[0])?.pageId;
     };
 
     ctx.agent.registerTool({

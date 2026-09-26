@@ -312,6 +312,21 @@ describe('router MCP tools', () => {
     expect(broadcast).toHaveBeenCalledOnce();
   });
 
+  it('sends a panel router action to one page when no page is named', async () => {
+    const { ctx, push } = await boot();
+    await push('push-router', report());
+    await push('push-router', { ...report(), pageId: 'other', snapshot: null });
+    const seen: unknown[] = [];
+    vi.spyOn(ctx.rpc, 'broadcast').mockImplementation((async (options: never) => {
+      const { requestId, pageId } = (options as { args: [{ requestId: string; pageId?: string }] })
+        .args[0];
+      seen.push(pageId);
+      await push('router-action-result', { requestId, result: { ok: true } });
+    }) as never);
+    await push('request-router-action', { request: { action: 'probe', url: '/' } });
+    expect(seen).toEqual([report().pageId]);
+  });
+
   it('tells the page whether its route config is stored', async () => {
     const { push } = await boot();
     const bare = { pageId: 'fresh', snapshot: null, navigations: [], generation: 1 };
