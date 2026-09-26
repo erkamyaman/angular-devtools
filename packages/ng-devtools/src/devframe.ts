@@ -19,6 +19,17 @@ import {
   type FormsState,
   type InspectFormsArgs,
 } from './rpc/forms-tools.ts';
+import {
+  currentRouter,
+  expireRouterPages,
+  explainNavigationText,
+  inspectRouteText,
+  isRouterReport,
+  mergeRouterReport,
+  routerResourceText,
+  type RouterPage,
+  type RouterState,
+} from './rpc/router-tools.ts';
 
 import pkg from '../package.json' with { type: 'json' };
 
@@ -108,9 +119,46 @@ const ngDevtools = defineDevframe({
       },
     });
 
+    const routerPages = new Map<string, RouterPage>();
+    const routerState = await my.rpc.sharedState('router', {
+      initialValue: { pages: [] } as RouterState,
+    });
+
+    const applyRouter = (next: RouterState) =>
+      routerState.mutate((draft) => {
+        draft.pages = next.pages;
+      });
+
+    my.rpc.register({
+      name: 'push-router',
+      type: 'action',
+      jsonSerializable: true,
+      handler: (report: unknown) => {
+        if (!isRouterReport(report)) return;
+        try {
+          applyRouter(mergeRouterReport(routerPages, report));
+        } catch {
+          routerPages.delete(report.pageId);
+        }
+      },
+    });
+
+    my.rpc.register({
+      name: 'forget-router-page',
+      type: 'action',
+      jsonSerializable: true,
+      handler: (pageId: string) => {
+        if (typeof pageId === 'string' && routerPages.delete(pageId)) {
+          applyRouter(currentRouter(routerPages));
+        }
+      },
+    });
+
     const expiry = setInterval(() => {
       const next = expirePages(formPages);
       if (next) applyForms(next);
+      const nextRouter = expireRouterPages(routerPages);
+      if (nextRouter) applyRouter(nextRouter);
     }, 5000);
     expiry.unref?.();
 
@@ -241,6 +289,15 @@ const ngDevtools = defineDevframe({
       read: () => ({ text: formsResourceText(formsState.value() as FormsState) }),
     });
 
+    ctx.agent.registerResource({
+      id: 'ng-devtools:router',
+      name: 'Angular Router',
+      description:
+        'The active route tree (params, data, guards, resolvers) and recent navigations of each connected page. Empty when no page is connected.',
+      mimeType: 'application/json',
+      read: () => ({ text: routerResourceText(routerState.value() as RouterState) }),
+    });
+
     // Agent tools
     ctx.agent.registerTool({
       id: 'ng-devtools:highlight',
@@ -334,6 +391,56 @@ const ngDevtools = defineDevframe({
         return {
           markdown: `This is the injector tree for the whole page${scope}:\n\n${JSON.stringify(roots, null, 2)}`,
         };
+      },
+    });
+
+    const noRouter = `No router state has been reported. Live data needs a page: connect through the MCP endpoint of the server that runs the app, with the app open in a browser. The stdio server has no page attached and only ever reports this.`;
+    const pageProperty = {
+      type: 'string',
+      description: 'Page id, when more than one tab reports. Defaults to the most recent.',
+    };
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:inspect-route',
+      description:
+        "The route the running page is on right now: URL, query params, fragment and the active route tree, with each route's component, params, resolved data, title, guards and resolvers. Secret-looking keys are redacted.",
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: { page: pageProperty },
+      },
+      handler: async (args: { page?: string }) => {
+        const state = routerState.value() as RouterState;
+        if (!state.pages.length) return { markdown: noRouter };
+        return { markdown: inspectRouteText(state, args) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:explain-navigation',
+      description:
+        'Recent navigations on the running page, newest first: whether each succeeded, redirected, was cancelled, failed or was skipped, with timing, the guards and resolvers that ran, lazy loads and the cancel or error reason. Use it for "why did this navigation not work" or "why was I redirected".',
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: pageProperty,
+          url: {
+            type: 'string',
+            description: 'Only navigations whose URL or final URL contains this text.',
+          },
+          limit: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 50,
+            description: 'How many navigations to return (default 5, at most 50).',
+          },
+        },
+      },
+      handler: async (args: { page?: string; url?: string; limit?: number }) => {
+        const state = routerState.value() as RouterState;
+        if (!state.pages.length) return { markdown: noRouter };
+        return { markdown: explainNavigationText(state, args) };
       },
     });
 

@@ -13,6 +13,13 @@ import {
   type FormFieldNode,
   type FoundForm,
 } from './forms.ts';
+import {
+  findRouter,
+  snapshotRouter,
+  watchRouter,
+  type NavigationRecord,
+  type RouterDebugApi,
+} from './router.ts';
 
 let highlightEl: HTMLElement | null = null;
 let highlightTimer: ReturnType<typeof setTimeout> | undefined;
@@ -218,11 +225,51 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     }
   }
 
+  const navigations: NavigationRecord[] = [];
+  let router: Record<string, unknown> | null = null;
+  let stopRouter: (() => void) | null = null;
+  let routerMisses = 0;
+  let lastRouterPayload = '';
+  let lastRouterPushAt = 0;
+  let routerPushTimer: ReturnType<typeof setTimeout> | undefined;
+
+  async function pushRouter() {
+    try {
+      if (!router && routerMisses < 3) {
+        const ng = getNg() as RouterDebugApi | undefined;
+        const roots = document.querySelectorAll('[ng-version]');
+        router = ng
+          ? findRouter(ng, roots.length ? roots : findAngularElements().slice(0, 1))
+          : null;
+        if (router) stopRouter = watchRouter(router, navigations, scheduleRouterPush);
+        else if (Array.from(roots).some((root) => read(() => !!ng?.getComponent?.(root), false))) {
+          routerMisses++;
+        }
+      }
+      const snapshot = router ? snapshotRouter(router) : null;
+      const payload = JSON.stringify({ snapshot, navigations });
+      if (payload === lastRouterPayload && Date.now() - lastRouterPushAt < FORMS_HEARTBEAT_MS) {
+        return;
+      }
+      lastRouterPayload = payload;
+      lastRouterPushAt = Date.now();
+      await my.rpc.call('push-router', { pageId, snapshot, navigations });
+    } catch {
+      return;
+    }
+  }
+
+  function scheduleRouterPush() {
+    clearTimeout(routerPushTimer);
+    routerPushTimer = setTimeout(() => void pushRouter(), 50);
+  }
+
   pushTree();
   pushSignalGraph();
   pushInjectorTree();
   pushNgrxState();
   pushForms();
+  pushRouter();
 
   const interval = setInterval(() => {
     pushTree();
@@ -230,6 +277,7 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     pushInjectorTree();
     pushNgrxState();
     pushForms();
+    pushRouter();
   }, 3000);
 
   my.rpc.register({
@@ -274,13 +322,18 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     },
   });
 
-  const leave = () => void my.rpc.call('forget-forms-page', pageId).catch(() => {});
+  const leave = () => {
+    void my.rpc.call('forget-forms-page', pageId).catch(() => {});
+    void my.rpc.call('forget-router-page', pageId).catch(() => {});
+  };
   addEventListener('pagehide', leave);
 
   return () => {
     clearInterval(interval);
     removeEventListener('pagehide', leave);
     for (const { stop } of watched.values()) stop();
+    stopRouter?.();
+    clearTimeout(routerPushTimer);
     releasePageId();
     watched.clear();
     clearHighlight();
@@ -459,6 +512,14 @@ function clearHighlight() {
 }
 
 // --- Signal Graph collection using Angular's debug API ---
+
+function read<T>(fn: () => T, fallback: T): T {
+  try {
+    return fn();
+  } catch {
+    return fallback;
+  }
+}
 
 function getNg(): any {
   return (window as any).ng;

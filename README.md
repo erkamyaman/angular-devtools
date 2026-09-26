@@ -7,7 +7,7 @@ Inspect Angular component trees, signals, dependency injection, and routes — a
 - **Component inspector** — discover components, inputs, outputs, and source files; view injected providers per component
 - **Signal graph** — visualize signal, computed, linkedSignal, effect nodes and their dependency edges (Angular 19+)
 - **DI inspector** — browse the injector hierarchy (element and environment) with providers at each level (Angular 17+)
-- **Route inspector** — list registered routes from source
+- **Route inspector** — list registered routes from source, plus the live route (params, query params, resolved data, guards, resolvers) and a timeline of navigations with their outcome, guard results, redirects and errors
 - **NgRx Store inspector** — detect `@ngrx/store` (actions, reducers, effects, selectors) and `@ngrx/signals` (`signalStore`, `signalState`, `signalMethod`) patterns from source; live state & action log via Redux DevTools protocol
 - **Forms inspector** — every form on the page (Signal Forms, reactive and template-driven) with each field's value, status, touched/dirty state and readable errors, plus a timeline of recent changes; hover a field to highlight its input
 - **Build metadata** — Angular version, TypeScript version, SSR status
@@ -101,6 +101,8 @@ MCP clients see these with an underscore, as `ng-devtools_get-routes`.
 | `ng-devtools:get-ngrx-store`       | Scan source for NgRx store patterns                         |
 | `ng-devtools:inspect-forms`        | Forms on the page with every field's state and errors       |
 | `ng-devtools:explain-form-invalid` | Which fields make a form invalid, and why                   |
+| `ng-devtools:inspect-route`        | The current route with params, data, guards and resolvers   |
+| `ng-devtools:explain-navigation`   | Recent navigations and why each succeeded or not            |
 
 #### Forms
 
@@ -113,6 +115,17 @@ The Forms tab and the forms tools read Signal Forms, reactive forms and template
 
 Form values leave the page: they are sent to the devtools server, shown in the Forms tab and returned to agents. Values of password fields, fields with a password, one-time-code or credit-card `autocomplete`, and fields whose name looks secret (password, token, card, cvv and similar) are replaced with `[redacted]`. Other values are sent as they are, so keep real credentials out of forms you inspect, and don't expose the dev server beyond localhost.
 
+#### Router
+
+The Routes tab and the router tools read the running app's Router, in development builds only. The Router is found through the debug helper `provideRouter()` publishes, or through the injector for `RouterModule.forRoot()` apps.
+
+- The Routes tab shows the current URL and each active route with its component, params, data (static and resolved), guards and resolvers, then a timeline of recent navigations: whether each succeeded, redirected, was cancelled, failed or was skipped, how long guards and resolvers took, what was lazy loaded, and the cancel or error reason.
+- `ng-devtools:explain-navigation` answers "why did this navigation not work": pass `url` to filter and `limit` for more than the last 5.
+- `ng-devtools:inspect-route` describes the route the page is on right now.
+- The guards listed for a navigation are candidates: the `canDeactivate` guards of the page being left and the `canActivate`/`canActivateChild` guards of the target. The router reports one result for all of them, not which guard blocked or redirected. A navigation that finished before the devtools connected is listed without timing or guard details.
+
+Query, matrix and fragment keys that look secret (token, password, api key, code, sig, session, jwt and similar), including inside encoded return URLs, and route params with such names are replaced with `[redacted]` in URLs, params, data and messages. A secret route param is only known once the route is recognized, so a navigation that fails before that (an unmatched URL, a failed lazy load) can still show it in its URL.
+
 #### Agent Resources
 
 | Resource                     | Content                       |
@@ -122,6 +135,7 @@ Form values leave the page: they are sent to the devtools server, shown in the F
 | `ng-devtools:injector-tree`  | DI injector hierarchy         |
 | `ng-devtools:ngrx-store`     | Live NgRx state & action log  |
 | `ng-devtools:forms`          | Live forms and recent changes |
+| `ng-devtools:router`         | Live route and navigations    |
 
 ### Vite DevTools Dock
 
