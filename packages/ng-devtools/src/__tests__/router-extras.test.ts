@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { redactText, type NavigationRecord } from '../router.ts';
+import { noteFailedCall, redactText, type NavigationRecord } from '../router.ts';
 import type { RouteNode } from '../router-config.ts';
 import { lintRoutes, matchUrl, renderModeFor } from '../rpc/router-config-tools.ts';
 import {
@@ -241,5 +241,15 @@ describe('report validation', () => {
     expect(
       isRouterReport({ ...base, config: [node('/a')], activeIds: ['/a'], instrumented: true }),
     ).toBe(true);
+  });
+});
+
+describe('failed calls', () => {
+  it('get unique ids even after the list is capped', () => {
+    const list: NavigationRecord[] = [];
+    for (let i = 0; i < 60; i++) noteFailedCall(list, `/x/${i}`, new Error('nope'), i);
+    expect(list).toHaveLength(50);
+    expect(new Set(list.map((n) => n.id)).size).toBe(50);
+    expect(list.every((n) => n.id < 0)).toBe(true);
   });
 });

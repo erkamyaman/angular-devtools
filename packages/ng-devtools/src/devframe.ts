@@ -145,12 +145,13 @@ const ngDevtools = defineDevframe({
       type: 'action',
       jsonSerializable: true,
       handler: (report: unknown) => {
-        if (!isRouterReport(report)) return;
+        if (!isRouterReport(report)) return { hasConfig: false };
         try {
           applyRouter(mergeRouterReport(routerPages, report));
         } catch {
           routerPages.delete(report.pageId);
         }
+        return { hasConfig: !!routerPages.get(report.pageId)?.config };
       },
     });
 

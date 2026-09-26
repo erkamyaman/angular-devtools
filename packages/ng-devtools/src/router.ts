@@ -773,6 +773,8 @@ export function noteRun(navigations: NavigationRecord[], run: GuardRun) {
   nav.runs = [...(nav.runs ?? []), { ...run, result: redactMessage(run.result) }].slice(-40);
 }
 
+let failedCalls = 0;
+
 export function noteFailedCall(
   navigations: NavigationRecord[],
   url: string,
@@ -780,7 +782,7 @@ export function noteFailedCall(
   at: number,
 ) {
   navigations.push({
-    id: -navigations.length - 1,
+    id: -++failedCalls,
     url: redactUrl(url),
     trigger: 'imperative',
     startedAt: at,

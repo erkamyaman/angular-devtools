@@ -313,8 +313,10 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
       }
       lastRouterPayload = payload;
       lastRouterPushAt = Date.now();
-      await my.rpc.call('push-router', report);
-      if (report['config']) sentGeneration = configTracker.generation;
+      const answer = (await my.rpc.call('push-router', report)) as
+        { hasConfig?: boolean } | undefined;
+      if (answer?.hasConfig === false) sentGeneration = -1;
+      else if (report['config']) sentGeneration = configTracker.generation;
     } catch {
       return;
     }
@@ -407,10 +409,13 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     void my.rpc.call('forget-router-page', pageId).catch(() => {});
   };
   addEventListener('pagehide', leave);
+  const resendConfig = () => (sentGeneration = -1);
+  addEventListener('pageshow', resendConfig);
 
   return () => {
     clearInterval(interval);
     removeEventListener('pagehide', leave);
+    removeEventListener('pageshow', resendConfig);
     for (const { stop } of watched.values()) stop();
     for (const cleanup of routerCleanup) cleanup();
     routerCleanup = [];

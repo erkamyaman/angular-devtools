@@ -312,6 +312,15 @@ describe('router MCP tools', () => {
     expect(broadcast).toHaveBeenCalledOnce();
   });
 
+  it('tells the page whether its route config is stored', async () => {
+    const { push } = await boot();
+    const bare = { pageId: 'fresh', snapshot: null, navigations: [], generation: 1 };
+    expect(await push('push-router', bare)).toEqual({ hasConfig: false });
+    expect(await push('push-router', { ...bare, config })).toEqual({ hasConfig: true });
+    expect(await push('push-router', bare)).toEqual({ hasConfig: true });
+    expect(await push('push-router', { pageId: 1 })).toEqual({ hasConfig: false });
+  });
+
   it('rejects malformed router reports', async () => {
     const { push, call } = await boot();
     await push('push-router', { ...report(), config: [{ id: 1 }] });
