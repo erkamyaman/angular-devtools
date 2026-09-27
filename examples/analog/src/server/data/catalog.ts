@@ -74,6 +74,8 @@ export interface Order {
   createdAt: string;
 }
 
+export type OrderSummary = Pick<Order, 'id' | 'name' | 'total' | 'createdAt'>;
+
 export const ORDERS: Order[] = [
   {
     id: 1001,

@@ -30,9 +30,11 @@ import type { load } from './[id].server';
           <div class="hero-actions">
             <button type="button" [disabled]="!cart.canAdd(product)" (click)="cart.add(product)">
               {{
-                !product.stock || cart.canAdd(product)
-                  ? 'Add to cart'
-                  : 'All in stock is in your cart'
+                !product.stock
+                  ? 'Sold out'
+                  : cart.canAdd(product)
+                    ? 'Add to cart'
+                    : 'All in stock is in your cart'
               }}
             </button>
             @if (cart.count()) {

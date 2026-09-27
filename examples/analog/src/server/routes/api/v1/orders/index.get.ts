@@ -1,4 +1,6 @@
 import { defineEventHandler } from 'h3';
-import { ORDERS } from '../../../../data/catalog';
+import { ORDERS, type OrderSummary } from '../../../../data/catalog';
 
-export default defineEventHandler(() => ORDERS);
+export default defineEventHandler((): OrderSummary[] =>
+  ORDERS.map(({ id, name, total, createdAt }) => ({ id, name, total, createdAt })),
+);

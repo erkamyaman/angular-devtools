@@ -2,7 +2,7 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { Component, computed } from '@angular/core';
 import type { RouteMeta } from '@analogjs/router';
-import type { Order } from '../../server/data/catalog';
+import type { OrderSummary } from '../../server/data/catalog';
 
 export const routeMeta: RouteMeta = {
   title: 'Dashboard',
@@ -43,7 +43,7 @@ export const routeMeta: RouteMeta = {
   `,
 })
 export default class Dashboard {
-  protected readonly orders = httpResource<Order[]>(() => '/api/v1/orders');
+  protected readonly orders = httpResource<OrderSummary[]>(() => '/api/v1/orders');
   protected readonly count = computed(() => this.orders.value()?.length ?? 0);
   protected readonly revenue = computed(() =>
     (this.orders.value() ?? []).reduce((sum, order) => sum + order.total, 0),
