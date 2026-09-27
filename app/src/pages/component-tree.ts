@@ -1,4 +1,13 @@
-import { Component, input, signal, effect } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import type { DevframeRpcClient } from 'devframe/client';
 
@@ -8,6 +17,14 @@ interface ComponentInfo {
   inputs: string[];
   outputs: string[];
   isStandalone: boolean;
+}
+
+interface OutletInfo {
+  outlet: string;
+  route?: string;
+  element?: string;
+  activated: boolean;
+  children?: OutletInfo[];
 }
 
 interface ProviderEntry {
@@ -48,6 +65,9 @@ interface ProviderEntry {
             >
               <div class="selector">&lt;{{ comp.selector }}&gt;</div>
               <div class="file">{{ comp.file }}</div>
+              @for (hit of routedBy().get(comp.selector) ?? []; track hit.outlet + hit.route) {
+                <span class="routed">routed {{ hit.route }} · outlet {{ hit.outlet }}</span>
+              }
             </button>
             @if (isSelected(comp)) {
               <div class="inline-detail">
@@ -57,6 +77,11 @@ interface ProviderEntry {
                   <dt>Standalone</dt>
                   <dd>{{ comp.isStandalone ? 'Yes' : 'No' }}</dd>
                 </dl>
+                @for (form of formsIn(comp.file); track form.formId) {
+                  <button type="button" class="show-form" (click)="showForm.emit(form.formId)">
+                    Show {{ form.label }} in Forms
+                  </button>
+                }
                 @if (comp.inputs.length) {
                   <h4>Inputs</h4>
                   <ul class="prop-list" role="list">
@@ -181,6 +206,9 @@ interface ProviderEntry {
     .io .label {
       color: #71717a;
     }
+    .show-form {
+      margin: 0 8px 8px 0;
+    }
     .inline-detail {
       padding: 0 16px 12px;
       border-top: 1px solid #27272a;
@@ -258,9 +286,19 @@ interface ProviderEntry {
       background: #3f3f46;
       color: #a1a1aa;
     }
+    .routed {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 1px 6px;
+      border: 1px solid #52525b;
+      border-radius: 4px;
+      color: #d4d4d8;
+      font-size: 11px;
+      font-family: monospace;
+    }
     .provider-source {
       font-size: 12px;
-      color: #71717a;
+      color: #a1a1aa;
     }
     .no-providers {
       font-size: 13px;
@@ -270,6 +308,8 @@ interface ProviderEntry {
 })
 export class ComponentTree {
   rpc = input<DevframeRpcClient | null>(null);
+  readonly showForm = output<string>();
+  formOwners = signal<{ formId: string; label: string; file: string | null }[]>([]);
 
   components = signal<ComponentInfo[]>([]);
   allProviders = signal<ProviderEntry[]>([]);
@@ -279,6 +319,26 @@ export class ComponentTree {
   selectedProviders = signal<ProviderEntry[]>([]);
 
   filtered = signal<ComponentInfo[]>([]);
+  private readonly outlets = signal<OutletInfo[]>([]);
+  private unsubscribeRouter: (() => void) | null = null;
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly routedBy = computed(() => {
+    const map = new Map<string, { route: string; outlet: string }[]>();
+    const visit = (outlets: OutletInfo[]) => {
+      for (const outlet of outlets) {
+        if (outlet.activated && outlet.element && outlet.route) {
+          map.set(outlet.element, [
+            ...(map.get(outlet.element) ?? []),
+            { route: outlet.route, outlet: outlet.outlet },
+          ]);
+        }
+        if (outlet.children) visit(outlet.children);
+      }
+    };
+    visit(this.outlets());
+    return map;
+  });
 
   constructor() {
     effect(() => {
@@ -289,8 +349,30 @@ export class ComponentTree {
 
     effect(() => {
       const client = this.rpc();
-      if (client) this.refresh();
+      if (client) {
+        this.refresh();
+        void this.watchRouter(client);
+      }
     });
+    this.destroyRef.onDestroy(() => this.unsubscribeRouter?.());
+  }
+
+  private async watchRouter(client: DevframeRpcClient) {
+    try {
+      const state = await client.scope('ng-devtools').rpc.sharedState('router');
+      if (this.destroyRef.destroyed) return;
+      const apply = (value: unknown) => {
+        const pages =
+          (value as { pages?: { outlets?: OutletInfo[]; snapshot?: unknown }[] })?.pages ?? [];
+        const page = pages.find((p) => p.snapshot) ?? pages[0];
+        this.outlets.set(page?.outlets ?? []);
+      };
+      apply(state.value());
+      this.unsubscribeRouter?.();
+      this.unsubscribeRouter = state.on('updated', apply);
+    } catch {
+      this.outlets.set([]);
+    }
   }
 
   async refresh() {
@@ -304,6 +386,12 @@ export class ComponentTree {
         my.rpc.call('get-providers') as Promise<ProviderEntry[]>,
       ]);
       this.components.set(comps);
+      const owners = (await my.rpc.call('forms-owners').catch(() => [])) as {
+        formId: string;
+        label: string;
+        file: string | null;
+      }[];
+      this.formOwners.set(owners ?? []);
       this.allProviders.set(providers);
       const sel = this.selected();
       if (sel) {
@@ -319,6 +407,10 @@ export class ComponentTree {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  formsIn(file: string) {
+    return this.formOwners().filter((form) => form.file === file);
   }
 
   isSelected(comp: ComponentInfo): boolean {

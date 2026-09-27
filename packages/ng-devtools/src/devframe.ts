@@ -19,6 +19,45 @@ import {
   type FormsState,
   type InspectFormsArgs,
 } from './rpc/forms-tools.ts';
+import {
+  explainCustomControlText,
+  explainFieldText,
+  explainSubmitText,
+  fieldOwner,
+  exportFormText,
+  formDiffText,
+  formHistoryText,
+  formPayloadText,
+  latestMarker,
+  lintFormsFor,
+  lintFormsText,
+  resolveForm,
+  waitSatisfied,
+  type WaitUntil,
+} from './rpc/forms-explain.ts';
+import { findFormSource, sourceText } from './rpc/forms-source.ts';
+import {
+  currentRouter,
+  expireRouterPages,
+  explainNavigationText,
+  inspectRouteText,
+  isRouterReport,
+  mergeRouterReport,
+  routerResourceText,
+  type RouterPage,
+  type RouterState,
+} from './rpc/router-tools.ts';
+import {
+  explainRenderModeText,
+  exportNavigationText,
+  lintRoutes,
+  lintRoutesText,
+  listRoutesText,
+  matchUrl,
+  routerConfigText,
+} from './rpc/router-config-tools.ts';
+import { extractRoutes } from './rpc/get-routes.ts';
+import { scanServerRoutes } from './rpc/server-routes.ts';
 
 import { registerAnalog } from './rpc/analog-register.ts';
 
@@ -95,7 +134,7 @@ const ngDevtools = defineDevframe({
 
     const formPages = new Map<string, PageReport & { reportedAt: number }>();
     const formsState = await my.rpc.sharedState('forms', {
-      initialValue: { forms: [], events: [], reportedAt: 0 } as FormsState,
+      initialValue: { forms: [], events: [], reportedAt: 0, setupErrors: [] } as FormsState,
     });
 
     const applyForms = (next: FormsState) =>
@@ -103,6 +142,8 @@ const ngDevtools = defineDevframe({
         draft.forms = next.forms;
         draft.events = next.events;
         draft.reportedAt = next.reportedAt;
+        draft.setupErrors = next.setupErrors ?? [];
+        draft.instrumented = next.instrumented ?? [];
       });
 
     my.rpc.register({
@@ -112,6 +153,131 @@ const ngDevtools = defineDevframe({
       handler: (report: unknown) => {
         if (!isPageReport(report)) return;
         applyForms(mergePageReport(formPages, report));
+      },
+    });
+
+    const routerPages = new Map<string, RouterPage>();
+    const routerState = await my.rpc.sharedState('router', {
+      initialValue: { pages: [] } as RouterState,
+    });
+
+    const applyRouter = (next: RouterState) =>
+      routerState.mutate((draft) => {
+        draft.pages = next.pages;
+      });
+
+    my.rpc.register({
+      name: 'push-router',
+      type: 'action',
+      jsonSerializable: true,
+      handler: (report: unknown) => {
+        if (!isRouterReport(report)) return { hasConfig: false };
+        try {
+          applyRouter(mergeRouterReport(routerPages, report));
+        } catch {
+          routerPages.delete(report.pageId);
+        }
+        return { hasConfig: !!routerPages.get(report.pageId)?.config };
+      },
+    });
+
+    const pendingActions = new Map<string, (result: unknown) => void>();
+    let actionSeq = 0;
+
+    const defaultPageId = () => {
+      const state = routerState.value() as RouterState;
+      return (state.pages.find((p) => p.snapshot) ?? state.pages[0])?.pageId;
+    };
+
+    const requestRouterAction = (page: string | undefined, request: unknown) =>
+      new Promise<unknown>((resolve) => {
+        const pageId = page || defaultPageId();
+        const requestId = `a${++actionSeq}`;
+        const timer = setTimeout(() => {
+          pendingActions.delete(requestId);
+          resolve({ error: 'No page answered within 15s. Is the app open in a browser?' });
+        }, 15_000);
+        timer.unref?.();
+        pendingActions.set(requestId, (result) => {
+          clearTimeout(timer);
+          pendingActions.delete(requestId);
+          resolve(result);
+        });
+        void my.rpc.broadcast({
+          method: 'router-action',
+          args: [{ requestId, pageId, request }],
+          optional: true,
+        });
+      });
+
+    my.rpc.register({
+      name: 'router-action-result',
+      type: 'action',
+      jsonSerializable: true,
+      handler: (message: { requestId?: unknown; result?: unknown }) => {
+        if (typeof message?.requestId !== 'string') return;
+        pendingActions.get(message.requestId)?.(message.result);
+      },
+    });
+
+    my.rpc.register({
+      name: 'request-router-action',
+      type: 'action',
+      jsonSerializable: true,
+      handler: (message: { pageId?: string; request?: unknown }) =>
+        requestRouterAction(
+          typeof message?.pageId === 'string' ? message.pageId : undefined,
+          message?.request,
+        ),
+    });
+
+    const pageFor = (pageId: unknown) => {
+      const state = routerState.value() as RouterState;
+      return typeof pageId === 'string'
+        ? state.pages.find((p) => p.pageId === pageId)
+        : (state.pages.find((p) => p.snapshot) ?? state.pages[0]);
+    };
+
+    my.rpc.register({
+      name: 'router-lint',
+      type: 'query',
+      jsonSerializable: true,
+      handler: (pageId: unknown) => {
+        const page = pageFor(pageId);
+        return page?.config ? lintRoutes(page) : [];
+      },
+    });
+
+    my.rpc.register({
+      name: 'router-match',
+      type: 'query',
+      jsonSerializable: true,
+      handler: (message: { pageId?: unknown; url?: unknown }) => {
+        const page = pageFor(message?.pageId);
+        if (!page?.config || typeof message?.url !== 'string') return null;
+        return matchUrl(page.config, message.url.slice(0, 2000));
+      },
+    });
+
+    my.rpc.register({
+      name: 'router-export',
+      type: 'query',
+      jsonSerializable: true,
+      handler: (message: { pageId?: unknown; id?: unknown }) =>
+        exportNavigationText(routerState.value() as RouterState, {
+          page: typeof message?.pageId === 'string' ? message.pageId : undefined,
+          id: typeof message?.id === 'number' ? message.id : undefined,
+        }),
+    });
+
+    my.rpc.register({
+      name: 'forget-router-page',
+      type: 'action',
+      jsonSerializable: true,
+      handler: (pageId: string) => {
+        if (typeof pageId === 'string' && routerPages.delete(pageId)) {
+          applyRouter(currentRouter(routerPages));
+        }
       },
     });
 
@@ -130,6 +296,8 @@ const ngDevtools = defineDevframe({
       }
       const next = expirePages(formPages);
       if (next) applyForms(next);
+      const nextRouter = expireRouterPages(routerPages);
+      if (nextRouter) applyRouter(nextRouter);
     }, 5000);
     expiry.unref?.();
 
@@ -154,6 +322,106 @@ const ngDevtools = defineDevframe({
           args: [target],
           optional: true,
         });
+      },
+    });
+
+    const pendingFormActions = new Map<string, (result: unknown) => void>();
+    let formActionSeq = 0;
+
+    const requestFormAction = (request: Record<string, unknown>, timeoutMs = 15_000) =>
+      new Promise<Record<string, unknown>>((resolve) => {
+        const requestId = `f${++formActionSeq}`;
+        const formId = typeof request['formId'] === 'string' ? request['formId'] : undefined;
+        const explicit = typeof request['page'] === 'string' ? request['page'] : undefined;
+        const pageId = explicit ?? (formId?.includes('@') ? formId.split('@')[1] : undefined);
+        const { page: _page, ...payload } = request;
+        const timer = setTimeout(() => {
+          pendingFormActions.delete(requestId);
+          resolve({
+            ok: false,
+            error: `No page answered within ${Math.round(timeoutMs / 1000)}s. Is the app open in a browser, with that form on screen?`,
+          });
+        }, timeoutMs);
+        timer.unref?.();
+        pendingFormActions.set(requestId, (result) => {
+          clearTimeout(timer);
+          pendingFormActions.delete(requestId);
+          resolve(
+            (result && typeof result === 'object'
+              ? result
+              : { ok: false, error: 'Empty answer.' }) as Record<string, unknown>,
+          );
+        });
+        void my.rpc.broadcast({
+          method: 'form-action',
+          args: [{ requestId, pageId, request: payload }],
+          optional: true,
+        });
+      });
+
+    my.rpc.register({
+      name: 'form-action-result',
+      type: 'action',
+      jsonSerializable: true,
+      handler: (message: { requestId?: unknown; result?: unknown }) => {
+        if (typeof message?.requestId !== 'string') return;
+        pendingFormActions.get(message.requestId)?.(message.result);
+      },
+    });
+
+    my.rpc.register({
+      name: 'request-form-action',
+      type: 'action',
+      jsonSerializable: true,
+      handler: (request: unknown) =>
+        request && typeof request === 'object'
+          ? requestFormAction(request as Record<string, unknown>)
+          : { ok: false, error: 'Bad request.' },
+    });
+
+    my.rpc.register({
+      name: 'forms-lint',
+      type: 'query',
+      jsonSerializable: true,
+      handler: (args: { form?: unknown; page?: unknown } | null) =>
+        lintFormsFor(formsState.value() as FormsState, {
+          form: typeof args?.form === 'string' ? args.form : undefined,
+          page: typeof args?.page === 'string' ? args.page : undefined,
+        }),
+    });
+
+    my.rpc.register({
+      name: 'forms-owners',
+      type: 'query',
+      jsonSerializable: true,
+      handler: () =>
+        (formsState.value() as FormsState).forms.map((form) => ({
+          formId: form.id,
+          label: form.label,
+          file: findFormSource(ctx.cwd, form.owner, form.property)?.form?.file ?? null,
+        })),
+    });
+
+    my.rpc.register({
+      name: 'forms-explain',
+      type: 'query',
+      jsonSerializable: true,
+      handler: (args: { kind?: unknown; form?: unknown; path?: unknown } | null) => {
+        const state = formsState.value() as FormsState;
+        const target = {
+          form: typeof args?.form === 'string' ? args.form : undefined,
+          path: typeof args?.path === 'string' ? args.path : undefined,
+        };
+        switch (args?.kind) {
+          case 'submit':
+            return explainSubmitText(state, target);
+          case 'payload':
+            return formPayloadText(state, target);
+          case 'fixture':
+            return exportFormText(state, { ...target, format: 'fixture' });
+          default:
+            return explainFieldText(state, target);
+        }
       },
     });
 
@@ -271,6 +539,15 @@ const ngDevtools = defineDevframe({
       read: () => ({ text: formsResourceText(formsState.value() as FormsState) }),
     });
 
+    ctx.agent.registerResource({
+      id: 'ng-devtools:router',
+      name: 'Angular Router',
+      description:
+        'The active route tree (params, data, guards, resolvers) and recent navigations of each connected page. Empty when no page is connected.',
+      mimeType: 'application/json',
+      read: () => ({ text: routerResourceText(routerState.value() as RouterState) }),
+    });
+
     // Agent tools
     ctx.agent.registerTool({
       id: 'ng-devtools:highlight',
@@ -367,6 +644,252 @@ const ngDevtools = defineDevframe({
       },
     });
 
+    const noRouter = `No router state has been reported. Live data needs a page: connect through the MCP endpoint of the server that runs the app, with the app open in a browser. The stdio server has no page attached and only ever reports this.`;
+    const pageProperty = {
+      type: 'string',
+      description: 'Page id, when more than one tab reports. Defaults to the most recent.',
+    };
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:inspect-route',
+      description:
+        'The route the running page is on right now: URL (and the browser URL when it differs), query params, fragment, document title, any navigation in flight, the active route tree (component, params and data with where each value comes from, own or inherited title, guards, resolvers) and the outlet tree with router-bound inputs. Pass `selector` (a component class, element tag or link text) to see the route a component was rendered for, or whether a link counts as active. Secret-looking values are redacted.',
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: pageProperty,
+          selector: {
+            type: 'string',
+            description:
+              'Component class name, element tag or link text to explain instead of the whole route.',
+          },
+        },
+      },
+      handler: async (args: { page?: string; selector?: string }) => {
+        const state = routerState.value() as RouterState;
+        if (!state.pages.length) return { markdown: noRouter };
+        return { markdown: inspectRouteText(state, args) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:explain-navigation',
+      description:
+        'Recent navigations on the running page, newest first, each as a full story: from and to, who started it (link, code, back/forward), extras, redirect chain and loops, per-phase timing, guards and resolvers (with each verdict when instrumentation is on), lazy loads, reused components, HTTP requests, scroll, title, and the cancel or error reason with a plain-language meaning and the NG0 error explained. Use it for "why did this navigation not work", "why was I redirected" or, with perf, "why is navigation slow".',
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: pageProperty,
+          url: {
+            type: 'string',
+            description: 'Only navigations whose URL or final URL contains this text.',
+          },
+          id: { type: 'integer', description: 'Only the navigation with this id.' },
+          limit: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 50,
+            description: 'How many navigations to return (default 5, at most 50).',
+          },
+          perf: {
+            type: 'boolean',
+            description: 'Summarize the slowest navigations and preloads instead.',
+          },
+        },
+      },
+      handler: async (args: {
+        page?: string;
+        url?: string;
+        limit?: number;
+        perf?: boolean;
+        id?: number;
+      }) => {
+        const state = routerState.value() as RouterState;
+        if (!state.pages.length) return { markdown: noRouter };
+        return { markdown: explainNavigationText(state, args) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:list-routes',
+      description:
+        "The router's live route config (not just the active route): every route with its full path, component or redirect, lazy state, outlet, guards, resolvers, title, the source file it is declared in and an example URL, with the active routes marked. Pass `match` to predict which route a URL matches (or the nearest routes when it matches none), `audit` for the guards protecting each page, or `filter` to narrow by path or component.",
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: pageProperty,
+          match: {
+            type: 'string',
+            description: 'A URL such as /users/42 to match against the config.',
+          },
+          audit: { type: 'boolean', description: 'List the guards that protect each page.' },
+          filter: {
+            type: 'string',
+            description: 'Only routes whose path or component contains this text.',
+          },
+        },
+      },
+      handler: async (args: {
+        page?: string;
+        match?: string;
+        audit?: boolean;
+        filter?: string;
+      }) => {
+        const state = routerState.value() as RouterState;
+        if (!state.pages.length) return { markdown: noRouter };
+        let sources: { path: string; component?: string; redirectTo?: string; file: string }[] = [];
+        try {
+          sources = extractRoutes(ctx.cwd);
+        } catch {
+          sources = [];
+        }
+        return { markdown: listRoutesText(state, args, sources) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:lint-routes',
+      description:
+        "Checks the live route config for mistakes: routes after '**', a :param route shadowing a literal one, duplicate paths, empty-path redirects without pathMatch 'full', redirect cycles, deprecated class guards and canLoad, lazy chunks downloaded before canActivate rejects, missing or duplicate titles, param/input name typos, RouterLinkActive without aria-current, emails in URLs and return URLs taken from query params. Each finding says whether Angular throws, warns or stays silent, and how to fix it.",
+      safety: 'read',
+      inputSchema: { type: 'object', properties: { page: pageProperty } },
+      handler: async (args: { page?: string }) => {
+        const state = routerState.value() as RouterState;
+        if (!state.pages.length) return { markdown: noRouter };
+        return { markdown: lintRoutesText(state, args) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:router-config',
+      description:
+        'How the router is set up on the running page: provideRouter or forRoot, Angular version, effective options with which are set and which are defaults (onSameUrlNavigation, paramsInheritanceStrategy, urlUpdateStrategy, canceledNavigationResolution, scrolling, initial navigation), enabled features (input binding, view transitions, error handler, preloading strategy, scroller, resources), strategies (location, title, reuse, URL handling), base href, hydration and whether per-guard instrumentation is on.',
+      safety: 'read',
+      inputSchema: { type: 'object', properties: { page: pageProperty } },
+      handler: async (args: { page?: string }) => {
+        const state = routerState.value() as RouterState;
+        if (!state.pages.length) return { markdown: noRouter };
+        return { markdown: routerConfigText(state, args) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:export-navigation',
+      description:
+        'A markdown repro for one navigation (default: the latest that did not succeed): Angular version, router options and features, how it started, the full redirect chain with every detail from explain-navigation, and the relevant slice of the route config. Secret-looking values stay redacted.',
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: { page: pageProperty, id: { type: 'integer', description: 'Navigation id.' } },
+      },
+      handler: async (args: { page?: string; id?: number }) => {
+        const state = routerState.value() as RouterState;
+        if (!state.pages.length) return { markdown: noRouter };
+        return { markdown: exportNavigationText(state, args) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:explain-render-mode',
+      description:
+        "Which ServerRoute (from the workspace's *.routes.server.ts) and render mode (Server, Client, Prerender) a URL gets, plus server entries that match no client route and the render mode of every client route.",
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: pageProperty,
+          url: { type: 'string', description: 'URL to check; defaults to the page URL.' },
+        },
+      },
+      handler: async (args: { page?: string; url?: string }) => {
+        const state = routerState.value() as RouterState;
+        let entries: ReturnType<typeof scanServerRoutes> = [];
+        try {
+          entries = scanServerRoutes(ctx.cwd);
+        } catch {
+          entries = [];
+        }
+        return { markdown: explainRenderModeText(state, entries, args) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:navigate',
+      description:
+        'Acts on the running app\'s router (development only). action "navigate" goes to `url` (same-origin, starting with "/") or to `pattern` with `params` (e.g. /users/:id with {"id":"7"}), optionally with replaceUrl or skipLocationChange, and waits for the outcome; "abort" stops the navigation in flight; "replay" re-runs navigation `id` and compares the outcome; "probe" runs the real matcher for `url` without navigating (it runs canMatch and may load lazy chunks); "instrument" turns per-guard and per-resolver recording on or off; "resolve-lazy" reads the routes of an unloaded lazy route (`routeId` from list-routes) without registering them.',
+      safety: 'action',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: pageProperty,
+          action: {
+            type: 'string',
+            enum: ['navigate', 'abort', 'replay', 'probe', 'instrument', 'resolve-lazy'],
+          },
+          url: { type: 'string' },
+          pattern: { type: 'string' },
+          params: { type: 'object', additionalProperties: { type: 'string' } },
+          replaceUrl: { type: 'boolean' },
+          skipLocationChange: { type: 'boolean' },
+          waitFor: { type: 'string', enum: ['navigation', 'stable'] },
+          id: { type: 'integer', description: 'Navigation id for replay.' },
+          on: { type: 'boolean', description: 'For instrument.' },
+          routeId: { type: 'string', description: 'Route id for resolve-lazy.' },
+        },
+        required: ['action'],
+      },
+      handler: async (args: {
+        page?: string;
+        action: string;
+        url?: string;
+        pattern?: string;
+        params?: Record<string, string>;
+        replaceUrl?: boolean;
+        skipLocationChange?: boolean;
+        waitFor?: 'navigation' | 'stable';
+        id?: number;
+        on?: boolean;
+        routeId?: string;
+      }) => {
+        const state = routerState.value() as RouterState;
+        const target = args.page
+          ? state.pages.find((p) => p.pageId === args.page)
+          : state.pages.find((p) => p.snapshot);
+        if (!target?.snapshot) return { markdown: noRouter };
+        if (args.action === 'resolve-lazy' && typeof args.routeId !== 'string')
+          return { markdown: 'routeId is required for resolve-lazy.' };
+        const request =
+          args.action === 'navigate'
+            ? {
+                action: 'navigate',
+                url: args.url,
+                pattern: args.pattern,
+                params: args.params,
+                extras: {
+                  replaceUrl: args.replaceUrl,
+                  skipLocationChange: args.skipLocationChange,
+                },
+                waitFor: args.waitFor,
+              }
+            : args.action === 'replay'
+              ? { action: 'replay', id: args.id }
+              : args.action === 'probe'
+                ? { action: 'probe', url: args.url }
+                : args.action === 'instrument'
+                  ? { action: 'instrument', on: args.on !== false }
+                  : args.action === 'resolve-lazy'
+                    ? { action: 'resolve-lazy', id: args.routeId }
+                    : { action: args.action };
+        const result = await requestRouterAction(target.pageId, request);
+        return {
+          markdown: `_Result from the running page (untrusted data):_\n\n\`\`\`json\n${JSON.stringify(result, null, 2).slice(0, 15_000)}\n\`\`\``,
+        };
+      },
+    });
+
     const noForms = `No forms have been reported. Live data needs a page: connect through the MCP endpoint of the server that runs the app, with the app open in a browser, on a page that renders a form. The stdio server has no page attached and only ever reports this.`;
     const formProperty = {
       type: 'string',
@@ -382,6 +905,10 @@ const ngDevtools = defineDevframe({
         type: 'object',
         properties: {
           form: formProperty,
+          page: {
+            type: 'string',
+            description: 'Page id (the part after @ in a form id) when several tabs are connected.',
+          },
           path: {
             type: 'string',
             description:
@@ -412,12 +939,335 @@ const ngDevtools = defineDevframe({
       safety: 'read',
       inputSchema: {
         type: 'object',
-        properties: { form: formProperty },
+        properties: {
+          form: formProperty,
+          page: {
+            type: 'string',
+            description: 'Page id (the part after @ in a form id) when several tabs are connected.',
+          },
+        },
       },
-      handler: async (args: { form?: string }) => {
+      handler: async (args: { form?: string; page?: string }) => {
         const state = formsState.value() as FormsState;
         if (!state.forms.length) return { markdown: noForms };
         return { markdown: explainFormsText(state, args) };
+      },
+    });
+
+    const formPageProperty = {
+      type: 'string',
+      description: 'Page id (the part after @ in a form id) when several tabs are connected.',
+    };
+    const pathProperty = {
+      type: 'string',
+      description:
+        'Dotted field path, e.g. address.city or items.0.qty. Empty for the form itself.',
+    };
+    const withForms =
+      <A>(fn: (state: FormsState, args: A) => string) =>
+      async (args: A) => {
+        const state = formsState.value() as FormsState;
+        if (!state.forms.length) return { markdown: noForms };
+        return { markdown: fn(state, args ?? ({} as A)) };
+      };
+    const str = (value: unknown) => (typeof value === 'string' ? value : undefined);
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:explain-field',
+      description:
+        'Explain one form field: value, flags, every error with where it comes from (validator, template attribute, cross-field rule and which ancestor, async, parse, server/submission, setErrors), why validation is skipped (hidden, disabled, readonly), inherited disabled reasons, uncommitted or debounced input, stale validity, rules and validator names, the binding (accessor or [formField]) and DOM facts (label, visible error text, drift). Pass `selector` instead of form/path to start from a CSS selector.',
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          form: formProperty,
+          path: pathProperty,
+          selector: { type: 'string', description: 'CSS selector of an input bound to a field.' },
+          page: formPageProperty,
+        },
+      },
+      handler: async (args: { form?: string; path?: string; selector?: string; page?: string }) => {
+        const state = formsState.value() as FormsState;
+        if (!state.forms.length) return { markdown: noForms };
+        let target = { form: args?.form, path: args?.path, page: args?.page };
+        if (args?.selector) {
+          const located = await requestFormAction(
+            { action: 'locate', selector: args.selector, page: args.page },
+            5000,
+          );
+          if (!located['ok']) return { markdown: String(located['error'] ?? 'Not found.') };
+          target = {
+            form: str(located['formId']),
+            path: str(located['path']) ?? '',
+            page: undefined,
+          };
+        }
+        const owner = fieldOwner(state, target);
+        const source = owner
+          ? sourceText(findFormSource(ctx.cwd, owner.owner, owner.property, owner.path))
+          : '';
+        return { markdown: explainFieldText(state, target, Date.now(), source) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:explain-submit',
+      description:
+        'Explain what submitting a form will do and why it might do nothing: Signal Forms submit() dry-run (action present, ignoreValidators, already submitting), ngSubmit semantics for reactive and template forms, DOM reasons (no submit button, type="button", disabled button, directive not on a <form>, native validation), blocking and pending fields, and recent submits with their outcome (ran, blocked, threw).',
+      safety: 'read',
+      inputSchema: { type: 'object', properties: { form: formProperty, page: formPageProperty } },
+      handler: withForms(explainSubmitText),
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:form-payload',
+      description:
+        'Show what a form would send: form.value vs getRawValue() with the disabled fields form.value drops (reactive), or the hidden/disabled/readonly fields Signal Forms keeps in the value without validating them, plus which fields the user changed.',
+      safety: 'read',
+      inputSchema: { type: 'object', properties: { form: formProperty, page: formPageProperty } },
+      handler: withForms(formPayloadText),
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:form-history',
+      description:
+        'Timeline of form changes: value (with previous value and repeat count), status, submit (ran, blocked, threw), added and removed fields, each tagged with its origin (user, code, devtools). Filter by form, path, type, origin or `since` (a marker from an earlier call). Returns the current marker.',
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          form: formProperty,
+          path: pathProperty,
+          type: {
+            type: 'string',
+            enum: [
+              'value',
+              'status',
+              'touched',
+              'dirty',
+              'submit',
+              'reset',
+              'added',
+              'removed',
+              'moved',
+              'validators',
+            ],
+          },
+          origin: { type: 'string', enum: ['user', 'code', 'devtools', 'binding'] },
+          since: { type: 'number', description: 'Only events after this marker.' },
+          limit: { type: 'number', description: 'Max events (default 50, max 200).' },
+          page: formPageProperty,
+        },
+      },
+      handler: withForms(formHistoryText),
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:form-diff',
+      description:
+        'Net change of a form since a marker: each field whose value or status ended different, with from → to and how many changes happened in between. Get a marker from form-history, inspect-forms or a form-action result, act, then call this.',
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          form: formProperty,
+          since: {
+            type: 'number',
+            description: 'Marker to diff from (default: everything buffered).',
+          },
+          page: formPageProperty,
+        },
+      },
+      handler: withForms(formDiffText),
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:lint-forms',
+      description:
+        'Deterministic checks on live forms: stale validity after validator changes, stuck PENDING, unreachable submit, missing submission action, hidden fields still rendered, view out of sync with the model, [disabled] on reactive controls, required-but-unbound fields, NG01xxx setup errors, and model-aware accessibility (missing label, aria-invalid desync, required not exposed, error text not shown or not linked, no focus after invalid submit).',
+      safety: 'read',
+      inputSchema: { type: 'object', properties: { form: formProperty, page: formPageProperty } },
+      handler: async (args: { form?: string; page?: string }) => {
+        const state = formsState.value() as FormsState;
+        if (!state.forms.length && !state.setupErrors?.length) return { markdown: noForms };
+        return { markdown: lintFormsText(state, args ?? {}) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:explain-custom-control',
+      description:
+        'Explain how a field is bound to its element (built-in accessor, custom ControlValueAccessor, custom control, [formField]) and what is wrong with it: value drift, missing setDisabledState, touched never set, captured NG01xxx setup errors.',
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: { form: formProperty, path: pathProperty, page: formPageProperty },
+      },
+      handler: withForms(explainCustomControlText),
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:export-form',
+      description:
+        'Export a form as a JSON snapshot (tree, status, raw value) or as a test fixture (setValue / signal model plus the expected status) with a repro header. Secret values stay [redacted].',
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          form: formProperty,
+          format: { type: 'string', enum: ['snapshot', 'fixture'] },
+          page: formPageProperty,
+        },
+      },
+      handler: withForms(exportFormText),
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:wait-for-form',
+      description:
+        'Wait until a form is settled (no pending async validation, debounce or submit in flight), valid, not pending, or submitted after a marker. Resolves as soon as the condition holds, or reports the state on timeout.',
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          form: formProperty,
+          until: { type: 'string', enum: ['settled', 'valid', 'not-pending', 'submitted'] },
+          since: { type: 'number', description: 'Marker for `submitted`.' },
+          timeoutMs: { type: 'number', description: 'Default 5000, max 30000.' },
+          page: formPageProperty,
+        },
+      },
+      handler: async (args: {
+        form?: string;
+        until?: WaitUntil;
+        since?: number;
+        timeoutMs?: number;
+        page?: string;
+      }) => {
+        const timeout = Math.min(Math.max(Number(args?.timeoutMs) || 5000, 100), 30_000);
+        const start = Date.now();
+        while (true) {
+          const state = formsState.value() as FormsState;
+          if (waitSatisfied(state, args ?? {})) {
+            return {
+              markdown: `Condition \`${args?.until ?? 'settled'}\` holds after ${Date.now() - start}ms. Marker: ${latestMarker(state)}.\n\n${explainFormsText(state, { form: args?.form, page: args?.page })}`,
+            };
+          }
+          if (Date.now() - start >= timeout) {
+            return {
+              markdown: `Timed out after ${timeout}ms waiting for \`${args?.until ?? 'settled'}\`.\n\n${explainFormsText(state, { form: args?.form, page: args?.page })}`,
+            };
+          }
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      },
+    });
+
+    const actionText = (result: Record<string, unknown>, state: FormsState) => {
+      const lines = [
+        result['ok']
+          ? `Done: ${String(result['message'] ?? '')}`
+          : `Refused: ${String(result['error'] ?? result['message'] ?? 'failed')}`,
+      ];
+      const skipped = Array.isArray(result['skipped'])
+        ? (result['skipped'] as { path: string; reason: string }[])
+        : [];
+      if (skipped.length)
+        lines.push(`Skipped: ${skipped.map((s) => `\`${s.path}\` ${s.reason}`).join('; ')}.`);
+      if (typeof result['status'] === 'string') lines.push(`Form status now: ${result['status']}.`);
+      const invalid = Array.isArray(result['invalid']) ? (result['invalid'] as string[]) : [];
+      if (invalid.length)
+        lines.push(`Fields with errors: ${invalid.map((p) => `\`${p || '(form)'}\``).join(', ')}.`);
+      if (typeof result['expression'] === 'string') lines.push(`Console: ${result['expression']}`);
+      if (typeof result['snapshot'] === 'string')
+        lines.push(`Snapshot id: ${result['snapshot']} (use with restore).`);
+      lines.push(
+        `Marker: ${latestMarker(state)}. Call form-diff with since set to the marker you had before this action to see what changed.`,
+      );
+      return lines.join('\n');
+    };
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:form-action',
+      description:
+        'Act on a live form (dev mode). Actions: set-value (mode code or user; user goes through the input like typing), mark-touched, mark-untouched, mark-dirty, mark-pristine, touch-all, revalidate (Signal Forms: reloads async/HTTP validation), reset, enable, disable (reactive only), submit, focus, focus-first-invalid, store-as-global ($form in the page console), snapshot, restore, instrument (value true or false: record the calling code of form changes, validator changes and template updates per keystroke, shown by form-history). reset, submit and restore need confirm: true. Secret, hidden and readonly fields are never written; disabled reactive fields need force.',
+      safety: 'action',
+      inputSchema: {
+        type: 'object',
+        required: ['action', 'form'],
+        properties: {
+          action: {
+            type: 'string',
+            enum: [
+              'set-value',
+              'mark-touched',
+              'mark-untouched',
+              'mark-dirty',
+              'mark-pristine',
+              'touch-all',
+              'revalidate',
+              'reset',
+              'enable',
+              'disable',
+              'submit',
+              'focus',
+              'focus-first-invalid',
+              'store-as-global',
+              'snapshot',
+              'restore',
+              'instrument',
+            ],
+          },
+          form: { type: 'string', description: 'Full form id, e.g. form-1@ab12.' },
+          path: pathProperty,
+          value: { description: 'New value for set-value.' },
+          mode: { type: 'string', enum: ['code', 'user'] },
+          confirm: { type: 'boolean' },
+          force: { type: 'boolean' },
+          snapshot: { type: 'string', description: 'Snapshot id for restore.' },
+        },
+      },
+      handler: async (args: Record<string, unknown>) => {
+        const state = formsState.value() as FormsState;
+        if (!state.forms.length) return { markdown: noForms };
+        const match = resolveForm(state.forms, str(args?.['form']));
+        if (typeof match === 'string') return { markdown: match };
+        const { form: _form, ...rest } = args;
+        const result = await requestFormAction({ ...rest, formId: match.id });
+        return { markdown: actionText(result, formsState.value() as FormsState) };
+      },
+    });
+
+    ctx.agent.registerTool({
+      id: 'ng-devtools:fill-form',
+      description:
+        'Fill several fields at once, by dotted path, through the inputs like a user would (so parsing, dirty and touched run for real). Reports written and skipped fields (secret, hidden, readonly, disabled, missing) and the resulting status. Optionally submits afterwards (needs confirm: true).',
+      safety: 'action',
+      inputSchema: {
+        type: 'object',
+        required: ['form', 'values'],
+        properties: {
+          form: { type: 'string', description: 'Full form id, e.g. form-1@ab12.' },
+          values: { type: 'object', description: 'Map of field path to value.' },
+          mode: { type: 'string', enum: ['code', 'user'] },
+          submit: { type: 'boolean' },
+          confirm: { type: 'boolean' },
+        },
+      },
+      handler: async (args: Record<string, unknown>) => {
+        const state = formsState.value() as FormsState;
+        if (!state.forms.length) return { markdown: noForms };
+        const match = resolveForm(state.forms, str(args?.['form']));
+        if (typeof match === 'string') return { markdown: match };
+        const result = await requestFormAction({
+          action: 'fill',
+          formId: match.id,
+          values: args['values'],
+          mode: args['mode'],
+          submit: args['submit'],
+          confirm: args['confirm'],
+        });
+        return { markdown: actionText(result, formsState.value() as FormsState) };
       },
     });
 
