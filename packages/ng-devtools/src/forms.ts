@@ -176,10 +176,12 @@ function changedOf(target: object, value: unknown, dirty: boolean): boolean | un
   return baselines.get(target) !== text;
 }
 
-function remember(value: unknown) {
+function remember(value: unknown, seen = new WeakSet<object>()) {
   if (!secrets) return;
   if (value && typeof value === 'object') {
-    for (const item of Object.values(value as object).slice(0, 50)) remember(item);
+    if (seen.has(value)) return;
+    seen.add(value);
+    for (const item of Object.values(value).slice(0, 50)) remember(item, seen);
   } else secrets.add(value);
 }
 
@@ -860,6 +862,10 @@ export function collectForms(
   });
   formSecrets = kept;
   return collected;
+}
+
+export function forgetFormSecrets(formIds: Iterable<string>) {
+  for (const id of formIds) formSecrets.delete(id);
 }
 
 export function redactFormText(formId: string, text: string): string {

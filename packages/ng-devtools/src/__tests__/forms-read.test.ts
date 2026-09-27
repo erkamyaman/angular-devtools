@@ -22,6 +22,7 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   collectForms,
+  forgetFormSecrets,
   redactFormText,
   findForms,
   serializeControl,
@@ -269,6 +270,20 @@ describe('privacy', () => {
     expect(redactReason('x', document.getElementById('e'))).toBeNull();
   });
 
+  it('collects secrets from a circular value without overflowing', () => {
+    const secret: Record<string, unknown> = { pin: '98765' };
+    secret['self'] = secret;
+    const group = new FormGroup({
+      password: new FormControl(secret),
+      note: new FormControl('98765'),
+    });
+    const [collected] = collectForms({
+      forms: [{ kind: 'reactive', root: group as any, owner: null }],
+      elements: new WeakMap(),
+    });
+    expect(JSON.stringify(collected.root.children)).not.toContain('98765');
+  });
+
   it('removes a secret value from every serialized string', () => {
     const group = new FormGroup({
       password: new FormControl('hunter2'),
@@ -298,6 +313,10 @@ describe('privacy', () => {
     expect(text).not.toContain('hunter2');
     expect(redactFormText(collected.id, 'Invalid password hunter2')).toBe(
       'Invalid password [redacted]',
+    );
+    forgetFormSecrets([collected.id]);
+    expect(redactFormText(collected.id, 'Invalid password hunter2')).toBe(
+      'Invalid password hunter2',
     );
     expect(redactMessage('Bearer abc.def and eyJhbGciOiJI.eyJzdWIiOiIx.c2lnbmF0dXJl')).toBe(
       'Bearer [redacted] and [redacted]',

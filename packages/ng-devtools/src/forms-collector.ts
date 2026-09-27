@@ -14,6 +14,7 @@ import {
   type FormEvent,
   type FormFieldNode,
   type FoundForm,
+  forgetFormSecrets,
   redactFormText,
 } from './forms.ts';
 import {
@@ -621,6 +622,7 @@ export function attachForms(
       renders?.stop();
       instrumentation = null;
       renders = null;
+      forgetFormSecrets(lastForms.map((form) => form.id));
     },
   };
 }
