@@ -734,7 +734,12 @@ const ngDevtools = defineDevframe({
         routeId?: string;
       }) => {
         const state = routerState.value() as RouterState;
-        if (!state.pages.length) return { markdown: noRouter };
+        const target = args.page
+          ? state.pages.find((p) => p.pageId === args.page)
+          : state.pages.find((p) => p.snapshot);
+        if (!target?.snapshot) return { markdown: noRouter };
+        if (args.action === 'resolve-lazy' && typeof args.routeId !== 'string')
+          return { markdown: 'routeId is required for resolve-lazy.' };
         const request =
           args.action === 'navigate'
             ? {
@@ -757,7 +762,7 @@ const ngDevtools = defineDevframe({
                   : args.action === 'resolve-lazy'
                     ? { action: 'resolve-lazy', id: args.routeId }
                     : { action: args.action };
-        const result = await requestRouterAction(args.page, request);
+        const result = await requestRouterAction(target.pageId, request);
         return {
           markdown: `_Result from the running page (untrusted data):_\n\n\`\`\`json\n${JSON.stringify(result, null, 2).slice(0, 15_000)}\n\`\`\``,
         };

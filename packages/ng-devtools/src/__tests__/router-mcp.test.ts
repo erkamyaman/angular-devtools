@@ -285,6 +285,19 @@ describe('router MCP tools', () => {
     const chain = await call('export-navigation', { id: 4 });
     expect(chain).toContain('#3 `/admin`');
     expect(chain).toContain('#4 `/login`');
+    const later = {
+      id: 6,
+      url: '/welcome',
+      trigger: 'imperative',
+      startedAt: 1200,
+      outcome: 'succeeded' as const,
+      redirectedFrom: 4,
+    };
+    const fresh = await boot();
+    await fresh.push('push-router', report({ navigations: [...navigations, later] }));
+    const full = await fresh.call('export-navigation', { id: 3 });
+    expect(full).toContain('#4 `/login`');
+    expect(full).toContain('#6 `/welcome`');
   });
 
   it('explain-render-mode reads the workspace server routes', async () => {
@@ -327,6 +340,18 @@ describe('router MCP tools', () => {
     await push('request-router-action', { pageId: '', request: { action: 'probe', url: '/' } });
     await call('navigate', { url: '/users/7', page: '' });
     expect(seen).toEqual([report().pageId, report().pageId, report().pageId]);
+  });
+
+  it('navigate refuses pages without a router and resolve-lazy without a routeId', async () => {
+    const { ctx, push, call } = await boot();
+    await push('push-router', report());
+    await push('push-router', { ...report(), pageId: 'bare', snapshot: null });
+    const broadcast = vi.spyOn(ctx.rpc, 'broadcast');
+    expect(await call('navigate', { action: 'probe', url: '/', page: 'bare' })).toMatch(
+      /no router state/i,
+    );
+    expect(await call('navigate', { action: 'resolve-lazy' })).toContain('routeId is required');
+    expect(broadcast).not.toHaveBeenCalled();
   });
 
   it('tells the page whether its route config is stored', async () => {

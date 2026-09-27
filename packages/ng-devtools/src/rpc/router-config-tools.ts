@@ -628,7 +628,18 @@ export function exportNavigationText(
     chainIds.add(cursor.id);
     cursor = page.navigations.find((n) => n.id === cursor!.redirectedFrom);
   }
-  const chain = page.navigations.filter((n) => chainIds.has(n.id) || n.redirectedFrom === nav.id);
+  const after = new Set([nav.id]);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const n of page.navigations) {
+      if (n.redirectedFrom !== undefined && after.has(n.redirectedFrom) && !after.has(n.id)) {
+        after.add(n.id);
+        chainIds.add(n.id);
+        grew = true;
+      }
+    }
+  }
+  const chain = page.navigations.filter((n) => chainIds.has(n.id));
   const setup = page.setup;
   const lines = [
     `## Router repro: #${nav.id} ${nav.url} (${nav.outcome})`,
