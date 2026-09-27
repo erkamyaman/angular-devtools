@@ -163,8 +163,14 @@ const ngDevtools = defineDevframe({
     const pendingActions = new Map<string, (result: unknown) => void>();
     let actionSeq = 0;
 
-    const requestRouterAction = (pageId: string | undefined, request: unknown) =>
+    const defaultPageId = () => {
+      const state = routerState.value() as RouterState;
+      return (state.pages.find((p) => p.snapshot) ?? state.pages[0])?.pageId;
+    };
+
+    const requestRouterAction = (page: string | undefined, request: unknown) =>
       new Promise<unknown>((resolve) => {
+        const pageId = page || defaultPageId();
         const requestId = `a${++actionSeq}`;
         const timer = setTimeout(() => {
           pendingActions.delete(requestId);
@@ -193,18 +199,13 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    const defaultPageId = () => {
-      const state = routerState.value() as RouterState;
-      return (state.pages.find((p) => p.snapshot) ?? state.pages[0])?.pageId;
-    };
-
     my.rpc.register({
       name: 'request-router-action',
       type: 'action',
       jsonSerializable: true,
       handler: (message: { pageId?: string; request?: unknown }) =>
         requestRouterAction(
-          typeof message?.pageId === 'string' ? message.pageId : defaultPageId(),
+          typeof message?.pageId === 'string' ? message.pageId : undefined,
           message?.request,
         ),
     });
@@ -756,7 +757,7 @@ const ngDevtools = defineDevframe({
                   : args.action === 'resolve-lazy'
                     ? { action: 'resolve-lazy', id: args.routeId }
                     : { action: args.action };
-        const result = await requestRouterAction(args.page ?? defaultPageId(), request);
+        const result = await requestRouterAction(args.page, request);
         return {
           markdown: `_Result from the running page (untrusted data):_\n\n\`\`\`json\n${JSON.stringify(result, null, 2).slice(0, 15_000)}\n\`\`\``,
         };

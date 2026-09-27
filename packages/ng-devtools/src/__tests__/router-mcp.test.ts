@@ -313,7 +313,7 @@ describe('router MCP tools', () => {
   });
 
   it('sends a panel router action to one page when no page is named', async () => {
-    const { ctx, push } = await boot();
+    const { ctx, push, call } = await boot();
     await push('push-router', report());
     await push('push-router', { ...report(), pageId: 'other', snapshot: null });
     const seen: unknown[] = [];
@@ -324,7 +324,9 @@ describe('router MCP tools', () => {
       await push('router-action-result', { requestId, result: { ok: true } });
     }) as never);
     await push('request-router-action', { request: { action: 'probe', url: '/' } });
-    expect(seen).toEqual([report().pageId]);
+    await push('request-router-action', { pageId: '', request: { action: 'probe', url: '/' } });
+    await call('navigate', { url: '/users/7', page: '' });
+    expect(seen).toEqual([report().pageId, report().pageId, report().pageId]);
   });
 
   it('tells the page whether its route config is stored', async () => {
