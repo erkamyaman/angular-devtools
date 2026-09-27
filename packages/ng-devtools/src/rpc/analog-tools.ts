@@ -34,6 +34,10 @@ function isStrings(value: unknown, max = 1000): boolean {
   return Array.isArray(value) && value.length <= max && value.every((v) => typeof v === 'string');
 }
 
+function optionalString(value: unknown): boolean {
+  return value === undefined || typeof value === 'string';
+}
+
 export function isAnalogReport(value: unknown): value is AnalogRuntimeReport {
   if (!isRecord(value)) return false;
   const r = value as Partial<AnalogRuntimeReport>;
@@ -44,7 +48,14 @@ export function isAnalogReport(value: unknown): value is AnalogRuntimeReport {
     typeof r.analog === 'boolean' &&
     Array.isArray(r.chain) &&
     r.chain.length <= 40 &&
-    r.chain.every((c) => isRecord(c) && typeof c['path'] === 'string') &&
+    r.chain.every(
+      (c) =>
+        isRecord(c) &&
+        typeof c['path'] === 'string' &&
+        optionalString(c['file']) &&
+        optionalString(c['serverFile']),
+    ) &&
+    optionalString(r.serverContext) &&
     typeof r.hydrated === 'number' &&
     typeof r.transferState === 'boolean' &&
     isStrings(r.hydrationErrors, 50) &&
@@ -52,7 +63,8 @@ export function isAnalogReport(value: unknown): value is AnalogRuntimeReport {
     (r.load === undefined ||
       (isRecord(r.load) &&
         typeof r.load['preview'] === 'string' &&
-        typeof r.load['bytes'] === 'number'))
+        typeof r.load['bytes'] === 'number' &&
+        isStrings(r.load['keys'], 200)))
   );
 }
 
@@ -170,6 +182,7 @@ export function analogCurrentPageText(
   state: AnalogState,
   page?: string,
 ): string {
+  if (!project.analog) return NOT_ANALOG;
   const report = pickPage(state, page);
   if (!report) {
     return 'No Analog page has reported yet. Open the app in a browser through the Vite dev server that runs ngDevtools().';

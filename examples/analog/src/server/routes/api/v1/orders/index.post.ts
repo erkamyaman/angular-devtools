@@ -15,11 +15,19 @@ export default defineEventHandler(async (event) => {
   if (body?.email?.endsWith('@blocked.test')) {
     errors.push({ field: 'email', message: 'This email is blocked' });
   }
-  const items = body?.items ?? [];
+  const items = Array.isArray(body?.items) ? body.items : [];
   if (!items.length) errors.push({ field: 'items', message: 'The cart is empty' });
+  const wanted = new Map<number, number>();
   for (const item of items) {
-    const product = findProduct(item.productId);
-    if (!product || product.stock < item.quantity) {
+    if (!Number.isInteger(item?.quantity) || item.quantity < 1) {
+      errors.push({ field: 'items', message: 'Each quantity must be a whole number above 0' });
+      break;
+    }
+    wanted.set(item.productId, (wanted.get(item.productId) ?? 0) + item.quantity);
+  }
+  for (const [productId, quantity] of wanted) {
+    const product = findProduct(productId);
+    if (!product || product.stock < quantity) {
       errors.push({ field: 'items', message: `${product?.name ?? 'A product'} is out of stock` });
     }
   }

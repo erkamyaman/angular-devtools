@@ -7,6 +7,7 @@ import {
   collectAnalog,
   configPathsOf,
   fileOfEndpoint,
+  hasAnalogMeta,
   hydrationErrorOf,
   loadSummary,
 } from '../analog-runtime.ts';
@@ -112,5 +113,19 @@ describe('Analog runtime reader', () => {
     });
     expect(report.chain[0].file).toBe('/src/app/pages/about.md');
     expect(collectAnalog({}, 'p', [])).toBeNull();
+  });
+
+  it('does not mistake a plain Angular app with lazy routes for Analog', () => {
+    document.body.innerHTML = '<app-root ng-version="22"></app-root>';
+    const router = {
+      url: '/admin',
+      config: [{ path: 'admin', loadChildren: () => null, _loadedRoutes: [{ path: '' }] }],
+      routerState: { snapshot: { root: { routeConfig: null, data: {}, firstChild: null } } },
+    };
+    const ng = { getInjector: () => ({}), ɵgetRouterInstance: () => router };
+    expect(collectAnalog(ng, 'p', [])!.analog).toBe(false);
+    expect(
+      hasAnalogMeta([{ path: 'x', _loadedRoutes: [analogRoute('', '/src/app/pages/x.page.ts')] }]),
+    ).toBe(true);
   });
 });

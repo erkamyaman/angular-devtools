@@ -146,6 +146,22 @@ export function routerOf(ng: AnyRecord | undefined): AnyRecord | null {
   return null;
 }
 
+export function hasAnalogMeta(routes: unknown, depth = 0): boolean {
+  if (!Array.isArray(routes) || depth > 20) return false;
+  return (routes as AnyRecord[]).some(
+    (route) =>
+      !!analogMetaOf(route) ||
+      hasAnalogMeta(
+        read(() => route['children'], null),
+        depth + 1,
+      ) ||
+      hasAnalogMeta(
+        read(() => route['_loadedRoutes'], null),
+        depth + 1,
+      ),
+  );
+}
+
 export function collectAnalog(
   ng: AnyRecord | undefined,
   pageId: string,
@@ -156,12 +172,7 @@ export function collectAnalog(
   const root = read(() => router['routerState']['snapshot']['root'] as AnyRecord, null);
   const { chain, data } = chainOf(root);
   const paths = configPathsOf(read(() => router['config'], []));
-  const analog =
-    chain.length > 0 ||
-    read(
-      () => (router['config'] as AnyRecord[]).some((r) => typeof r['loadChildren'] === 'function'),
-      false,
-    );
+  const analog = chain.length > 0 || hasAnalogMeta(read(() => router['config'], null));
   const rootEl = document.querySelector('[ng-version]');
   const report: AnalogRuntimeReport = {
     pageId,

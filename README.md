@@ -181,6 +181,7 @@ For [Analog](https://analogjs.org) apps, add the Vite plugin next to `analog()` 
 // vite.config.ts
 import analog from '@analogjs/platform';
 import ngDevtools from '@santoshyadavdev/ng-devtools/vite';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [analog(), ngDevtools()],

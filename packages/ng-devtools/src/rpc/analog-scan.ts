@@ -57,6 +57,7 @@ export interface AnalogProject {
   content: AnalogContentFile[];
   config: AnalogConfig;
   prerendered: string[];
+  scanErrors?: string[];
 }
 
 export interface AnalogLintFinding {
@@ -81,11 +82,15 @@ const HTTP_METHODS = [
   'trace',
 ];
 
+let walkErrors: Map<string, string> | null = null;
+
 function walk(dir: string, accept: (name: string) => boolean, out: string[] = []): string[] {
   let entries: string[];
   try {
     entries = readdirSync(dir);
-  } catch {
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException)?.code;
+    if (code !== 'ENOENT') walkErrors?.set(dir, code ?? 'unknown error');
     return out;
   }
   for (const entry of entries.sort()) {
@@ -354,7 +359,7 @@ export function frontmatter(source: string): {
   const end = source.indexOf('\n---', 3);
   if (end < 0) return { attributes: {}, error: 'Frontmatter block is not closed with ---' };
   const attributes: Record<string, string> = {};
-  for (const line of source.slice(3, end).split('\n')) {
+  for (const line of source.slice(3, end).replace(/\r/g, '').split('\n')) {
     if (!line.trim() || /^\s/.test(line) || line.trim().startsWith('#')) continue;
     const match = line.match(/^([\w-]+)\s*:\s*(.*)$/);
     if (!match) return { attributes, error: `Cannot read frontmatter line: ${line.slice(0, 60)}` };
@@ -467,6 +472,19 @@ export function prerenderedPages(root: string): string[] {
 }
 
 export function scanAnalog(root: string): AnalogProject {
+  walkErrors = new Map();
+  try {
+    const project = scanProject(root);
+    if (walkErrors.size) {
+      project.scanErrors = Array.from(walkErrors, ([dir, code]) => `${rel(root, dir)}: ${code}`);
+    }
+    return project;
+  } finally {
+    walkErrors = null;
+  }
+}
+
+function scanProject(root: string): AnalogProject {
   const version = analogVersion(root);
   const files = routeFiles(root);
   return {
@@ -488,6 +506,14 @@ export function scanAnalog(root: string): AnalogProject {
     config: analogConfig(root),
     prerendered: version ? prerenderedPages(root) : [],
   };
+}
+
+function safeDecode(part: string): string {
+  try {
+    return decodeURIComponent(part);
+  } catch {
+    return part;
+  }
 }
 
 export function flattenRoutes(routes: AnalogRoute[], out: AnalogRoute[] = []): AnalogRoute[] {
@@ -527,7 +553,7 @@ function matchSegments(
         ok = false;
         break;
       }
-      if (seg.startsWith(':')) local[seg.slice(1)] = decodeURIComponent(part);
+      if (seg.startsWith(':')) local[seg.slice(1)] = safeDecode(part);
       else if (seg !== part) {
         ok = false;
         break;
@@ -582,6 +608,15 @@ export function explainUrl(routes: AnalogRoute[], url: string): UrlMatch {
 
 export function lintAnalog(project: AnalogProject): AnalogLintFinding[] {
   const out: AnalogLintFinding[] = [];
+  for (const error of project.scanErrors ?? []) {
+    out.push({
+      rule: 'scan-error',
+      severity: 'error',
+      file: error.slice(0, error.lastIndexOf(':')),
+      message: `Could not read this folder (${error.slice(error.lastIndexOf(':') + 2)}), so its files are missing from every result.`,
+      fix: 'Check the folder permissions, or that the path is a folder and not a file.',
+    });
+  }
   const all = flattenRoutes(project.routes);
   const byPath = new Map<string, AnalogRoute[]>();
   for (const route of all) {

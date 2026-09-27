@@ -79,6 +79,7 @@ beforeEach(() => {
 describe('Analog MCP tools', () => {
   it('say when the workspace is not an Analog app', async () => {
     const { call } = await boot(makeProject({ 'package.json': '{}' }));
+    expect(await call('analog-current-page')).toContain('not an Analog app');
     for (const tool of [
       'analog-routes',
       'analog-api-routes',
@@ -284,6 +285,9 @@ describe('Analog MCP tools', () => {
     await push('push-analog', { ...report, chain: 'nope' });
     await push('push-analog', { ...report, hydrationErrors: [1] });
     await push('push-analog', { ...report, pageId: 'x'.repeat(80) });
+    await push('push-analog', { ...report, chain: [{ path: '/a', file: 7 }] });
+    await push('push-analog', { ...report, load: { preview: '{}', bytes: 2 } });
+    await push('push-analog', { ...report, serverContext: 1 });
     expect(await call('analog-current-page')).toContain('No Analog page has reported yet');
   });
 });

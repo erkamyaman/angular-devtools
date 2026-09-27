@@ -129,6 +129,10 @@ interface LintCard {
 }
 
 const LINT_TEXT: Record<string, { title: string; summary: string }> = {
+  'scan-error': {
+    title: 'A folder could not be read',
+    summary: 'Its files are missing from routes, API routes and lint results.',
+  },
   'duplicate-url': {
     title: 'Two files serve the same URL',
     summary: 'Only one of them is reachable; the other never renders.',
@@ -1407,6 +1411,8 @@ export class AnalogInspector {
   readonly response = signal<ApiResult | null>(null);
 
   private unsubscribe: (() => void) | null = null;
+  private refreshTimer: ReturnType<typeof setTimeout> | undefined;
+  private refreshRun = 0;
   private readonly destroyRef = inject(DestroyRef);
 
   readonly page = computed(() => this.state().pages?.[0] ?? null);
@@ -1498,9 +1504,12 @@ export class AnalogInspector {
     effect(() => {
       const view = this.view();
       this.state();
-      untracked(() => void this.refresh(view));
+      untracked(() => this.scheduleRefresh(view));
     });
-    this.destroyRef.onDestroy(() => this.unsubscribe?.());
+    this.destroyRef.onDestroy(() => {
+      this.unsubscribe?.();
+      clearTimeout(this.refreshTimer);
+    });
   }
 
   private async load(client: DevframeRpcClient) {
@@ -1517,19 +1526,26 @@ export class AnalogInspector {
     await this.refresh(this.view());
   }
 
+  private scheduleRefresh(view: View) {
+    clearTimeout(this.refreshTimer);
+    this.refreshTimer = setTimeout(() => void this.refresh(view), 300);
+  }
+
   private async refresh(view: View) {
     const client = this.rpc();
     if (!client) return;
+    const run = ++this.refreshRun;
     const [findings, render] = await Promise.all([
       call<Finding[]>(client, 'analog-lint'),
       call<{ rows: RenderRow[]; plan: PrerenderPlan }>(client, 'analog-render'),
     ]);
+    if (run !== this.refreshRun) return;
     this.findings.set(findings ?? []);
     this.renderRows.set(render?.rows ?? []);
     this.plan.set(render?.plan ?? null);
     if (view === 'routes' || view === 'content') {
       const project = await call<AnalogProject>(client, 'analog-project');
-      if (project) this.project.set(project);
+      if (project && run === this.refreshRun) this.project.set(project);
     }
   }
 

@@ -169,6 +169,29 @@ describe('Analog route rules', () => {
     expect(lintAnalog(scanAnalog(root)).map((f) => f.rule)).toContain('layout-without-outlet');
   });
 
+  it('reads CRLF frontmatter and survives malformed URL escapes', () => {
+    expect(frontmatter('---\r\ntitle: Hello\r\nslug: hi\r\n---\r\nBody')).toEqual({
+      attributes: { title: 'Hello', slug: 'hi' },
+    });
+    const { routes } = scanAnalog(makeProject(BASE_FILES));
+    expect(explainUrl(routes, '/products/%E0').params).toEqual({ id: '%E0' });
+  });
+
+  it('reports a folder it cannot read instead of treating it as empty', () => {
+    const files: Record<string, string> = {
+      ...BASE_FILES,
+      'src/server/middleware': 'not a folder',
+    };
+    delete files['src/server/middleware/log.ts'];
+    const root = makeProject(files);
+    const project = scanAnalog(root);
+    expect(project.scanErrors).toEqual(['/src/server/middleware: ENOTDIR']);
+    expect(lintAnalog(project)).toContainEqual(
+      expect.objectContaining({ rule: 'scan-error', file: '/src/server/middleware' }),
+    );
+    expect(scanAnalog(makeProject(BASE_FILES)).scanErrors).toBeUndefined();
+  });
+
   it('reports a non-Analog project as such', () => {
     const project = scanAnalog(makeProject({ 'package.json': '{"dependencies":{}}' }));
     expect(project).toMatchObject({ analog: false, routes: [], api: [] });
