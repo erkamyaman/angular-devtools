@@ -9,6 +9,12 @@ export interface NgDevtoolsViteOptions {
   apiPrefix?: string;
 }
 
+function isLoopback(address: string | undefined): boolean {
+  if (!address) return false;
+  const ip = address.startsWith('::ffff:') ? address.slice(7) : address;
+  return ip === '::1' || ip.startsWith('127.');
+}
+
 export default function ngDevtoolsVite(options: NgDevtoolsViteOptions = {}): Plugin {
   const base = options.base ?? '/__ng-devtools/';
   return {
@@ -22,6 +28,11 @@ export default function ngDevtoolsVite(options: NgDevtoolsViteOptions = {}): Plu
         if (url.endsWith('/__connection.json') && !url.startsWith(base)) {
           res.statusCode = 404;
           res.end();
+          return;
+        }
+        if (url.startsWith(base) && !isLoopback(req.socket?.remoteAddress)) {
+          res.statusCode = 403;
+          res.end('ng-devtools only answers requests from this machine.');
           return;
         }
         next();

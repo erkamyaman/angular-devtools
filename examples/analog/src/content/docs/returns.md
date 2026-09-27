@@ -10,8 +10,8 @@ You can return anything within 30 days.
 
 ## How to return
 
-1. Open your order in the [dashboard](/dashboard).
-2. Choose **Return** and print the free label.
+1. Find your order number in the [dashboard](/dashboard).
+2. Email returns@analog-shop.test with the order number, and we reply with a free label.
 3. Drop the parcel at any carrier point.
 
 ## Refunds

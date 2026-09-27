@@ -43,9 +43,20 @@ interface CheckoutModel {
         @for (error of checkout.address().errors(); track error.kind) {
           <p class="error">{{ error.message }}</p>
         }
-        <label for="card">Card number</label>
-        <input id="card" [formField]="checkout.cardNumber" autocomplete="cc-number" />
+        <label for="card">Card number (demo only, nothing is charged)</label>
+        <input
+          id="card"
+          [formField]="checkout.cardNumber"
+          autocomplete="cc-number"
+          aria-describedby="card-hint"
+        />
+        <p id="card-hint" class="muted">
+          This demo never sends the card number. It is here to show how DevTools hides card fields.
+        </p>
         <p class="muted">Total {{ cart.total() | currency }}</p>
+        @if (orderError(); as message) {
+          <p class="error" role="alert">{{ message }}</p>
+        }
         <button type="submit" [disabled]="cart.isEmpty()">Place order</button>
         @if (cart.isEmpty()) {
           <p class="muted">Add something to the cart first.</p>
@@ -58,6 +69,7 @@ export default class Checkout {
   protected readonly cart = inject(CartStore);
   private readonly http = inject(HttpClient);
   protected readonly placed = signal<Order | null>(null);
+  protected readonly orderError = signal('');
   private readonly model = signal<CheckoutModel>({
     name: '',
     email: '',
@@ -78,6 +90,7 @@ export default class Checkout {
       submission: {
         action: async (tree) => {
           const value = tree().value();
+          this.orderError.set('');
           try {
             const order = await firstValueFrom(
               this.http.post<Order>('/api/v1/orders', {
@@ -93,14 +106,17 @@ export default class Checkout {
             this.cart.clear();
             return undefined;
           } catch (error) {
-            const errors = (error as HttpErrorResponse).error?.data?.errors ?? [];
-            return errors
-              .filter((e: { field: string }) => e.field === 'email' || e.field === 'name')
-              .map((e: { field: 'email' | 'name'; message: string }) => ({
-                kind: 'server',
-                message: e.message,
-                fieldTree: tree[e.field],
-              }));
+            const errors: { field: string; message: string }[] =
+              (error as HttpErrorResponse).error?.data?.errors ?? [];
+            const fieldErrors = errors.filter((e) => e.field === 'email' || e.field === 'name');
+            const other = errors.filter((e) => !fieldErrors.includes(e)).map((e) => e.message);
+            if (!errors.length) other.push('The order could not be placed. Try again.');
+            this.orderError.set(other.join(' '));
+            return fieldErrors.map((e) => ({
+              kind: 'server',
+              message: e.message,
+              fieldTree: tree[e.field as 'email' | 'name'],
+            }));
           }
         },
       },

@@ -10,16 +10,22 @@ interface OrderRequest {
 export default defineEventHandler(async (event) => {
   const body = await readBody<OrderRequest>(event);
   const errors: { field: string; message: string }[] = [];
-  if (!body?.name?.trim()) errors.push({ field: 'name', message: 'Name is required' });
-  if (!body?.email?.includes('@')) errors.push({ field: 'email', message: 'Enter a valid email' });
-  if (body?.email?.endsWith('@blocked.test')) {
+  const name = typeof body?.name === 'string' ? body.name.trim() : '';
+  const email = typeof body?.email === 'string' ? body.email : '';
+  if (!name) errors.push({ field: 'name', message: 'Name is required' });
+  if (!email.includes('@')) errors.push({ field: 'email', message: 'Enter a valid email' });
+  if (email.endsWith('@blocked.test')) {
     errors.push({ field: 'email', message: 'This email is blocked' });
   }
   const items = Array.isArray(body?.items) ? body.items : [];
   if (!items.length) errors.push({ field: 'items', message: 'The cart is empty' });
   const wanted = new Map<number, number>();
   for (const item of items) {
-    if (!Number.isInteger(item?.quantity) || item.quantity < 1) {
+    if (
+      !Number.isInteger(item?.productId) ||
+      !Number.isInteger(item?.quantity) ||
+      item.quantity < 1
+    ) {
       errors.push({ field: 'items', message: 'Each quantity must be a whole number above 0' });
       break;
     }
@@ -34,8 +40,8 @@ export default defineEventHandler(async (event) => {
   if (errors.length) throw createError({ statusCode: 422, data: { errors } });
   const order: Order = {
     id: 1000 + ORDERS.length + 1,
-    name: body.name!,
-    email: body.email!,
+    name,
+    email,
     items,
     total: items.reduce(
       (sum, item) => sum + (findProduct(item.productId)?.price ?? 0) * item.quantity,
@@ -43,6 +49,7 @@ export default defineEventHandler(async (event) => {
     ),
     createdAt: new Date().toISOString(),
   };
+  for (const [productId, quantity] of wanted) findProduct(productId)!.stock -= quantity;
   ORDERS.push(order);
   return order;
 });

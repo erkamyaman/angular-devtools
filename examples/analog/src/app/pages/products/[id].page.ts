@@ -28,8 +28,12 @@ import type { load } from './[id].server';
             {{ product.stock ? product.stock + ' in stock, ships in two days' : 'Sold out' }}
           </p>
           <div class="hero-actions">
-            <button type="button" [disabled]="!product.stock" (click)="cart.add(product)">
-              Add to cart
+            <button type="button" [disabled]="!cart.canAdd(product)" (click)="cart.add(product)">
+              {{
+                !product.stock || cart.canAdd(product)
+                  ? 'Add to cart'
+                  : 'All in stock is in your cart'
+              }}
             </button>
             @if (cart.count()) {
               <a class="button secondary" routerLink="/cart">View cart ({{ cart.count() }})</a>

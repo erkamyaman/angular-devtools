@@ -168,8 +168,21 @@ describe('Vite plugin', () => {
     let passed = false;
     probe({ url: '/products/__connection.json' }, res, () => (passed = true));
     expect([res.statusCode, passed]).toEqual([404, false]);
-    probe({ url: '/__ng-devtools/__connection.json' }, new FakeRes(), () => (passed = true));
+    const local = { remoteAddress: '::ffff:127.0.0.1' };
+    probe(
+      { url: '/__ng-devtools/__connection.json', socket: local },
+      new FakeRes(),
+      () => (passed = true),
+    );
     expect(passed).toBe(true);
+    const remote = new FakeRes();
+    passed = false;
+    probe(
+      { url: '/__ng-devtools/__sse', socket: { remoteAddress: '192.168.1.20' } },
+      remote,
+      () => (passed = true),
+    );
+    expect([remote.statusCode, passed]).toEqual([403, false]);
     expect(onListening).toBeTypeOf('function');
   });
 });

@@ -17,7 +17,16 @@ export class CartStore {
   );
   readonly isEmpty = computed(() => this.lines().length === 0);
 
+  quantityOf(productId: number): number {
+    return this.lines().find((line) => line.product.id === productId)?.quantity ?? 0;
+  }
+
+  canAdd(product: Product): boolean {
+    return this.quantityOf(product.id) < product.stock;
+  }
+
   add(product: Product) {
+    if (!this.canAdd(product)) return;
     this.lines.update((lines) => {
       const existing = lines.find((line) => line.product.id === product.id);
       return existing

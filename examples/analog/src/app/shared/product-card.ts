@@ -22,8 +22,8 @@ import { CartStore } from './cart.store';
       <p class="muted">{{ product().summary }}</p>
       <div class="buy">
         <span class="price">{{ product().price | currency }}</span>
-        <button type="button" [disabled]="soldOut()" (click)="cart.add(product())">
-          {{ soldOut() ? 'Sold out' : 'Add to cart' }}
+        <button type="button" [disabled]="!cart.canAdd(product())" (click)="cart.add(product())">
+          {{ soldOut() ? 'Sold out' : cart.canAdd(product()) ? 'Add to cart' : 'All in cart' }}
           <span class="sr-only">{{ product().name }}</span>
         </button>
       </div>
