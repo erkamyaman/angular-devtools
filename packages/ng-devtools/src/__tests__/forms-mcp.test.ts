@@ -473,6 +473,27 @@ describe('forms MCP tools', () => {
     }
   });
 
+  it('refuses a short form id that matches forms on several pages', async () => {
+    const { push, call } = await withForms();
+    await push('push-forms', {
+      pageId: 'pg3',
+      forms: [{ ...signup, id: 'form-1@pg3' }],
+      events: [],
+    });
+    for (const text of [
+      await call('explain-field', { form: 'form-1', path: 'email' }),
+      await call('form-action', { action: 'focus', form: 'form-1', path: 'email' }),
+      await call('fill-form', { form: 'form-1', values: { email: 'a' } }),
+    ]) {
+      expect(text).toContain('pass the full `form` id');
+      expect(text).toContain('form-1@pg1');
+      expect(text).toContain('form-1@pg3');
+    }
+    expect(await call('explain-field', { form: 'form-1@pg3', path: 'email' })).not.toContain(
+      'forms match',
+    );
+  });
+
   it('rejects reports with malformed new fields', async () => {
     const { push, call } = await boot();
     const bad = {

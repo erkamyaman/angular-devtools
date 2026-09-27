@@ -2,6 +2,7 @@ import { domFacts, submitDom, type DomFacts, type SubmitDom } from './forms-dom.
 import {
   REDACTED,
   SecretSet,
+  redactMessage,
   isSecretKey,
   redactReason,
   type RedactReason,
@@ -155,6 +156,7 @@ const uids = new WeakMap<object, string>();
 const baselines = new WeakMap<object, string>();
 let nextUid = 0;
 let secrets: SecretSet | null = null;
+let formSecrets = new Map<string, SecretSet>();
 
 function uidOf(target: object): string {
   let uid = uids.get(target);
@@ -819,14 +821,17 @@ export function collectForms(
   idOf: (root: object) => string = formIdFor,
 ): CollectedForm[] {
   const seen = new Map<string, number>();
-  return forms.map((found) => {
+  const kept = new Map<string, SecretSet>();
+  const collected = forms.map((found) => {
     const property = found.property ?? propertyHolding(found);
     const owner = ownerName(found.owner);
     let label = `${owner}.${property ?? fallbackName(found)}`;
     const count = (seen.get(label) ?? 0) + 1;
     seen.set(label, count);
     if (count > 1) label = `${label} #${count}`;
+    const id = idOf(found.root);
     secrets = new SecretSet();
+    kept.set(id, secrets);
     let root: FormFieldNode;
     try {
       root =
@@ -838,7 +843,7 @@ export function collectForms(
       secrets = null;
     }
     const form: CollectedForm = {
-      id: idOf(found.root),
+      id,
       kind: found.kind,
       owner,
       property,
@@ -853,15 +858,43 @@ export function collectForms(
     if (found.formElement) form.submitDom = read(() => submitDom(found.formElement!), undefined);
     return form;
   });
+  formSecrets = kept;
+  return collected;
 }
 
+export function redactFormText(formId: string, text: string): string {
+  return formSecrets.get(formId)?.redact(text) ?? redactMessage(text);
+}
+
+const STRUCTURAL_KEYS = new Set([
+  'key',
+  'path',
+  'uid',
+  'type',
+  'status',
+  'updateOn',
+  'skipped',
+  'hiddenBy',
+  'readonlyBy',
+  'redacted',
+  'children',
+]);
+
 function redactTree(node: FormFieldNode, set: SecretSet) {
-  node.errors = node.errors.map((error) => ({ ...error, message: set.redact(error.message) }));
-  if (node.disabledReasons) node.disabledReasons = node.disabledReasons.map((r) => set.redact(r));
-  if (typeof node.value === 'string') node.value = set.redact(node.value);
-  if (node.dom?.drift && typeof node.dom.drift === 'string')
-    node.dom.drift = set.redact(node.dom.drift);
+  const fields = node as unknown as Record<string, unknown>;
+  for (const [key, value] of Object.entries(fields)) {
+    if (!STRUCTURAL_KEYS.has(key)) fields[key] = redactStrings(value, set, 0);
+  }
   for (const child of node.children ?? []) redactTree(child, set);
+}
+
+function redactStrings(value: unknown, set: SecretSet, depth: number): unknown {
+  if (typeof value === 'string') return set.redact(value);
+  if (!value || typeof value !== 'object' || depth > 20) return value;
+  if (Array.isArray(value)) return value.map((item) => redactStrings(item, set, depth + 1));
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [key, redactStrings(item, set, depth + 1)]),
+  );
 }
 
 function flatten(node: FormFieldNode, out = new Map<string, FormFieldNode>()) {

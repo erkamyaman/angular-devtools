@@ -1,4 +1,4 @@
-import { Component, effect, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, input, linkedSignal, signal, untracked } from '@angular/core';
 import type { DevframeRpcClient } from 'devframe/client';
 import {
   FORMS_STYLES,
@@ -74,8 +74,9 @@ export class FormsFieldDetail {
   rpc = input<DevframeRpcClient | null>(null);
 
   readonly text = signal('');
-  readonly draft = signal('');
-  readonly message = signal('');
+  private readonly target = computed(() => `${this.form().id}|${this.node().path}`);
+  readonly draft = linkedSignal({ source: this.target, computation: () => '' });
+  readonly message = linkedSignal({ source: this.target, computation: () => '' });
 
   constructor() {
     effect(() => {

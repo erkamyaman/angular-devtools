@@ -85,11 +85,11 @@ export function redactReason(key: string, element?: Element | null): RedactReaso
   const unmasked = !!element && safeClosest(element, UNMASK_MARKER);
   if (listed(mask, key)) return 'config';
   if (!unmasked && isSecretKey(key)) return 'key';
-  if (!element) return null;
+  if (!element || unmasked) return null;
   if (element.getAttribute('type') === 'password') return 'input-type';
   if (SECRET_AUTOCOMPLETE.test(element.getAttribute('autocomplete') ?? '')) return 'autocomplete';
-  if (!unmasked && safeClosest(element, MASK_MARKERS)) return 'marker';
-  if (!unmasked && safeQuery(element, 'input[type="password"]')) return 'input-type';
+  if (safeClosest(element, MASK_MARKERS)) return 'marker';
+  if (safeQuery(element, 'input[type="password"]')) return 'input-type';
   return null;
 }
 

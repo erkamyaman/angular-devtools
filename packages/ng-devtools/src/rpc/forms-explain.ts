@@ -38,14 +38,32 @@ function pickForm(state: FormsState, args: FieldArgs): CollectedForm | string {
       ? noMatch(onPage(state.forms, args.page), args.form ?? '')
       : 'No forms have been reported.';
   }
-  if (forms.length > 1 && args.form) {
-    const exact = forms.find((f) => f.id === args.form || f.id.split('@')[0] === args.form);
-    if (exact) return exact;
-  }
-  if (forms.length > 1 && !args.form) {
-    return `${forms.length} forms match; pass \`form\`: ${forms.map((f) => `${f.id} ${code(f.label)}`).join(', ')}.`;
-  }
-  return forms[0];
+  if (forms.length === 1) return forms[0];
+  return exactForm(forms, args.form) ?? ambiguous(forms);
+}
+
+function exactForm(forms: CollectedForm[], query: string | undefined): CollectedForm | null {
+  if (!query) return null;
+  const full = forms.find((f) => f.id === query);
+  if (full) return full;
+  const short = forms.filter((f) => f.id.split('@')[0] === query);
+  return short.length === 1 ? short[0] : null;
+}
+
+function ambiguous(forms: CollectedForm[]): string {
+  return `${forms.length} forms match; pass the full \`form\` id: ${forms.map((f) => `${f.id} ${code(f.label)}`).join(', ')}.`;
+}
+
+export function resolveForm(
+  forms: CollectedForm[],
+  query: string | undefined,
+): CollectedForm | string {
+  const match = exactForm(forms, query);
+  if (match) return match;
+  const short = forms.filter((f) => f.id.split('@')[0] === query);
+  return short.length > 1
+    ? ambiguous(short)
+    : `No form ${query ?? ''}. Forms: ${forms.map((f) => f.id).join(', ')}.`;
 }
 
 export function latestMarker(state: FormsState): number {

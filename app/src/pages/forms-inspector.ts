@@ -350,7 +350,11 @@ function countFields(node: FormFieldNode): number {
                         } @empty {
                           <tr>
                             <td colspan="5" class="muted">
-                              No field path matches "{{ filter() }}".
+                              @if (filter()) {
+                                No field path matches "{{ filter() }}".
+                              } @else {
+                                No field matches the selected filters.
+                              }
                             </td>
                           </tr>
                         }

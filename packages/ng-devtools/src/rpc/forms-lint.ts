@@ -146,12 +146,13 @@ export function lintForm(
       );
     }
     const invalid = node.status === 'INVALID';
-    if (node.dom.ariaInvalid !== undefined && node.dom.ariaInvalid !== invalid) {
+    const aria = node.dom.ariaInvalid;
+    if ((aria === true && !invalid) || (aria === false && invalid && node.touched)) {
       add(
         'aria-invalid-desync',
         'warning',
         at,
-        `aria-invalid is ${node.dom.ariaInvalid} but the field is ${node.status}.`,
+        `aria-invalid is ${aria} but the field is ${node.status}${invalid ? ' and touched' : ''}.`,
         'Bind [attr.aria-invalid] to the field state (invalid && touched).',
       );
     }

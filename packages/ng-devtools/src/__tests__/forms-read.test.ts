@@ -22,6 +22,7 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   collectForms,
+  redactFormText,
   findForms,
   serializeControl,
   serializeField,
@@ -260,6 +261,27 @@ describe('privacy', () => {
     expect(redactReason('city', document.getElementById('a'))).toBe('marker');
     expect(redactReason('token', document.getElementById('b'))).toBeNull();
     expect(redactReason('x', document.getElementById('c'))).toBe('autocomplete');
+    document.body.innerHTML = `
+      <div data-ng-devtools="unmask">
+        <input id="d" type="password"><input id="e" autocomplete="one-time-code">
+      </div>`;
+    expect(redactReason('x', document.getElementById('d'))).toBeNull();
+    expect(redactReason('x', document.getElementById('e'))).toBeNull();
+  });
+
+  it('removes a secret value from every serialized string', () => {
+    const group = new FormGroup({
+      password: new FormControl('hunter2'),
+      hint: new FormControl('hunter2 backwards'),
+    });
+    group.controls.hint.setErrors({ pattern: { requiredPattern: '^hunter2$', actualValue: 'x' } });
+    const [collected] = collectForms({
+      forms: [{ kind: 'reactive', root: group as any, owner: null }],
+      elements: new WeakMap(),
+    });
+    const text = JSON.stringify(collected);
+    expect(text).not.toContain('hunter2');
+    expect(text).toContain('"path":"hint"');
   });
 
   it('removes a secret value quoted in another field error', () => {
@@ -274,6 +296,9 @@ describe('privacy', () => {
     });
     const text = JSON.stringify(collected);
     expect(text).not.toContain('hunter2');
+    expect(redactFormText(collected.id, 'Invalid password hunter2')).toBe(
+      'Invalid password [redacted]',
+    );
     expect(redactMessage('Bearer abc.def and eyJhbGciOiJI.eyJzdWIiOiIx.c2lnbmF0dXJl')).toBe(
       'Bearer [redacted] and [redacted]',
     );

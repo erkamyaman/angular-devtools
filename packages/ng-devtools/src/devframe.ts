@@ -31,6 +31,7 @@ import {
   latestMarker,
   lintFormsFor,
   lintFormsText,
+  resolveForm,
   waitSatisfied,
   type WaitUntil,
 } from './rpc/forms-explain.ts';
@@ -823,12 +824,8 @@ const ngDevtools = defineDevframe({
       handler: async (args: Record<string, unknown>) => {
         const state = formsState.value() as FormsState;
         if (!state.forms.length) return { markdown: noForms };
-        const form = str(args?.['form']);
-        const match = state.forms.find((f) => f.id === form || f.id.split('@')[0] === form);
-        if (!match)
-          return {
-            markdown: `No form ${form ?? ''}. Forms: ${state.forms.map((f) => f.id).join(', ')}.`,
-          };
+        const match = resolveForm(state.forms, str(args?.['form']));
+        if (typeof match === 'string') return { markdown: match };
         const { form: _form, ...rest } = args;
         const result = await requestFormAction({ ...rest, formId: match.id });
         return { markdown: actionText(result, formsState.value() as FormsState) };
@@ -854,12 +851,8 @@ const ngDevtools = defineDevframe({
       handler: async (args: Record<string, unknown>) => {
         const state = formsState.value() as FormsState;
         if (!state.forms.length) return { markdown: noForms };
-        const form = str(args?.['form']);
-        const match = state.forms.find((f) => f.id === form || f.id.split('@')[0] === form);
-        if (!match)
-          return {
-            markdown: `No form ${form ?? ''}. Forms: ${state.forms.map((f) => f.id).join(', ')}.`,
-          };
+        const match = resolveForm(state.forms, str(args?.['form']));
+        if (typeof match === 'string') return { markdown: match };
         const result = await requestFormAction({
           action: 'fill',
           formId: match.id,

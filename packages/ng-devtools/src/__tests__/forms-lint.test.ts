@@ -106,4 +106,14 @@ describe('forms lint', () => {
     );
     expect(rules(form)).not.toContain('error-not-described:c');
   });
+
+  it('matches aria-invalid against invalid and touched', () => {
+    const form = formOf('reactive', [
+      leaf('a', { status: 'INVALID', touched: false, dom: { labelled: true, ariaInvalid: false } }),
+      leaf('b', { status: 'VALID', dom: { labelled: true, ariaInvalid: true } }),
+      leaf('c', { status: 'INVALID', touched: true, dom: { labelled: true, ariaInvalid: true } }),
+    ]);
+    const found = rules(form).filter((rule) => rule.startsWith('aria-invalid-desync'));
+    expect(found).toEqual(['aria-invalid-desync:b']);
+  });
 });

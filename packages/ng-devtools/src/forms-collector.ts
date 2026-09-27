@@ -14,6 +14,7 @@ import {
   type FormEvent,
   type FormFieldNode,
   type FoundForm,
+  redactFormText,
 } from './forms.ts';
 import {
   isDevtoolsAction,
@@ -502,7 +503,10 @@ export function attachForms(
       path: '',
       type: 'submit',
       outcome: 'threw',
-      detail: redactMessage(String(event.reason?.message ?? event.reason ?? 'error')).slice(0, 200),
+      detail: redactFormText(
+        submittingForm,
+        String(event.reason?.message ?? event.reason ?? 'error'),
+      ).slice(0, 200),
       timestamp: Date.now(),
     });
     schedulePush();
