@@ -305,14 +305,16 @@ This adds a purple FAB button (bottom-right) that opens the full devtools UI in 
 
 ## Demo App
 
-The repository includes a demo Angular app (`src/`) that showcases the devtools with a product catalog built using `@ngrx/signals`:
+The repository includes a demo app, **Angular Travel** (`src/`), that looks and behaves like a real booking site so every inspector has something to show:
 
-- **Home** — simple counter with `signal()`
-- **Products** — product list and detail pages powered by a `signalStore` with `withState`, `withComputed`, and `withMethods`
-- **About** — static page
-- **Examples → SSR & HTTP** (`/examples/http`) — a product list fetched from `/api/products` during SSR and replayed from the transfer cache. The endpoint accepts `?delay=` and `?fail=` for backend scenarios; run the SSR server (`pnpm build --configuration development && node dist/angular-devtools/server/server.mjs`) to see server calls
+- **Destinations**: search, region filter and sort kept in the URL, backed by an `@ngrx/signals` store (`withState`, `withComputed`, `withMethods`)
+- **Trip pages**: loaded by a resolver that redirects unknown trips, with a route title resolver
+- **Booking**: a Signal Forms checkout with cross-field rules, a seat limit and an unsaved-changes guard
+- **My Trips**: behind a sign-in guard that redirects to a reactive form and back
+- **DevTools Lab** (`/examples`): small, focused pages for signals, components, DI, routes and all three form APIs
+- **SSR & HTTP** (`/examples/http`): a product list fetched from `/api/products` during SSR and replayed from the transfer cache. The endpoint accepts `?delay=` and `?fail=` for backend scenarios; run the SSR server (`pnpm build --configuration development && node dist/angular-devtools/server/server.mjs`) to see server calls
 
-Run `pnpm start` and click the purple FAB button to open the devtools popup and see all inspectors in action.
+Run `pnpm start` and click the floating button in the corner to open the devtools. Destination photos are from Unsplash, credited in `public/destinations/CREDITS.md`.
 
 ## Development
 

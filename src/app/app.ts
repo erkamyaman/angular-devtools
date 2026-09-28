@@ -1,6 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ThemeToggle } from './theme-toggle';
+import { Account } from './travel/auth';
+import { TravelStore } from './travel/travel.store';
 
 @Component({
   imports: [RouterOutlet, RouterLink, RouterLinkActive, ThemeToggle],
@@ -9,7 +11,8 @@ import { ThemeToggle } from './theme-toggle';
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly title = signal('angular-devtools');
+  protected readonly store = inject(TravelStore);
+  protected readonly account = inject(Account);
 
   /**
    * `<base href="/">` makes a bare `#main` resolve to `/#main`, so the browser
