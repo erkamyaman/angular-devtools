@@ -1,5 +1,5 @@
-import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import {Component, DestroyRef, computed, inject, OnInit, signal} from '@angular/core';
+import {Router, RouterLink, RouterOutlet} from '@angular/router';
 import {
   LucideDynamicIcon,
   LucideMenu,
@@ -9,27 +9,27 @@ import {
   LucideSunMoon,
   LucideX,
 } from '@lucide/angular';
-import { GithubIcon } from './ui/github-icon';
-import { DiscordIcon } from './ui/discord-icon';
-import { ThemeService } from './theme';
-import { LayoutMode } from './layout-mode.service';
-import { RouteUrlService } from './services/route-url/route-url.service';
-import { onNavigation } from './utils/enhance-on-navigation';
+import {GithubIcon} from './ui/github-icon';
+import {DiscordIcon} from './ui/discord-icon';
+import {ThemeService} from './theme';
+import {LayoutMode} from './layout-mode.service';
+import {RouteUrlService} from './services/route-url/route-url.service';
+import {onNavigation} from './utils/enhance-on-navigation';
 import siteConfig from '../ngmd.config';
-import { CommandPalette } from './components/command-palette';
-import { Sidebar } from './components/sidebar';
-import { Breadcrumb } from './components/breadcrumb';
-import { Toc } from './components/toc';
-import { CodeCopy } from './components/code-copy';
-import { ExternalLinks } from './components/external-links';
-import { HeadingAnchors } from './components/heading-anchors';
-import { CodeGroup } from './components/code-group';
-import { PageFooter } from './components/page-footer';
-import { SourceActions } from './components/source-actions';
-import { MediaEnhancer } from './components/media-enhancer';
-import { SiteFooter } from './components/site-footer';
-import { Toaster } from './components/toaster';
-import { VersionSwitcher } from './components/version-switcher';
+import {CommandPalette} from './components/command-palette';
+import {Sidebar} from './components/sidebar';
+import {Breadcrumb} from './components/breadcrumb';
+import {Toc} from './components/toc';
+import {CodeCopy} from './components/code-copy';
+import {ExternalLinks} from './components/external-links';
+import {HeadingAnchors} from './components/heading-anchors';
+import {CodeGroup} from './components/code-group';
+import {PageFooter} from './components/page-footer';
+import {SourceActions} from './components/source-actions';
+import {MediaEnhancer} from './components/media-enhancer';
+import {SiteFooter} from './components/site-footer';
+import {Toaster} from './components/toaster';
+import {VersionSwitcher} from './components/version-switcher';
 
 @Component({
   selector: 'app-root',
@@ -286,7 +286,7 @@ export class App implements OnInit {
     onNavigation(this.router, this.destroyRef, () => {
       this.drawerOpen.set(false);
       if (typeof window === 'undefined' || window.location.hash) return;
-      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+      setTimeout(() => window.scrollTo({top: 0, behavior: 'smooth'}), 0);
     });
   }
 }

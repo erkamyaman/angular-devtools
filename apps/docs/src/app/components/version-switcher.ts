@@ -1,12 +1,12 @@
-import { Component, computed, ElementRef, HostListener, inject, signal } from '@angular/core';
+import {Component, computed, ElementRef, HostListener, inject, signal} from '@angular/core';
 import {
   LucideDynamicIcon,
   LucideCheck,
   LucideChevronDown,
   LucideExternalLink,
 } from '@lucide/angular';
-import type { VersionStatus } from '../../ngmd.config';
-import { VersionService } from '../services/version/version.service';
+import type {VersionStatus} from '../../ngmd.config';
+import {VersionService} from '../services/version/version.service';
 
 /**
  * Header dropdown of every documentation version.

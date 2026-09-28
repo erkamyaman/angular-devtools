@@ -22,6 +22,6 @@ export function watchHostAttribute(
   onChange(host.getAttribute(attribute));
   if (typeof MutationObserver === 'undefined') return () => {};
   const observer = new MutationObserver(() => onChange(host.getAttribute(attribute)));
-  observer.observe(host, { attributes: true, attributeFilter: [attribute] });
+  observer.observe(host, {attributes: true, attributeFilter: [attribute]});
   return () => observer.disconnect();
 }

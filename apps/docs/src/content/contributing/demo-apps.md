@@ -1,33 +1,116 @@
 ---
 title: Demo apps
-description: The Angular Travel demo and the Analog demo in the repository.
+description: The Angular Travel demo and the Analog demo in the repository, and how to run each in development and production.
 ---
+
+<ngmd-hero title="Demo apps" gradient>
+  Two apps that give every inspector something to show. One Angular CLI app with SSR, one Analog app on Vite.
+</ngmd-hero>
 
 # Demo apps
 
-The repository has two demo apps, so every inspector has something to show.
+The repository has two demo apps. Use them to try a change against a real app before you open a PR.
+
+<ngmd-card-grid columns="2">
+  <ngmd-card icon="compass" title="Angular Travel" cta="src/">
+    An Angular CLI app with SSR and Express. It uses the hub, the overlay and the HTTP providers.
+  </ngmd-card>
+  <ngmd-card icon="zap" title="Analog demo" cta="examples/analog">
+    An Analog app wired with the Vite plugin. It covers file routes, server loads, API routes and content.
+  </ngmd-card>
+</ngmd-card-grid>
 
 ## Angular Travel
 
-The repository includes a demo app, **Angular Travel** (`src/`), that looks and behaves like a real booking site so every inspector has something to show:
+**Angular Travel** (`src/`) looks and behaves like a real booking site.
 
-- **Destinations**: search, region filter and sort kept in the URL, backed by an `@ngrx/signals` store (`withState`, `withComputed`, `withMethods`)
-- **Trip pages**: loaded by a resolver that redirects unknown trips, with a route title resolver
-- **Booking**: a Signal Forms checkout with a departure date rule, a seat limit and an unsaved-changes guard
-- **My Trips**: behind a sign-in guard that redirects to a reactive form and back
-- **DevTools Lab** (`/examples`): small, focused pages for signals, components, DI, routes, forms, pipes and HTTP
-- **SSR & HTTP** (`/examples/http`): a product list fetched from `/api/products` during SSR and replayed from the transfer cache. The endpoint accepts `?delay=` and `?fail=` for backend scenarios; run the SSR server (`pnpm build --configuration development && node dist/angular-devtools/server/server.mjs`) to see server calls
+### What's inside
 
-Run `pnpm start` and click the amber button in the corner to open the devtools. Destination photos are from Unsplash, credited in `public/destinations/CREDITS.md`.
+- **Destinations**: search, region filter and sort kept in the URL, backed by an `@ngrx/signals` store (`withState`, `withComputed`, `withMethods`).
+- **Trip pages**: loaded by a resolver that redirects unknown trips, with a route title resolver.
+- **Booking**: a Signal Forms checkout with a departure date rule, a seat limit and an unsaved-changes guard.
+- **My Trips**: behind a sign-in guard that redirects to a reactive form and back.
+- **DevTools Lab** (`/examples`): small, focused pages for signals, components, DI, routes, forms, pipes and HTTP.
+- **SSR & HTTP** (`/examples/http`): a product list fetched from `/api/products` during SSR and replayed from the transfer cache. The endpoint accepts `?delay=` and `?fail=` for backend errors.
 
-The demo shows the full setup: the hub in `src/server.ts`, the overlay and `registerNgrxSignals` in `src/main.ts`, and the HTTP providers in `src/app/app.config.ts`.
+Destination photos are from Unsplash, credited in `public/destinations/CREDITS.md`.
+
+### Where the devtools are wired
+
+The demo shows the full setup in three files:
+
+| File                    | What it adds                                                            |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `src/server.ts`         | The hub, with `initNgDevtoolsHub()` mounted as Express middleware       |
+| `src/main.ts`           | The overlay and `registerNgrxSignals`, loaded in development only       |
+| `src/app/app.config.ts` | `withNgDevtools()` and `provideNgDevtoolsHttp()` for the SSR & HTTP tab |
+
+### Run in development
+
+```bash
+pnpm start
+```
+
+This builds the devtools package, then runs `ng serve` with SSR and hot reload on port 4200. Click the amber button in the corner to open the devtools.
+
+### Run the SSR server
+
+To see server calls in the SSR & HTTP tab, run the built SSR server:
+
+```bash
+pnpm build --configuration development
+node dist/angular-devtools/server/server.mjs
+```
+
+It listens on port 4000, or on `PORT` when set.
+
+<ngmd-callout type="warning" title="Use the development configuration">
+  <code>pnpm build</code> defaults to the production configuration. <code>src/main.ts</code> only loads the overlay when <code>ngDevMode</code> is on, and the HTTP interceptor passes requests through in production. Build with <code>--configuration development</code> to use the devtools.
+</ngmd-callout>
+
+### Render modes
+
+`src/app/app.routes.server.ts` sets a render mode per route, so the SSR tools have something to compare:
+
+- `destinations`, `destinations/:id` and `examples/http` render on the server per request.
+- `book/:id`, `trips`, `sign-in` and some `examples/routes` pages render on the client only.
+- Everything else is prerendered.
 
 ## Analog demo
 
-`examples/analog` is an Analog app wired with the [Vite plugin](/getting-started/vite).
+`examples/analog` is an *Analog app wired with the [Vite plugin](/getting-started/vite). Its project name is `analog-demo`.
+
+### What's in the Analog demo
+
+- File routes with route groups (`(auth)`, `(marketing)`), a `[id]` param and a `[...slug]` catch-all.
+- `.server.ts` loads next to pages, like `products/[id].server.ts`.
+- API routes under `src/server/routes/api/v1`, with method suffixes such as `index.get.ts` and `index.post.ts`, and a timing middleware.
+- Markdown content under `src/content/blog` and `src/content/docs`.
+- Prerendered routes listed in `vite.config.ts`, and `/dashboard` as client only (`ssr: false`).
+
+### Run Analog in development
 
 ```bash
 pnpm analog:dev
 ```
 
-The script builds the devtools package, then starts the Vite dev server.
+The script builds the devtools package, then starts the Vite dev server. The devtools and the MCP endpoint are served by that dev server.
+
+### Build and preview
+
+```bash
+pnpm --filter analog-demo build
+pnpm --filter analog-demo preview
+```
+
+<ngmd-alert severity="helpful">
+  The Vite plugin runs on the dev server only, and the overlay loads only when <code>import.meta.env.DEV</code> is true. A production build has no devtools. Use it to check the <code>analog-prerender-plan</code> tool against real build output.
+</ngmd-alert>
+
+## Where to next
+
+<ngmd-pill-row>
+  <ngmd-pill href="/contributing/development" title="Development setup"></ngmd-pill>
+  <ngmd-pill href="/guides/analog" title="Set up Analog"></ngmd-pill>
+  <ngmd-pill href="/guides/ssr-http" title="Set up SSR & HTTP"></ngmd-pill>
+</ngmd-pill-row>

@@ -1,7 +1,7 @@
-import { DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs';
+import {DestroyRef} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {NavigationEnd, Router} from '@angular/router';
+import {filter} from 'rxjs';
 
 /**
  * Run a DOM-enhancing function on initial mount and after every router
@@ -28,7 +28,7 @@ export function enhanceOnNavigation(
   destroyRef: DestroyRef,
   selector: string,
   enhanceEach: (el: HTMLElement) => void,
-  opts: { maxAttempts?: number; delayMs?: number } = {},
+  opts: {maxAttempts?: number; delayMs?: number} = {},
 ): void {
   const maxAttempts = opts.maxAttempts ?? 20;
   const delayMs = opts.delayMs ?? 50;

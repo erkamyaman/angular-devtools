@@ -1,7 +1,7 @@
-import { statSync } from 'node:fs';
-import { join } from 'node:path';
-import type { Plugin } from 'vite';
-import { gitDate, routeFromPagePath, walkContentFiles, walkPageFiles } from './plugin-utils.ts';
+import {statSync} from 'node:fs';
+import {join} from 'node:path';
+import type {Plugin} from 'vite';
+import {gitDate, routeFromPagePath, walkContentFiles, walkPageFiles} from './plugin-utils.ts';
 
 /**
  * Build-time map of page URL → { editUrl, lastUpdated }.
@@ -24,7 +24,7 @@ export interface PageMeta {
 const VIRTUAL_ID = 'virtual:ngmd/page-meta';
 const RESOLVED_ID = '\0' + VIRTUAL_ID;
 
-export function pageMetaPlugin(opts: { repoUrl: string; branch?: string; dir?: string }): Plugin {
+export function pageMetaPlugin(opts: {repoUrl: string; branch?: string; dir?: string}): Plugin {
   const branch = opts.branch ?? 'main';
   const prefix = opts.dir ? `${opts.dir.replace(/\/+$/, '')}/` : '';
   let root = process.cwd();

@@ -1,12 +1,12 @@
-import { computed } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
-import type { VersionEntry } from '../../ngmd.config';
-import { VersionService } from '../services/version/version.service';
-import { VersionSwitcher } from './version-switcher';
+import {computed} from '@angular/core';
+import {TestBed} from '@angular/core/testing';
+import type {VersionEntry} from '../../ngmd.config';
+import {VersionService} from '../services/version/version.service';
+import {VersionSwitcher} from './version-switcher';
 
 const list: VersionEntry[] = [
-  { label: 'v2', url: 'https://v2.example.com', status: 'current' },
-  { label: 'v1', url: 'https://v1.example.com', status: 'deprecated' },
+  {label: 'v2', url: 'https://v2.example.com', status: 'current'},
+  {label: 'v1', url: 'https://v1.example.com', status: 'deprecated'},
 ];
 
 describe('VersionSwitcher', () => {
@@ -16,7 +16,7 @@ describe('VersionSwitcher', () => {
       providers: [
         {
           provide: VersionService,
-          useValue: { list: computed(() => list), self: computed(() => list[0]) },
+          useValue: {list: computed(() => list), self: computed(() => list[0])},
         },
       ],
     });
@@ -35,7 +35,7 @@ describe('VersionSwitcher', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
     expect(el.querySelectorAll('[role="option"]').length).toBe(2);
 
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
     await fixture.whenStable();
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     expect(el.querySelector('[role="listbox"]')).toBeNull();

@@ -1,6 +1,6 @@
-import { ApplicationRef, Injector } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
-import { registerNgmdElements } from './register-elements';
+import {ApplicationRef, Injector} from '@angular/core';
+import {TestBed} from '@angular/core/testing';
+import {registerNgmdElements} from './register-elements';
 
 describe('registerNgmdElements', () => {
   afterEach(() => {

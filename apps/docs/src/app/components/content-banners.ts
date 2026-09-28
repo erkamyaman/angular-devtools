@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import {Component, computed, inject} from '@angular/core';
 import {
   LucideDynamicIcon,
   LucideArchive,
@@ -6,7 +6,7 @@ import {
   LucideRocket,
   LucideTriangleAlert,
 } from '@lucide/angular';
-import { VersionService } from '../services/version/version.service';
+import {VersionService} from '../services/version/version.service';
 
 /**
  * Banner rendered above every documentation route when THIS deployment

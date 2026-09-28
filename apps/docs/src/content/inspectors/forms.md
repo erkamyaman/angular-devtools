@@ -3,63 +3,221 @@ title: Forms
 description: Every form on the page with each field's state and errors, a change timeline, submit explanations and a lint.
 ---
 
+<ngmd-hero title="Forms" gradient>
+  Every Signal Form, reactive form and template-driven form on the page. Each field's value, state and errors, where each error comes from, a change timeline, submit explanations and a lint.
+</ngmd-hero>
+
 # Forms
 
-The Forms tab and the forms tools read Signal Forms, reactive forms and template-driven forms from the running page, in development builds only. Signal Forms need Angular 21 or later. The live change timeline for reactive and template-driven forms uses `control.events` (Angular 18+); on Angular 17 changes are picked up every few seconds instead, without submit and reset events.
+The Forms tab reads the forms of the running page, in development builds only. It covers Signal Forms, reactive forms and template-driven forms. Actions you run from the tab are sent back to the page and run there.
 
-## Where the data comes from
+## What it shows
 
-The [overlay](/getting-started/overlay) finds the forms on the page and sends their state. Form actions (touch, reset, submit and others) are sent back to the page and run there. The server adds the source file and line of each form and its rules.
+### Forms list
 
-## Forms list
+The sidebar lists each form with its label, its kind (**Signal Forms**, **Reactive** or **Template-driven**) and its error count. When the panel runs inside a page and other tabs report forms, check **All pages** to include them.
 
-The sidebar lists each form with its label, kind (**Signal Forms**, **Reactive** or **Template-driven**) and error count. Check **All pages** to include forms from other open tabs.
+Select a form to see its status, whether it is dirty or touched, whether it was submitted or is submitting, and an **Error summary**.
 
-Select a form to see its status, dirty and touched state, whether it was submitted or is submitting, and an error summary.
+### Fields view
 
-## Fields
+Each field shows its value, status, touched and dirty state, and errors. Extra facts depend on the kind:
 
-Each field shows its value, status, touched/dirty state and errors, plus:
+- **Signal Forms**: constraints (`min`, `max`, `minLength`, `maxLength`, `pattern`), a pending `debounce`, `submitting`, and disabled reasons.
+- **Reactive and template-driven**: whether validators and async validators are attached, the value `reset()` goes back to, `updateOn`, and the bound `ControlValueAccessor`.
 
-- For Signal Forms: constraints (`min`, `max`, `minLength`, `maxLength`, `pattern`), a pending `debounce`, `submitting`, and disabled reasons.
-- For reactive and template-driven forms: whether validators and async validators are attached, the value `reset()` goes back to, `updateOn`, and the bound `ControlValueAccessor`.
+Filter by path, or with the **Invalid**, **Dirty**, **Touched**, **Disabled** and **Error not shown** chips. Hover a field to highlight its input in the page.
 
-Filter by path, or with the **Invalid**, **Dirty**, **Touched**, **Disabled** and **Error not shown** chips. Hover a field to highlight its input in the page. Click it for field details, where you can set a value, focus, touch or revalidate the field, or store it as a global (`$form` in the page console).
+### Error sources
 
-Each error says where it comes from: a validator, a template attribute, a cross-field rule (and on which ancestor), async, parse, a server/submission error, or `setErrors()`.
+Each error says where it comes from:
 
-## Actions
+| Label              | Meaning                                                  |
+| ------------------ | -------------------------------------------------------- |
+| validator          | A validator on the control.                              |
+| template attribute | A template attribute, such as `required` or `minlength`. |
+| cross-field rule   | A rule on an ancestor, with the ancestor's path.         |
+| async              | An async validator.                                      |
+| parse              | The input could not parse the typed text.                |
+| schema             | A Standard Schema, with the path it reported.            |
+| server             | A server or submission error.                            |
+| setErrors          | Code set the error with `setErrors()`.                   |
+
+### Field details
+
+Click a field to open its details. There you can set a value, **Focus**, **Touch** or **Revalidate** the field, or **Store as global**. That stores the form as `$form`, and the field as `$control`, in the page console.
+
+### Timeline view
+
+Recent changes, newest first, each tagged with its origin: user, code or devtools. Array items are tracked by identity, so moves show as moves. Async validation times show as **pending** tags.
+
+Check **Record details** to add the calling code of each change, validator changes, and component renders per keystroke. It is off by default and applies to the whole page.
+
+### Submit view
+
+What submit will do, and why it might do nothing. It also shows what the form sends. **Copy test fixture** copies a fixture for your tests.
+
+### Lint view
+
+Form bugs and model-aware accessibility checks, each with a fix. For generic accessibility checks, run axe on the page.
+
+### Actions bar
 
 The actions bar works on the selected form:
 
-- **Touch all**, **Revalidate**, **Focus first invalid** and **Pick field on page**.
-- **Snapshot** saves the form's values. **Restore** puts them back.
+- **Touch all**, **Revalidate** and **Focus first invalid**.
+- **Pick field on page**: click a field in the app to select it. Esc cancels.
+- **Snapshot** saves the form's values. **Restore s1**, **Restore s2** and so on put them back.
 - **Reset** and **Submit**.
 
-Restore, reset and submit ask for confirmation first. Secret fields are never written.
+## Where the data comes from
 
-## Views
+<ngmd-card-grid columns="2">
+  <ngmd-card icon="zap" title="Live page">
+    The overlay finds the forms through Angular's debug API and pushes their state.
+  </ngmd-card>
+  <ngmd-card icon="file" title="Source scan">
+    The server adds the file and line of each form and its rules.
+  </ngmd-card>
+</ngmd-card-grid>
 
-The Forms tab has four views:
+### When the page reports
 
-- **Fields**: the field table with filters and per-field actions.
-- **Timeline**: recent changes, each tagged with its origin (user, code or devtools). Check **Record details** to add the calling code of each change, validator changes, async validation times and component renders per keystroke. Array items are tracked by identity, so moves show as moves.
-- **Submit**: what submit will do and why it might do nothing, plus what the form sends. **Copy test fixture** copies a fixture for your tests.
-- **Lint**: form bugs and model-aware accessibility checks. For generic accessibility checks, run axe on the page.
+The overlay pushes the forms every 3 seconds, and shortly after each `input`, `change`, `focusout`, `submit` or `reset` event. Reactive and template-driven forms also report each change through `control.events`.
 
-Pick a field on the page to select it, or open a form from its component in the [Components tab](/inspectors/components).
+### Validators run only when needed
 
-## For agents
+To tell where each error comes from, the devtools run the sync validators of reactive and template-driven fields themselves. They do this only for enabled leaf fields. The result is reused for up to 5 seconds while the value and the validators stay the same. With **Record details** on, they run on every report.
 
-`ng-devtools:explain-form-invalid` is the tool to reach for first: without arguments it lists every form that is invalid or waiting on async validation, with each failing field's current value, the validator that failed, its message and whether it was touched. Pass `form` (an id like `Checkout.form@ab12`, or part of a label like `Checkout.form`) to explain one form.
+Async validators are never run by the devtools. The probe emits no form events, so it does not show up in the timeline.
 
-- `ng-devtools:inspect-forms` lists the forms with their status and error counts. Pass `form` for a field tree, plus `path` (e.g. `address.city`), `onlyInvalid` or `includeValues: false` to narrow it down.
-- Both tools note when the page last reported, so an agent can tell when the data is stale.
-- `ng-devtools:explain-field` adds why validation is skipped (hidden, disabled, readonly), typed-but-uncommitted values (`updateOn`, `debounce`), stale validity after validator changes, the binding, whether the error text is visible, and the file and line of the form and its rules.
-- Agents can loop: inspect, act (`form-action`, `fill-form`), `wait-for-form`, then `form-diff` from the marker they had. Writes need a development build; `reset`, `submit` and `restore` need `confirm: true`.
+<ngmd-callout type="warning" title="Validators with side effects">
+  The devtools call your sync validators. A validator that logs, counts or changes state will see extra calls while the Forms tab is open.
+</ngmd-callout>
 
-See [Tools](/agents/tools) for the full list.
+## How to use it
 
-## Privacy
+### Find why a form is invalid
 
-Form values leave the page: they are sent to the devtools server, shown in the Forms tab and returned to agents. Password fields and fields with secret-looking names are replaced with `[redacted]`. See [Security](/security) for the full rules and how to mask or unmask a field.
+<ngmd-workflow>
+  <ngmd-step title="Select the form">
+    The error count in the sidebar shows which forms fail.
+  </ngmd-step>
+  <ngmd-step title="Filter to Invalid">
+    Click the <strong>Invalid</strong> chip.
+  </ngmd-step>
+  <ngmd-step title="Read the source">
+    Each error says which validator, attribute or rule set it.
+  </ngmd-step>
+  <ngmd-step title="Check what the user sees">
+    Click <strong>Error not shown</strong> to find errors that have no visible message.
+  </ngmd-step>
+</ngmd-workflow>
+
+### Find why submit does nothing
+
+<ngmd-workflow>
+  <ngmd-step title="Open Submit">
+    It explains what submit will do.
+  </ngmd-step>
+  <ngmd-step title="Read the payload">
+    Compare the value with what your API expects.
+  </ngmd-step>
+  <ngmd-step title="Copy a fixture">
+    Click <strong>Copy test fixture</strong> to reproduce it in a test.
+  </ngmd-step>
+</ngmd-workflow>
+
+### Test a form by hand
+
+<ngmd-workflow>
+  <ngmd-step title="Snapshot">
+    Save the current values.
+  </ngmd-step>
+  <ngmd-step title="Change things">
+    Type in the app, or set values from the field details.
+  </ngmd-step>
+  <ngmd-step title="Restore">
+    Click <strong>Restore s1</strong>, then click again to confirm.
+  </ngmd-step>
+</ngmd-workflow>
+
+You can also open a form from its component in the [Components tab](/inspectors/components).
+
+## Agent tools
+
+`form` is a form id like `Checkout.form@ab12`, or part of its label. `path` is a dotted field path, like `address.city`.
+
+### Read tools
+
+| Tool                                 | What it does                                                                                                      |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `ng-devtools:explain-form-invalid`   | Start here. Every invalid or pending form, with each failing field's value, validator, message and touched state. |
+| `ng-devtools:inspect-forms`          | The forms with status and error counts. With `form`, the field tree. Narrow with `path` or `onlyInvalid`.         |
+| `ng-devtools:explain-field`          | One field: error sources, skip reasons, pending values, binding, visible errors, and source lines.                |
+| `ng-devtools:explain-submit`         | What submit will do, and why it might do nothing.                                                                 |
+| `ng-devtools:form-payload`           | What the form sends: value against raw value, and unvalidated fields.                                             |
+| `ng-devtools:form-history`           | The change timeline with origins. Returns a marker.                                                               |
+| `ng-devtools:form-diff`              | The net change since a marker.                                                                                    |
+| `ng-devtools:lint-forms`             | Form bugs and accessibility checks.                                                                               |
+| `ng-devtools:explain-custom-control` | How a field binds to its element, and what is wrong with the binding.                                             |
+| `ng-devtools:export-form`            | A JSON snapshot or a test fixture.                                                                                |
+| `ng-devtools:wait-for-form`          | Waits until the form is settled, valid, not pending or submitted.                                                 |
+
+### Write tools
+
+| Tool                      | What it does                                                                       |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| `ng-devtools:form-action` | Set, touch, revalidate, reset, submit, focus, snapshot, restore and more.          |
+| `ng-devtools:fill-form`   | Fills several fields through the inputs, like a user would. Can submit afterwards. |
+
+Agents can loop: inspect, act, `wait-for-form`, then `form-diff` from the marker they had. The `ng-devtools:forms` resource holds every form and recent changes. See [Tools](/agents/tools).
+
+## Limits and gotchas
+
+<ngmd-callout type="warning" title="Reset, submit and restore ask first">
+  In the tab, the button turns into <strong>Confirm reset</strong>, <strong>Confirm submit</strong> or <strong>Confirm restore</strong>. Click again to run it. Agents pass <code>confirm: true</code> for the same actions, and for <code>fill-form</code> with <code>submit</code>.
+</ngmd-callout>
+
+<ngmd-callout type="info" title="Fields that are never written">
+  Secret fields are never written. For Signal Forms, hidden, readonly and rule-disabled fields are skipped too. Disabled reactive fields are written only with <code>force</code>.
+</ngmd-callout>
+
+<ngmd-callout type="info" title="Snapshots">
+  Up to 20 snapshots are kept. They are lost on reload. Restore fails when the form's shape has changed, and it keeps the current value of secret fields.
+</ngmd-callout>
+
+<ngmd-callout type="danger" title="Form values leave the page">
+  Values are sent to the devtools server, shown in the tab and returned to agents. Password fields and fields with secret-looking names are replaced with <code>[redacted]</code>. See <a href="/security">Security</a> to mask or unmask a field.
+</ngmd-callout>
+
+## FAQ
+
+<ngmd-accordion>
+  <ngmd-accordion-item title="Why does the tab say no forms on this page?">
+    The current tab has no form yet. Click <strong>Show forms from all pages</strong> to see forms from other tabs.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Why are there no callers in the timeline?">
+    Callers are recorded only with <strong>Record details</strong> checked.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Does the tab change my form when I only look at it?">
+    No. It reads state and runs sync validators without emitting events. Only the actions write.
+  </ngmd-accordion-item>
+</ngmd-accordion>
+
+## Related pages
+
+<ngmd-card-grid columns="2">
+  <ngmd-card icon="layers" title="Components" link="/inspectors/components" cta="Open">
+    Open a form from the component that owns it.
+  </ngmd-card>
+  <ngmd-card icon="shield" title="Security" link="/security" cta="Read">
+    What is redacted, and how to mask a field.
+  </ngmd-card>
+  <ngmd-card icon="sparkles" title="Agent tools" link="/agents/tools" cta="Browse">
+    Every tool a coding agent can call.
+  </ngmd-card>
+  <ngmd-card icon="compass" title="Browser overlay" link="/getting-started/overlay" cta="Set up">
+    The script that reports the live page.
+  </ngmd-card>
+</ngmd-card-grid>

@@ -1,5 +1,5 @@
-import type { MarkedExtension } from 'marked';
-import { getHighlighter, LANGS } from './shiki-shared.ts';
+import type {MarkedExtension} from 'marked';
+import {getHighlighter, LANGS} from './shiki-shared.ts';
 
 /**
  * Fenced code blocks tagged with `{1,3-5}` get the matching lines visually
@@ -61,8 +61,7 @@ export const ngmdCodeHighlightExtension: MarkedExtension = {
       // Quick negative check before scanning.
       if (!/^```[\w-]*[\t ]+\{[0-9,\-\s]+\}/m.test(markdown)) return markdown;
 
-      const matches: { start: number; end: number; lang: string; spec: string; body: string }[] =
-        [];
+      const matches: {start: number; end: number; lang: string; spec: string; body: string}[] = [];
       const re = new RegExp(FENCE_RE.source, FENCE_RE.flags);
       let m: RegExpExecArray | null;
       while ((m = re.exec(markdown)) !== null) {
@@ -86,7 +85,7 @@ export const ngmdCodeHighlightExtension: MarkedExtension = {
           const safeLang = LANGS.includes(mt.lang) ? mt.lang : 'text';
           const raw = highlighter.codeToHtml(mt.body, {
             lang: safeLang,
-            themes: { light: 'github-light', dark: 'github-dark' },
+            themes: {light: 'github-light', dark: 'github-dark'},
             defaultColor: false,
           });
           return applyHighlights(raw, parseRanges(mt.spec));

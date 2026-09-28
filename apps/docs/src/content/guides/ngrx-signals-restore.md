@@ -3,21 +3,48 @@ title: Restore NgRx signal state
 description: Register patchState so that restoring a signal store also notifies watchState listeners.
 ---
 
+<ngmd-hero title="Restore NgRx signal state" logo="https://cdn.simpleicons.org/ngrx/BA2BD2" gradient>
+  Put a signal store back to any state in its change log. Register patchState once, and your watchState listeners run too.
+</ngmd-hero>
+
 # Restore NgRx signal state
 
 The [NgRx Store tab](/inspectors/ngrx-store) can put a signal store back to its state after any change in the log. By default it writes the state signals directly. That updates your components, but `watchState` listeners do not run.
 
 Register `patchState` once, and restore goes through it instead. Then `watchState` listeners run as they would for any other change.
 
+## Why it matters
+
+A `watchState` listener runs on every state change made through `patchState`. Stores often use one to save state or sync it somewhere else:
+
+```ts {9-11}
+// travel.store.ts
+import {signalStore, watchState, withHooks, withState} from '@ngrx/signals';
+
+export const TravelStore = signalStore(
+  {providedIn: 'root'},
+  withState({query: '', saved: [] as string[]}),
+  withHooks({
+    onInit(store) {
+      watchState(store, (state) => {
+        localStorage.setItem('travel', JSON.stringify(state));
+      });
+    },
+  }),
+);
+```
+
+Without `registerNgrxSignals`, a restore changes the store but skips this listener. With it, the listener runs.
+
 ## Register patchState
 
-Call `registerNgrxSignals({ patchState })` from `@santoshyadavdev/ng-devtools/overlay` once, after the app starts. The demo app in this repository does it in `main.ts`, together with loading the overlay:
+Call `registerNgrxSignals({ patchState })` from `@santoshyadavdev/ng-devtools/overlay` once, after the app starts. Load both modules with dynamic imports in development only, so production bundles do not include the devtools.
 
-```ts
-// main.ts
-import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
+```ts group="register" name="Angular CLI" active
+// src/main.ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {appConfig} from './app/app.config';
+import {App} from './app/app';
 
 bootstrapApplication(App, appConfig)
   .then((ref) => {
@@ -27,22 +54,49 @@ bootstrapApplication(App, appConfig)
         .then(() =>
           Promise.all([import('@santoshyadavdev/ng-devtools/overlay'), import('@ngrx/signals')]),
         )
-        .then(([devtools, { patchState }]) => devtools.registerNgrxSignals({ patchState }));
+        .then(([devtools, {patchState}]) => devtools.registerNgrxSignals({patchState}));
     }
     return undefined;
   })
   .catch((err) => console.error(err));
 ```
 
-Both imports are dynamic and run in development only, so production bundles do not include the devtools.
+```ts group="register" name="Vite and Analog"
+// src/main.ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {App} from './app/app';
+import {appConfig} from './app/app.config';
+
+bootstrapApplication(App, appConfig).then(async () => {
+  if (import.meta.env.DEV) {
+    const [devtools, {patchState}] = await Promise.all([
+      import('@santoshyadavdev/ng-devtools/overlay'),
+      import('@ngrx/signals'),
+    ]);
+    devtools.registerNgrxSignals({patchState});
+  }
+});
+```
+
+The Angular CLI version is the demo app's `src/main.ts`. It loads the overlay and registers `patchState` in the same step.
 
 ## Restore a state
 
-1. Open the Store tab (the **NgRx** dock with the hub).
-2. Select a store, then open an entry in its change log.
-3. Click **Restore this state**, then **Restore**.
+<ngmd-workflow>
+  <ngmd-step title="Open the Store tab">
+    With the hub, it is the <strong>NgRx</strong> dock.
+  </ngmd-step>
+  <ngmd-step title="Pick a change">
+    Select a store, then open an entry in its change log.
+  </ngmd-step>
+  <ngmd-step title="Restore it">
+    Click <strong>Restore this state</strong>, then <strong>Restore</strong>.
+  </ngmd-step>
+</ngmd-workflow>
 
-Every state key of the store goes back to its value right after that change. Components that read the store update at once, and a new **Restore** entry is added to the log.
+### What happens
+
+Every state key of the store goes back to its value right after that change. Components that read the store update at once. A new **Restore** entry is added to the log.
 
 <ngmd-callout type="info" title="Without registerNgrxSignals">
   Restore still works, but the log entry says that <code>watchState</code> listeners were not notified.
@@ -50,6 +104,32 @@ Every state key of the store goes back to its value right after that change. Com
 
 ## Limits
 
-- Restore needs every state key to be writable.
-- The log keeps the last 200 entries per page.
-- For `@ngrx/store`, restore uses Store DevTools instead. Add `provideStoreDevtools()` to enable it. Without it, the action log is read-only.
+### Signal stores
+
+- Restore needs every state key to be writable. A read-only store state cannot be restored.
+- The log keeps the last 200 entries per page. Older changes cannot be restored.
+
+### @ngrx/store
+
+For `@ngrx/store`, restore uses Store DevTools instead. Add `provideStoreDevtools()` to enable it.
+
+```ts {6}
+// src/app/app.config.ts
+import {provideStoreDevtools} from '@ngrx/store-devtools';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideStoreDevtools()],
+};
+```
+
+<ngmd-alert severity="warning">
+  Without <code>provideStoreDevtools()</code>, the action log is read-only.
+</ngmd-alert>
+
+## Where to next
+
+<ngmd-pill-row>
+  <ngmd-pill href="/inspectors/ngrx-store" title="NgRx Store inspector"></ngmd-pill>
+  <ngmd-pill href="/getting-started/overlay" title="Browser overlay"></ngmd-pill>
+  <ngmd-pill href="/agents/resources" title="ngrx-store resource"></ngmd-pill>
+</ngmd-pill-row>

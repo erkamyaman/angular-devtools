@@ -1,4 +1,4 @@
-import { Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
+import {Component, DestroyRef, HostListener, computed, inject, signal} from '@angular/core';
 import {
   LucideDynamicIcon,
   type LucideIcon,
@@ -6,19 +6,18 @@ import {
   LucideChevronDown,
   LucideCopy,
   LucideLink,
-  LucideMessageSquare,
-  LucideSparkles,
 } from '@lucide/angular';
-import { GithubIcon } from '../ui/github-icon';
-import { pageMeta } from 'virtual:ngmd/page-meta';
-import { ToastService } from '../services/toast/toast.service';
-import { RouteUrlService } from '../services/route-url/route-url.service';
-import { writeToClipboard } from '../utils/clipboard';
+import {GithubIcon} from '../ui/github-icon';
+import {pageMeta} from 'virtual:ngmd/page-meta';
+import {ToastService} from '../services/toast/toast.service';
+import {RouteUrlService} from '../services/route-url/route-url.service';
+import {writeToClipboard} from '../utils/clipboard';
 import siteConfig from '../../ngmd.config';
+import {ClaudeIcon, OpenaiIcon} from '../ui/brand-icons';
 
 interface MenuItem {
   label: string;
-  icon: LucideIcon | 'github';
+  icon: LucideIcon | 'github' | 'claude' | 'openai';
   /** Either a click handler or a target URL — drives the `<button>` vs
    * `<a>` rendering and what action fires. Return value is ignored; the
    * loose typing accommodates handlers that report success via boolean. */
@@ -44,7 +43,7 @@ interface MenuItem {
  */
 @Component({
   selector: 'app-llm-actions',
-  imports: [LucideDynamicIcon, GithubIcon],
+  imports: [LucideDynamicIcon, GithubIcon, ClaudeIcon, OpenaiIcon],
   template: `
     @if (hasMdSource()) {
       <div class="relative">
@@ -95,10 +94,19 @@ interface MenuItem {
                   class="flex items-center gap-2.5 px-3 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900"
                   (click)="close()"
                 >
-                  @if (item.icon === 'github') {
-                    <svg ngmdGithubIcon class="size-4 text-zinc-500"></svg>
-                  } @else {
-                    <svg [lucideIcon]="item.icon" class="size-4 text-zinc-500"></svg>
+                  @switch (item.icon) {
+                    @case ('github') {
+                      <svg ngmdGithubIcon class="size-4 text-zinc-500"></svg>
+                    }
+                    @case ('claude') {
+                      <svg ngmdClaudeIcon class="size-4"></svg>
+                    }
+                    @case ('openai') {
+                      <svg ngmdOpenaiIcon class="size-4 text-zinc-700 dark:text-zinc-300"></svg>
+                    }
+                    @default {
+                      <svg [lucideIcon]="$any(item.icon)" class="size-4 text-zinc-500"></svg>
+                    }
                   }
                   {{ item.label }}
                 </a>
@@ -109,10 +117,19 @@ interface MenuItem {
                   class="flex w-full items-center gap-2.5 px-3 py-2 text-left text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900"
                   (click)="runAndClose(item.handler!)"
                 >
-                  @if (item.icon === 'github') {
-                    <svg ngmdGithubIcon class="size-4 text-zinc-500"></svg>
-                  } @else {
-                    <svg [lucideIcon]="item.icon" class="size-4 text-zinc-500"></svg>
+                  @switch (item.icon) {
+                    @case ('github') {
+                      <svg ngmdGithubIcon class="size-4 text-zinc-500"></svg>
+                    }
+                    @case ('claude') {
+                      <svg ngmdClaudeIcon class="size-4"></svg>
+                    }
+                    @case ('openai') {
+                      <svg ngmdOpenaiIcon class="size-4 text-zinc-700 dark:text-zinc-300"></svg>
+                    }
+                    @default {
+                      <svg [lucideIcon]="$any(item.icon)" class="size-4 text-zinc-500"></svg>
+                    }
                   }
                   {{ item.label }}
                 </button>
@@ -146,8 +163,6 @@ export class LlmActions {
   readonly checkIcon = LucideCheck;
   readonly chevronIcon = LucideChevronDown;
   readonly linkIcon = LucideLink;
-  readonly chatGptIcon = LucideSparkles;
-  readonly claudeIcon = LucideMessageSquare;
 
   readonly open = signal(false);
   readonly copied = signal(false);
@@ -178,16 +193,16 @@ export class LlmActions {
   }
 
   protected readonly items = computed<MenuItem[]>(() => [
-    { label: 'Copy Markdown Link', icon: this.linkIcon, handler: () => this.copyLinkAction() },
-    { label: 'Open in GitHub', icon: 'github', href: this.editUrl() },
+    {label: 'Copy Markdown Link', icon: this.linkIcon, handler: () => this.copyLinkAction()},
+    {label: 'Open in GitHub', icon: 'github', href: this.editUrl()},
     {
       label: 'Open in ChatGPT',
-      icon: this.chatGptIcon,
+      icon: 'openai',
       href: `https://chatgpt.com/?q=${encodeURIComponent(this.prompt())}`,
     },
     {
       label: 'Open in Claude',
-      icon: this.claudeIcon,
+      icon: 'claude',
       href: `https://claude.ai/new?q=${encodeURIComponent(this.prompt())}`,
     },
   ]);

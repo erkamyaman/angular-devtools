@@ -1,4 +1,4 @@
-import type { MarkedExtension, Tokens } from 'marked';
+import type {MarkedExtension, Tokens} from 'marked';
 import config from '../ngmd.config.ts';
 
 /**

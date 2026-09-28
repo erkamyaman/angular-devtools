@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import {Component, computed, input} from '@angular/core';
 import {
   LucideDynamicIcon,
   type LucideIcon,

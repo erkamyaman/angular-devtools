@@ -1,7 +1,7 @@
-import { AfterViewInit, Component, DestroyRef, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { writeToClipboard } from '../utils/clipboard';
-import { enhanceOnNavigation } from '../utils/enhance-on-navigation';
+import {AfterViewInit, Component, DestroyRef, inject} from '@angular/core';
+import {Router} from '@angular/router';
+import {writeToClipboard} from '../utils/clipboard';
+import {enhanceOnNavigation} from '../utils/enhance-on-navigation';
 
 /**
  * Scans rendered docs pages for h2/h3 with an id and appends a copy-link

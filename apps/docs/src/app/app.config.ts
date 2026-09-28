@@ -1,4 +1,4 @@
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import {provideHttpClient, withFetch, withInterceptors} from '@angular/common/http';
 import {
   ApplicationConfig,
   Injector,
@@ -11,15 +11,15 @@ import {
   withEventReplay,
   withNoIncrementalHydration,
 } from '@angular/platform-browser';
-import { provideFileRouter, requestContextInterceptor } from '@analogjs/router';
-import { provideContent, withMarkdownRenderer } from '@analogjs/content';
-import { withShikiHighlighter } from '@analogjs/content/shiki-highlighter';
-import { withInMemoryScrolling, withViewTransitions, TitleStrategy } from '@angular/router';
-import { ViewportScroller } from '@angular/common';
-import { marked } from 'marked';
-import { ngmdRuntimeExtensions } from '../marked-extensions/runtime';
-import { NgmdTitleStrategy } from './title-strategy';
-import { registerNgmdElements } from './register-elements';
+import {provideFileRouter, requestContextInterceptor} from '@analogjs/router';
+import {provideContent, withMarkdownRenderer} from '@analogjs/content';
+import {withShikiHighlighter} from '@analogjs/content/shiki-highlighter';
+import {withInMemoryScrolling, withViewTransitions, TitleStrategy} from '@angular/router';
+import {ViewportScroller} from '@angular/common';
+import {marked} from 'marked';
+import {ngmdRuntimeExtensions} from '../marked-extensions/runtime';
+import {NgmdTitleStrategy} from './title-strategy';
+import {registerNgmdElements} from './register-elements';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -39,7 +39,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([requestContextInterceptor])),
     provideClientHydration(withEventReplay(), withNoIncrementalHydration()),
     provideContent(withMarkdownRenderer(), withShikiHighlighter()),
-    { provide: TitleStrategy, useClass: NgmdTitleStrategy },
+    {provide: TitleStrategy, useClass: NgmdTitleStrategy},
     // AnalogJS's runtime MarkedSetupService only registers gfm/mangle/shiki.
     // The `markedOptions` in vite.config.ts only feeds the build-time
     // MarkdownRouteComponent. Pages using `<analog-markdown [content]>` parse

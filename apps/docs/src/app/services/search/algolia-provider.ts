@@ -1,4 +1,4 @@
-import type { SearchHit, SearchHitKind, SearchProvider } from '../../../types/search';
+import type {SearchHit, SearchHitKind, SearchProvider} from '../../../types/search';
 
 /**
  * Optional Algolia DocSearch backend. Activated when the user populates
@@ -21,24 +21,24 @@ export interface AlgoliaConfig {
 interface AlgoliaHit {
   objectID: string;
   url: string;
-  hierarchy: { lvl0?: string; lvl1?: string; lvl2?: string; lvl3?: string; lvl4?: string };
+  hierarchy: {lvl0?: string; lvl1?: string; lvl2?: string; lvl3?: string; lvl4?: string};
   content?: string;
   _snippetResult?: {
-    content?: { value: string };
+    content?: {value: string};
     hierarchy?: {
-      lvl0?: { value: string; matchLevel?: string };
-      lvl1?: { value: string; matchLevel?: string };
-      lvl2?: { value: string; matchLevel?: string };
-      lvl3?: { value: string; matchLevel?: string };
-      lvl4?: { value: string; matchLevel?: string };
+      lvl0?: {value: string; matchLevel?: string};
+      lvl1?: {value: string; matchLevel?: string};
+      lvl2?: {value: string; matchLevel?: string};
+      lvl3?: {value: string; matchLevel?: string};
+      lvl4?: {value: string; matchLevel?: string};
     };
   };
 }
 
 export class AlgoliaSearchProvider implements SearchProvider {
   private clientPromise: Promise<{
-    search: (params: Array<{ indexName: string; params: Record<string, unknown> }>) => Promise<{
-      results: Array<{ hits: AlgoliaHit[] }>;
+    search: (params: Array<{indexName: string; params: Record<string, unknown>}>) => Promise<{
+      results: Array<{hits: AlgoliaHit[]}>;
     }>;
   }> | null = null;
 
@@ -58,8 +58,8 @@ export class AlgoliaSearchProvider implements SearchProvider {
           key: string,
         ) => {
           search: (
-            params: Array<{ indexName: string; params: Record<string, unknown> }>,
-          ) => Promise<{ results: Array<{ hits: AlgoliaHit[] }> }>;
+            params: Array<{indexName: string; params: Record<string, unknown>}>,
+          ) => Promise<{results: Array<{hits: AlgoliaHit[]}>}>;
         };
       };
       return mod.liteClient(this.config.appId, this.config.apiKey);

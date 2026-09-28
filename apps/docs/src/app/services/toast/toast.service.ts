@@ -1,4 +1,4 @@
-import { Injectable, signal, type Signal } from '@angular/core';
+import {Injectable, signal, type Signal} from '@angular/core';
 
 export type ToastVariant = 'success' | 'error' | 'info';
 
@@ -23,7 +23,7 @@ const DEFAULT_DURATION = 3000;
  * the component. Service is SSR-safe by construction — no platform checks
  * or timers.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class ToastService {
   private readonly state = signal<Toast[]>([]);
   private nextId = 0;
@@ -33,7 +33,7 @@ export class ToastService {
 
   show(message: string, variant: ToastVariant = 'info', duration = DEFAULT_DURATION): number {
     const id = ++this.nextId;
-    this.state.update((items) => [{ id, message, variant, duration }, ...items]);
+    this.state.update((items) => [{id, message, variant, duration}, ...items]);
     return id;
   }
 

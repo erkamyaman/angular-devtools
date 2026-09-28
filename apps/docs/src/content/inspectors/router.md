@@ -3,39 +3,212 @@ title: Router
 description: The live route, every navigation as a story, the live route config, router setup and a route lint.
 ---
 
+<ngmd-hero title="Router" gradient>
+  The live route, every navigation as one story, the live route config, the router setup and a route lint. Plus the routes your source declares.
+</ngmd-hero>
+
 # Router
 
-The Routes tab and the router tools read the running app's Router, in development builds only. The Router is found through the debug helper `provideRouter()` publishes, or through the injector for `RouterModule.forRoot()` apps. Without debug utils (a production build) only navigation events are available, and the Setup view says so.
+The Routes tab reads the running app's Router. The top section, **Live router**, has five views. The bottom section, **Source route config**, lists the routes your files declare. When more than one page is connected, a **Page** picker chooses which one you see.
 
-## Live router
+## What it shows
 
-The live section has five views:
+### Current
 
-- **Current**: the URL (and the browser URL when they differ), the navigation in flight with an Abort button, each active route with its component, params and data and where each value comes from (own, inherited, static or resolved), the route title and whether it is inherited, and the outlet tree with the inputs the router binds.
-- **Navigations**: every navigation as one story: where it came from, who started it (a RouterLink, the code that called `navigate`, back/forward), extras, redirect chains and loops, a phase bar (recognize, guards, resolve, activate), guards and resolvers, lazy loads, reused components, HTTP requests, scroll, the title afterwards, router warnings, and the cancel or error reason. Turn on "Record each guard and resolver" to see each one's verdict and time (for example `authGuard returned UrlTree /login`). Replay a navigation, copy a markdown repro, or export the list as JSON.
-- **Routes**: the live route config with lazy children merged in once they load and the active branch marked. Test a URL to predict which route matches it (or the nearest ones), probe it with the real matcher, navigate to any route (with its params), or read the routes of a lazy route that has not loaded.
-- **Setup**: provideRouter or forRoot, effective options with set/default markers, enabled features, strategies, base href and hydration.
-- **Lint**: route config mistakes (unreachable routes after `**`, a `:param` shadowing a literal, duplicate paths, empty-path redirects without `pathMatch: 'full'`, redirect cycles, deprecated class guards and `canLoad`, lazy chunks downloaded before a rejecting `canActivate`, missing or duplicate titles, param/input typos, `routerLinkActive` without `ariaCurrentWhenActive`, emails in URLs, return URLs taken from query params), each with a fix and whether Angular throws or stays silent.
+The route the page is on right now:
 
-Components rendered by the router show the route and outlet in the [Components tab](/inspectors/components).
+- The URL, and the browser URL when the two differ.
+- The navigation in flight, with an **Abort** button.
+- The document title, query params and fragment.
+- **Active routes**: each active route with its component, params, data, and guards and resolvers. Tags mark lazy routes, inherited params, and whether a data value is static, resolved or inherited. The title row says when the title is inherited.
+- **Outlets**: the outlet tree, with the inputs the router binds to each component.
 
-## Source route config
+### Navigations
 
-Below the live views, the tab lists the routes declared in your source files: `*.routes.ts` and `*routing.module.ts` files, the files they lazy load, and Analog pages. It shows each path, its component or target, guards and resolvers, title and the file that declares it. Once live config is available, this table is collapsed.
+Every navigation as one story:
 
-## Guard verdicts
+- Where it came from, and who started it: a `RouterLink`, the code that called `navigate`, or back and forward.
+- The extras, redirect chains and loops.
+- A phase bar: recognize, guards, resolve, activate.
+- Guards and resolvers, lazy loads, reused components, HTTP requests, scroll, and the title afterwards.
+- Router warnings, and the cancel or error reason. NG04xxx errors are explained.
 
-Without instrumentation, the guards listed for a navigation are candidates (the `canDeactivate` guards of the page being left and the `canActivate`/`canActivateChild` guards of the target), because the router reports one result for all of them. Instrumentation wraps each guard and resolver in the live config to record its verdict; it is off by default and undone when turned off. A navigation that finished before the devtools connected is listed without timing or guard details.
+Filter by URL, or check **Only problems**. Each row has **Replay** and **Copy repro** (a markdown repro). **Export JSON** saves the list.
 
-## For agents
+### Routes
 
-- `ng-devtools:explain-navigation` answers "why did this navigation not work" or "why was I redirected": pass `url` or `id` to narrow it, `limit` for more than the last 5, or `perf` for the slowest navigations and preloads. NG04xxx and related errors are explained.
-- `ng-devtools:inspect-route` describes the route the page is on right now; pass `selector` (a component class, tag or link text) to see which route a component was rendered for or whether a link counts as active.
-- `ng-devtools:list-routes` lists the live config with source files and example URLs; `match` predicts which route a URL hits, `audit` lists the guards that protect each page.
-- `ng-devtools:lint-routes`, `ng-devtools:router-config` and `ng-devtools:export-navigation` give the lint findings, the setup and a repro.
-- `ng-devtools:explain-render-mode` reads the workspace's `*.routes.server.ts` and says which render mode a URL gets.
-- `ng-devtools:navigate` acts on the router: `navigate` (a relative URL, or a pattern with params), `abort`, `replay`, `probe` (runs the real matcher without navigating; it runs `canMatch` and may load lazy chunks), `instrument` and `resolve-lazy`. It only accepts same-origin relative URLs.
+The live route config. Lazy children are merged in once they load, and the active branch is marked.
 
-## Privacy
+- **Test a URL** and click **Predict** to see which route matches it, or the nearest ones.
+- **Probe in app** runs the real matcher without navigating.
+- Fill in the params of a route and click **Go** to navigate to it.
+- **Read lazy** reads the routes of a lazy route that has not loaded.
 
-Secret-looking query, matrix and fragment values, tokens and route params are replaced with `[redacted]` in URLs, params, data and messages. See [Security](/security).
+### Setup
+
+How the router is set up: `provideRouter` or `forRoot`, the effective options with **set** or **default** badges, the enabled features, the strategies, the base href and hydration.
+
+### Lint
+
+Route config mistakes, each with a fix:
+
+- Unreachable routes after `**`, and duplicate paths.
+- A `:param` that shadows a literal path.
+- Empty-path redirects without `pathMatch: 'full'`, and redirect cycles.
+- Deprecated class guards and `canLoad`.
+- Lazy chunks downloaded before a rejecting `canActivate`.
+- Missing or duplicate titles, and param or input typos.
+- `routerLinkActive` without `ariaCurrentWhenActive`.
+- Emails in URLs, and return URLs taken from query params.
+
+Each finding says whether Angular throws, warns or does not warn. Lazy routes that have not loaded are skipped. Click **Check again** to rerun it.
+
+### Source route config
+
+The routes declared in your files: `*.routes.ts` and `*routing.module.ts` files, the files they lazy load, and Analog pages. Each row shows the path, the component or target, guards and resolvers, the title and the declaring file. Once the live config is available, this table is collapsed. **Show table** opens it.
+
+Components rendered by the router show their route and outlet in the [Components tab](/inspectors/components).
+
+## Where the data comes from
+
+<ngmd-card-grid columns="2">
+  <ngmd-card icon="zap" title="Live page">
+    The overlay finds the Router through Angular's debug API and reports the route, navigations, config and setup.
+  </ngmd-card>
+  <ngmd-card icon="file" title="Source scan">
+    The server reads your route files for the source table, and <code>*.routes.server.ts</code> for render modes.
+  </ngmd-card>
+</ngmd-card-grid>
+
+### Finding the Router
+
+The overlay reads the helper `provideRouter()` publishes (`ng.ɵgetRouterInstance`). For `RouterModule.forRoot()` apps, it looks for the `Router` token in the injectors instead. With several app roots, the router that has routes or has navigated wins.
+
+### Development builds
+
+The live views need `window.ng`, so they need a development build. In a production build no Router is found, and **Current** says **This page reports no Router**.
+
+When the debug API exists but lacks the provider helpers, the tab runs in events-only mode. The **Setup** view says so, and the config, lint and actions are limited.
+
+### Guard verdicts
+
+The router reports one result for all the guards of a navigation. To see each guard's verdict and time, the devtools wrap every guard and resolver in the live config. The result reads like `authGuard returned UrlTree /login`.
+
+Without that recording, the guards listed for a navigation are candidates: the `canDeactivate` guards of the page being left, and the `canActivate` and `canActivateChild` guards of the target.
+
+## How to use it
+
+### Find out why a navigation failed
+
+<ngmd-workflow>
+  <ngmd-step title="Open Navigations">
+    Check <strong>Only problems</strong> to hide the navigations that succeeded.
+  </ngmd-step>
+  <ngmd-step title="Read the story">
+    The phase bar shows where it stopped. The guard rows show which guard returned <code>false</code> or a <code>UrlTree</code>.
+  </ngmd-step>
+  <ngmd-step title="Replay it">
+    Fix the code, then click <strong>Replay</strong> to run the same navigation again.
+  </ngmd-step>
+  <ngmd-step title="Share it">
+    Click <strong>Copy repro</strong> to paste a markdown repro into an issue.
+  </ngmd-step>
+</ngmd-workflow>
+
+### Check which route a URL hits
+
+<ngmd-workflow>
+  <ngmd-step title="Open Routes">
+    Type the URL into <strong>Test a URL</strong>.
+  </ngmd-step>
+  <ngmd-step title="Predict">
+    Click <strong>Predict</strong>. A miss lists the nearest routes.
+  </ngmd-step>
+  <ngmd-step title="Probe">
+    Click <strong>Probe in app</strong> to confirm with the real matcher. It runs <code>canMatch</code> and may load lazy chunks.
+  </ngmd-step>
+</ngmd-workflow>
+
+### Clean up the config
+
+<ngmd-workflow>
+  <ngmd-step title="Open Lint">
+    Read the findings, most severe first.
+  </ngmd-step>
+  <ngmd-step title="Apply the fix">
+    Each finding comes with a fix. Start with the ones where Angular stays silent.
+  </ngmd-step>
+  <ngmd-step title="Check again">
+    Click <strong>Check again</strong> after the app reloads.
+  </ngmd-step>
+</ngmd-workflow>
+
+## Agent tools
+
+| Tool or resource                  | What it does                                                                                                                                 |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ng-devtools:explain-navigation`  | Why a navigation failed or redirected. Pass `url` or `id` to narrow it, `limit` for more than the last 5, or `perf` for the slowest ones.    |
+| `ng-devtools:inspect-route`       | The route the page is on. Pass `selector` (a component class, tag or link text) for the route a component was rendered for, or a link state. |
+| `ng-devtools:list-routes`         | The live config with source files and example URLs. `match` predicts a URL, `audit` lists the guards of each page.                           |
+| `ng-devtools:lint-routes`         | The lint findings.                                                                                                                           |
+| `ng-devtools:router-config`       | The setup, including whether guard recording is on.                                                                                          |
+| `ng-devtools:export-navigation`   | A markdown repro. Defaults to the latest navigation that did not succeed.                                                                    |
+| `ng-devtools:explain-render-mode` | Which render mode a URL gets, from `*.routes.server.ts`.                                                                                     |
+| `ng-devtools:get-routes`          | Routes from your source files.                                                                                                               |
+| `ng-devtools:navigate`            | Acts on the router: `navigate`, `abort`, `replay`, `probe`, `instrument` and `resolve-lazy`.                                                 |
+| `ng-devtools:router` (resource)   | The active route tree and recent navigations of each page.                                                                                   |
+
+`navigate` only accepts same-origin relative URLs that start with `/`. `resolve-lazy` needs a `routeId`. See [Tools](/agents/tools).
+
+## Limits and gotchas
+
+<ngmd-callout type="info" title="Guard recording is on by default">
+  <strong>Record each guard and resolver</strong> in the Navigations view starts checked. Uncheck it to stop. Turning it off puts every original guard and resolver back. The choice is kept per browser tab, in <code>sessionStorage</code>, so it survives a reload. Agents use <code>navigate</code> with <code>action: "instrument"</code> and <code>on</code>.
+</ngmd-callout>
+
+<ngmd-callout type="warning" title="Abort and probe need Angular 20">
+  Aborting and probing use router APIs that older versions lack. On those versions the action returns an error.
+</ngmd-callout>
+
+<ngmd-callout type="info" title="Navigations before the devtools connected">
+  Only the last one is listed, marked <strong>before DevTools connected</strong>, without timing or guard details.
+</ngmd-callout>
+
+<ngmd-callout type="tip" title="Redaction">
+  Query, matrix and fragment values with secret-looking keys are replaced with <code>[redacted]</code>. So are tokens, <code>Bearer</code> values, and route params with secret-looking names such as <code>:token</code>. A navigation with a redacted URL cannot be replayed. See <a href="/security">Security</a>.
+</ngmd-callout>
+
+<ngmd-alert severity="helpful">
+  The page keeps the last 50 navigations and 50 preloads. The live config stops at 1000 routes.
+</ngmd-alert>
+
+## FAQ
+
+<ngmd-accordion>
+  <ngmd-accordion-item title="Why does a navigation list several guards but no verdicts?">
+    Guard recording is off for that tab. Check <strong>Record each guard and resolver</strong> and run the navigation again.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Does Probe in app change the URL?">
+    No. It runs the real matcher with <code>skipLocationChange</code> and stops after recognition. <code>canActivate</code>, <code>canDeactivate</code> and resolvers do not run.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Why is the source table collapsed?">
+    The live config is available, so it is the better source. Click <strong>Show table</strong> to open the source list.
+  </ngmd-accordion-item>
+</ngmd-accordion>
+
+## Related pages
+
+<ngmd-card-grid columns="2">
+  <ngmd-card icon="layers" title="Components" link="/inspectors/components" cta="Open">
+    Routed components show their route and outlet.
+  </ngmd-card>
+  <ngmd-card icon="rocket" title="Analog" link="/inspectors/analog" cta="Open">
+    File routes, server calls and render modes for Analog apps.
+  </ngmd-card>
+  <ngmd-card icon="shield" title="Security" link="/security" cta="Read">
+    What is redacted, and how access is limited.
+  </ngmd-card>
+  <ngmd-card icon="sparkles" title="Agent tools" link="/agents/tools" cta="Browse">
+    Every tool a coding agent can call.
+  </ngmd-card>
+</ngmd-card-grid>

@@ -1,7 +1,7 @@
-import type { MarkedExtension } from 'marked';
-import { ngmdRuntimeExtensions } from './runtime.ts';
+import type {MarkedExtension} from 'marked';
+import {ngmdRuntimeExtensions} from './runtime.ts';
 
-export { ngmdRuntimeExtensions };
+export {ngmdRuntimeExtensions};
 
 /**
  * Marked extensions are split into two arrays.
@@ -22,7 +22,7 @@ export { ngmdRuntimeExtensions };
 // never resolves their `node:fs` / `shiki` imports. The async getter is
 // called by `vite.config.ts` (Node context) only.
 export async function getBuildExtensions(): Promise<MarkedExtension[]> {
-  const [{ ngmdCodeImportExtension }, { ngmdCodeGroupExtension }, { ngmdCodeHighlightExtension }] =
+  const [{ngmdCodeImportExtension}, {ngmdCodeGroupExtension}, {ngmdCodeHighlightExtension}] =
     await Promise.all([
       import('./ngmd-code-import.ts'),
       import('./ngmd-code-group.ts'),

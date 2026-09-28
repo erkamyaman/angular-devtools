@@ -1,7 +1,7 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { extname, join, relative } from 'node:path';
-import type { Plugin } from 'vite';
-import { substituteMdVars } from './vars.plugin.ts';
+import {readdirSync, readFileSync, statSync} from 'node:fs';
+import {extname, join, relative} from 'node:path';
+import type {Plugin} from 'vite';
+import {substituteMdVars} from './vars.plugin.ts';
 
 /**
  * Serves the raw markdown body at the same URL plus a `.md` suffix.
@@ -73,7 +73,7 @@ export function rawMdPlugin(): Plugin {
 
       const walk = (dir: string): string[] => {
         const out: string[] = [];
-        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        for (const entry of readdirSync(dir, {withFileTypes: true})) {
           const full = join(dir, entry.name);
           if (entry.isDirectory()) out.push(...walk(full));
           else if (entry.isFile() && entry.name.endsWith('.md')) out.push(full);

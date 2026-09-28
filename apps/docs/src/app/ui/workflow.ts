@@ -10,7 +10,7 @@ import {
   QueryList,
   signal,
 } from '@angular/core';
-import { watchHostAttribute } from '../utils/watch-host-attribute';
+import {watchHostAttribute} from '../utils/watch-host-attribute';
 
 @Component({
   selector: 'ngmd-step',

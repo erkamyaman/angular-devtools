@@ -1,8 +1,8 @@
-import { readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
-import type { Plugin } from 'vite';
-import type { IndexDoc, SearchHitKind } from './src/types/search.ts';
-import { slugify, walkContentFiles } from './plugin-utils.ts';
+import {readFileSync, statSync} from 'node:fs';
+import {join} from 'node:path';
+import type {Plugin} from 'vite';
+import type {IndexDoc, SearchHitKind} from './src/types/search.ts';
+import {slugify, walkContentFiles} from './plugin-utils.ts';
 
 /**
  * Build-time search index. Walks `src/content/**\/*.md` and emits a flat list
@@ -25,9 +25,9 @@ interface Frontmatter {
   noIndex?: boolean;
 }
 
-function parseFrontmatter(text: string): { fm: Frontmatter; body: string } {
+function parseFrontmatter(text: string): {fm: Frontmatter; body: string} {
   const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-  if (!match) return { fm: {}, body: text };
+  if (!match) return {fm: {}, body: text};
   const fm: Frontmatter = {};
   for (const line of match[1].split(/\r?\n/)) {
     const m = line.match(/^\s*(\w+)\s*:\s*(.+?)\s*$/);
@@ -37,7 +37,7 @@ function parseFrontmatter(text: string): { fm: Frontmatter; body: string } {
     if (key === 'title') fm.title = raw;
     if (key === 'noIndex') fm.noIndex = /^(true|yes|1)$/i.test(raw);
   }
-  return { fm, body: match[2] };
+  return {fm, body: match[2]};
 }
 
 const ENTITIES: Record<string, string> = {
@@ -67,15 +67,15 @@ function stripMarkdown(s: string): string {
 /** Split raw markdown body into sections delimited by `##`+ headings.
  * Returns an array where each entry has the heading text (or empty for
  * the lead-in before the first heading) and the prose that follows. */
-function splitSections(body: string): Array<{ heading: string; body: string }> {
+function splitSections(body: string): Array<{heading: string; body: string}> {
   const lines = body.split(/\r?\n/);
-  const sections: Array<{ heading: string; body: string }> = [];
-  let current: { heading: string; body: string } = { heading: '', body: '' };
+  const sections: Array<{heading: string; body: string}> = [];
+  let current: {heading: string; body: string} = {heading: '', body: ''};
   for (const line of lines) {
     const m = line.match(/^(##+)\s+(.+?)\s*$/);
     if (m) {
       if (current.heading || current.body.trim()) sections.push(current);
-      current = { heading: m[2], body: '' };
+      current = {heading: m[2], body: ''};
     } else {
       current.body += line + '\n';
     }
@@ -145,7 +145,7 @@ export function searchIndexPlugin(): Plugin {
         } catch {
           continue;
         }
-        const { fm, body } = parseFrontmatter(raw);
+        const {fm, body} = parseFrontmatter(raw);
         if (fm.noIndex) continue;
 
         const slug = url.split('/').pop() || '';

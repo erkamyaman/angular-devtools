@@ -8,8 +8,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
-import { Router } from '@angular/router';
+import {NgTemplateOutlet} from '@angular/common';
+import {Router} from '@angular/router';
 import {
   LucideDynamicIcon,
   LucideArrowRight,
@@ -21,8 +21,8 @@ import {
   LucideTrash,
   LucideX,
 } from '@lucide/angular';
-import type { SearchHit } from '../../types/search';
-import { SearchService } from '../services/search/search.service';
+import type {SearchHit} from '../../types/search';
+import {SearchService} from '../services/search/search.service';
 
 /**
  * Cmd+K palette. The heavy lifting lives in `SearchService`; this component
@@ -73,7 +73,7 @@ import { SearchService } from '../services/search/search.service';
                 </div>
                 @for (item of search.favorites(); track item.url) {
                   <ng-container
-                    *ngTemplateOutlet="historyRow; context: { $implicit: item, favorite: true }"
+                    *ngTemplateOutlet="historyRow; context: {$implicit: item, favorite: true}"
                   />
                 }
               }
@@ -93,7 +93,7 @@ import { SearchService } from '../services/search/search.service';
                 </div>
                 @for (item of search.recents(); track item.url) {
                   <ng-container
-                    *ngTemplateOutlet="historyRow; context: { $implicit: item, favorite: false }"
+                    *ngTemplateOutlet="historyRow; context: {$implicit: item, favorite: false}"
                   />
                 }
               }
@@ -370,7 +370,7 @@ export class CommandPalette {
     this.navigateTo(hit.url);
   }
 
-  selectHistory(item: { id: string; url: string; labelHtml: string; subLabelHtml: string }) {
+  selectHistory(item: {id: string; url: string; labelHtml: string; subLabelHtml: string}) {
     // Re-record so a re-visited recent moves to the top of the list.
     this.search.recordVisit({
       id: item.id,
@@ -398,7 +398,7 @@ export class CommandPalette {
       // Already on the target route. Skip the router round-trip and just
       // scroll, otherwise Angular short-circuits and nothing happens.
       if (hash) this.scrollToWhenReady(hash);
-      else window.scrollTo({ top: 0, behavior: 'smooth' });
+      else window.scrollTo({top: 0, behavior: 'smooth'});
       return;
     }
     this.router.navigateByUrl(path).then(() => {
@@ -413,7 +413,7 @@ export class CommandPalette {
       setTimeout(() => this.scrollToWhenReady(slug, attempt + 1), 50);
       return;
     }
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.scrollIntoView({behavior: 'smooth', block: 'start'});
     history.replaceState(null, '', `${location.pathname}#${slug}`);
   }
 }

@@ -1,16 +1,28 @@
 ---
 title: Development setup
-description: Set up the repository, run the devtools UI and the demo app, and run the checks.
+description: Set up the repository, run the devtools UI and the demo apps, and run the same checks as CI.
 ---
+
+<ngmd-hero title="Development setup" logo="https://cdn.simpleicons.org/nx/71717A" gradient>
+  Clone, install, and run the devtools against a real Angular app. The same checks CI runs, on your machine.
+</ngmd-hero>
 
 # Development setup
 
+The repository is an Nx workspace with pnpm. It holds the npm package, the devtools UI, the Chrome extension, two demo apps and this docs site.
+
 ## Prerequisites
 
-- Node.js 24 or later
-- pnpm 10 or later
+<ngmd-card-grid columns="2">
+  <ngmd-card icon="terminal" title="Node.js 24 or later">
+    <code>.nvmrc</code> pins 24, and the root <code>package.json</code> requires <code>&gt;=24</code>.
+  </ngmd-card>
+  <ngmd-card icon="box" title="pnpm 10 or later">
+    The root <code>package.json</code> sets <code>packageManager</code> to <code>pnpm&#64;10.33.4</code>.
+  </ngmd-card>
+</ngmd-card-grid>
 
-## Setup
+## Set up the repository
 
 ```bash
 git clone https://github.com/santoshyadavdev/angular-devtools.git
@@ -18,44 +30,81 @@ cd angular-devtools
 pnpm install
 ```
 
+`pnpm-workspace.yaml` lists `packages/*`, `examples/*` and `apps/*`, so one install covers every project.
+
 ## Project structure
 
 ```text
 app/                          # Devtools UI SPA (Angular + Vite)
   src/app.ts                  # Root component with tab navigation
   src/pages/                  # One component per tab
-  vite.config.ts              # Vite config with Analog Angular plugin
+  vite.config.ts              # Vite config with the Analog Angular plugin
 packages/
   ng-devtools/                # Publishable npm package
-    src/devframe.ts           # defineDevframe(): tool definition
-    src/overlay.ts            # Client script running in user's page
-    src/rpc/                  # Node-side RPC functions
+    src/devframe.ts           # defineDevframe(): the tool definition
+    src/overlay.ts            # Client script running in the user's page
+    src/rpc/                  # Node-side RPC functions and agent tools
 extension/                    # Chrome DevTools extension
 examples/analog/              # Analog demo app
 apps/docs/                    # This documentation site
-src/                          # Angular host app (demo/playground)
+src/                          # Angular Travel, the host demo app
 ```
 
-The workspace uses Nx. `pnpm-workspace.yaml` lists `packages/*`, `examples/*` and `apps/*`.
+### Nx projects
 
-## Development
+| Project                        | Root                   | Targets                          |
+| ------------------------------ | ---------------------- | -------------------------------- |
+| `angular-devtools`             | `.` (`project.json`)   | `build`, `serve`, `test`         |
+| `@santoshyadavdev/ng-devtools` | `packages/ng-devtools` | `build`                          |
+| `analog-demo`                  | `examples/analog`      | `dev`, `build`, `preview`        |
+| `angular-devtools-docs`        | `apps/docs`            | `dev`, `build`, `test`, and more |
+
+Run `pnpm exec nx show projects` to list them. Package projects get their targets from their `package.json` scripts.
+
+## Run things
+
+### Root scripts
+
+Most work goes through the root `package.json` scripts:
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Dev server for the devtools UI (with live RPC)
-pnpm devtools:dev
-
-# Build the devtools UI SPA
-pnpm devtools:build
-
-# Build the publishable package (library + UI in dist/)
-pnpm devtools:build-pkg
-
-# Run the Angular host app (builds the package first, includes in-page devtools popup)
-pnpm start
+pnpm devtools:dev        # Devtools UI with hot reload and live RPC
+pnpm devtools:build      # Build the devtools UI SPA into dist/devtools-ui
+pnpm devtools:build-pkg  # Build the npm package (library + UI in dist/)
+pnpm start               # Build the package, then serve Angular Travel
 ```
+
+### Nx targets
+
+The scripts call Nx. You can also run a target on a project directly:
+
+```bash group="nx" name="Build" active
+pnpm exec nx build                              # Angular Travel
+pnpm exec nx build @santoshyadavdev/ng-devtools # The npm package
+pnpm exec nx build angular-devtools-docs        # This site
+```
+
+```bash group="nx" name="Test"
+pnpm exec nx test                        # Angular Travel
+pnpm exec nx test angular-devtools-docs  # This site
+```
+
+```bash group="nx" name="Serve"
+pnpm exec nx serve         # Angular Travel on port 4200
+pnpm exec nx dev analog-demo
+```
+
+```bash group="nx" name="Affected"
+pnpm exec nx affected -t test build
+```
+
+`build` and `test` are cached. `build` runs the `build` of its dependencies first, so building a demo also builds the package.
+
+<ngmd-alert severity="helpful">
+  The package's <code>build</code> target lists <code>app/**</code> as an input. A change to the devtools UI invalidates the package build.
+</ngmd-alert>
+
+### Ports
 
 | Command                                                                                  | Port | Notes                                                                                       |
 | ---------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------- |
@@ -63,44 +112,88 @@ pnpm start
 | `pnpm build --configuration development && node dist/angular-devtools/server/server.mjs` | 4000 | The demo app as an SSR server.                                                              |
 | `pnpm devtools:dev`                                                                      | 5173 | The devtools UI with hot reload. It needs the SSR server running for live data.             |
 
-The SSR server serves the UI built into `packages/ng-devtools/dist/public`. Run `pnpm devtools:build-pkg` to refresh it after you change `app/`.
+<ngmd-callout type="warning" title="Refresh the bundled UI">
+  The SSR server serves the UI built into <code>packages/ng-devtools/dist/public</code>. Run <code>pnpm devtools:build-pkg</code> to refresh it after you change <code>app/</code>.
+</ngmd-callout>
 
-## Checks
+## Run the checks
+
+Run the same checks as CI before you open a PR:
 
 ```bash
-pnpm test            # host app
-pnpm test:devtools   # devtools package
-pnpm typecheck       # host app + specs, devtools UI, devtools package + its tests
-pnpm format:check
+pnpm format:check                   # Prettier
+pnpm typecheck                      # Host app + specs, devtools UI, devtools package + its tests
+pnpm exec nx affected -t test build # Test and build affected projects
+pnpm test:devtools                  # Devtools package tests (Vitest)
+pnpm extension:build                # Chrome extension
 ```
 
-CI runs these, then `nx affected -t test build`, builds the Chrome extension and checks that the committed `extension/ui` is current.
+### What CI runs
 
-## Making changes
+`.github/workflows/ci.yml` runs on pushes and pull requests to `main`, in this order:
 
-### Adding a new RPC function
+<ngmd-workflow>
+  <ngmd-step title="Install">
+    <code>pnpm install --frozen-lockfile</code> on the Node version from <code>.nvmrc</code>.
+  </ngmd-step>
+  <ngmd-step title="Check formatting and types">
+    <code>pnpm format:check</code>, then <code>pnpm typecheck</code>.
+  </ngmd-step>
+  <ngmd-step title="Test and build affected projects">
+    <code>nx affected -t test build</code>, compared against the last green commit on <code>main</code>.
+  </ngmd-step>
+  <ngmd-step title="Test the devtools package">
+    <code>pnpm test:devtools</code>.
+  </ngmd-step>
+  <ngmd-step title="Build the extension and check it is committed">
+    <code>pnpm extension:build</code>. The job fails when <code>extension/ui</code> differs from the committed copy.
+  </ngmd-step>
+  <ngmd-step title="Smoke-test the CLI">
+    <code>node bin.mjs --help</code>.
+  </ngmd-step>
+</ngmd-workflow>
+
+## Make changes
+
+### Add an RPC function
 
 1. Create the function in `packages/ng-devtools/src/rpc/`.
 2. Register it in `packages/ng-devtools/src/devframe.ts`.
 3. Call it from the UI in `app/src/pages/`.
 
-### Adding a new tab
+### Add a tab
 
 1. Create a component in `app/src/pages/`.
 2. Import and add it to `app/src/app.ts` (imports array, tabs array, template switch).
 3. Add a card to `app/src/pages/dashboard.ts`.
 
-### Adding agent tools
+### Add an agent tool
 
-Add `agent: { description }` to any RPC function, or use `ctx.agent.registerTool()` in the devframe setup.
+Add `agent: { description }` to an RPC function, or call `ctx.agent.registerTool()` in the devframe setup. List the new tool on the [Tools](/agents/tools) page.
 
-## The docs site
+<ngmd-callout type="tip" title="Changed app/?">
+  Run <code>pnpm extension:build</code> and commit <code>extension/ui</code>. CI fails when it is stale. See <a href="/contributing/chrome-extension">Build the extension</a>.
+</ngmd-callout>
+
+## Work on the docs
 
 This site lives in `apps/docs`. It is built with [NgMd](https://github.com/erkamyaman/ngmd) on *Analog.
 
 ```bash
-pnpm docs:dev     # dev server
-pnpm docs:build   # production build
+pnpm docs:dev     # Dev server
+pnpm docs:build   # Production build
 ```
 
-Pages are markdown files under `apps/docs/src/content`. The sidebar comes from `apps/docs/src/ngmd.config.ts`. The build fails on broken internal links, so run `pnpm docs:build` before you open a PR.
+Pages are markdown files under `apps/docs/src/content`. The sidebar comes from `apps/docs/src/ngmd.config.ts`.
+
+<ngmd-alert severity="important">
+  The build fails on broken internal links and on raw external anchors without <code>target="_blank"</code>. Run <code>pnpm docs:build</code> before you open a PR.
+</ngmd-alert>
+
+## Where to next
+
+<ngmd-pill-row>
+  <ngmd-pill href="/contributing/demo-apps" title="Demo apps"></ngmd-pill>
+  <ngmd-pill href="/contributing/chrome-extension" title="Build the extension"></ngmd-pill>
+  <ngmd-pill href="/contributing/publishing" title="Publishing"></ngmd-pill>
+</ngmd-pill-row>

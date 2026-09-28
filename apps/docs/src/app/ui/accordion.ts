@@ -1,5 +1,5 @@
-import { Component, effect, input, signal } from '@angular/core';
-import { LucideDynamicIcon, LucideChevronDown } from '@lucide/angular';
+import {Component, effect, input, signal} from '@angular/core';
+import {LucideDynamicIcon, LucideChevronDown} from '@lucide/angular';
 
 let idCounter = 0;
 

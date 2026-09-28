@@ -1,17 +1,17 @@
-import { Injector, type Type } from '@angular/core';
+import {Injector, type Type} from '@angular/core';
 
-import { NgmdAccordion, NgmdAccordionItem } from './ui/accordion';
-import { NgmdAlert } from './ui/alert';
-import { NgmdBadge } from './ui/badge';
-import { NgmdCallout } from './ui/callout';
-import { NgmdCard } from './ui/card';
-import { NgmdCardGrid } from './ui/card-grid';
-import { NgmdHero } from './ui/hero';
-import { NgmdImage } from './ui/image';
-import { NgmdPill, NgmdPillRow } from './ui/pill';
-import { NgmdTab, NgmdTabs } from './ui/tabs';
-import { NgmdVideo } from './ui/video';
-import { NgmdStep, NgmdWorkflow } from './ui/workflow';
+import {NgmdAccordion, NgmdAccordionItem} from './ui/accordion';
+import {NgmdAlert} from './ui/alert';
+import {NgmdBadge} from './ui/badge';
+import {NgmdCallout} from './ui/callout';
+import {NgmdCard} from './ui/card';
+import {NgmdCardGrid} from './ui/card-grid';
+import {NgmdHero} from './ui/hero';
+import {NgmdImage} from './ui/image';
+import {NgmdPill, NgmdPillRow} from './ui/pill';
+import {NgmdTab, NgmdTabs} from './ui/tabs';
+import {NgmdVideo} from './ui/video';
+import {NgmdStep, NgmdWorkflow} from './ui/workflow';
 
 /**
  * Map of every NgmdUi component to its custom-element tag name.
@@ -71,7 +71,7 @@ export const MARKDOWN_HOSTS = 'analog-markdown, analog-markdown-route';
 
 export async function registerNgmdElements(injector: Injector): Promise<void> {
   if (typeof customElements === 'undefined') return;
-  const { createCustomElement } = await import('@angular/elements');
+  const {createCustomElement} = await import('@angular/elements');
   for (const [tag, component] of elementMap) {
     if (customElements.get(tag)) continue;
     const NgElementCtor = createCustomElement(component, {

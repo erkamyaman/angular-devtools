@@ -7,7 +7,7 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { watchHostAttribute } from '../utils/watch-host-attribute';
+import {watchHostAttribute} from '../utils/watch-host-attribute';
 import {
   LucideDynamicIcon,
   type LucideIcon,

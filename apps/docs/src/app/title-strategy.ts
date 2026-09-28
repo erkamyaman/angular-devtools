@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
-import { Title } from '@angular/platform-browser';
-import { TitleStrategy, type RouterStateSnapshot } from '@angular/router';
-import siteConfig, { navLabels } from '../ngmd.config';
-import { stripUrl } from './services/route-url/route-url.service';
+import {Injectable} from '@angular/core';
+import {Title} from '@angular/platform-browser';
+import {TitleStrategy, type RouterStateSnapshot} from '@angular/router';
+import siteConfig, {navLabels} from '../ngmd.config';
+import {stripUrl} from './services/route-url/route-url.service';
 
 /**
  * Custom title strategy. Every page renders as `NgMd | <Title>`, where
@@ -17,7 +17,7 @@ import { stripUrl } from './services/route-url/route-url.service';
  * Replaces Angular's `DefaultTitleStrategy`, which would otherwise overwrite
  * our format with just the raw frontmatter title.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class NgmdTitleStrategy extends TitleStrategy {
   constructor(private readonly title: Title) {
     super();

@@ -1,6 +1,6 @@
-import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
-import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
-import { writeToClipboard } from '../utils/clipboard';
+import {Component, DestroyRef, effect, inject, input, signal} from '@angular/core';
+import {DomSanitizer, type SafeHtml} from '@angular/platform-browser';
+import {writeToClipboard} from '../utils/clipboard';
 
 /**
  * Code block with a header bar and shiki syntax highlighting at runtime.
@@ -137,11 +137,11 @@ export class NgmdCodeBlock {
       if (!code || typeof window === 'undefined') return;
 
       try {
-        const { codeToHtml } = await import('shiki');
+        const {codeToHtml} = await import('shiki');
         if (cancelled) return;
         const html = await codeToHtml(code, {
           lang: lang || 'text',
-          themes: { light: 'github-light', dark: 'github-dark' },
+          themes: {light: 'github-light', dark: 'github-dark'},
           defaultColor: false,
         });
         if (!cancelled) {

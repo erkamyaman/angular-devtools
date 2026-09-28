@@ -1,6 +1,6 @@
-import { AfterViewInit, Component, DestroyRef, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { enhanceOnNavigation } from '../utils/enhance-on-navigation';
+import {AfterViewInit, Component, DestroyRef, inject} from '@angular/core';
+import {Router} from '@angular/router';
+import {enhanceOnNavigation} from '../utils/enhance-on-navigation';
 
 /**
  * Hydrates the placeholder divs emitted by the ngmd-video and ngmd-image

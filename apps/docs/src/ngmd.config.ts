@@ -5,7 +5,7 @@
  * Sidebar, command palette, breadcrumb, and header all read from here.
  */
 
-import type { BadgeVariant } from './types/badge.ts';
+import type {BadgeVariant} from './types/badge.ts';
 
 export interface NavItem {
   label: string;
@@ -133,9 +133,9 @@ const config: NgmdConfig = {
   },
 
   sponsors: [
-    { name: 'CodeRabbit', login: 'coderabbitai' },
-    { name: 'umairhm', login: 'umairhm' },
-    { name: 'Sonichigo', login: 'Sonichigo' },
+    {name: 'CodeRabbit', login: 'coderabbitai'},
+    {name: 'umairhm', login: 'umairhm'},
+    {name: 'Sonichigo', login: 'Sonichigo'},
   ],
 
   keywords: {
@@ -151,65 +151,65 @@ const config: NgmdConfig = {
     {
       label: 'Getting Started',
       items: [
-        { label: 'Introduction', href: '/getting-started/introduction' },
-        { label: 'Installation', href: '/getting-started/installation' },
-        { label: 'Angular CLI and Express', href: '/getting-started/express' },
-        { label: 'Vite and Analog', href: '/getting-started/vite' },
-        { label: 'Standalone CLI', href: '/getting-started/cli' },
-        { label: 'Popup and hub', href: '/getting-started/popup-and-hub' },
-        { label: 'Browser overlay', href: '/getting-started/overlay' },
-        { label: 'Chrome extension', href: '/getting-started/chrome-extension' },
+        {label: 'Introduction', href: '/getting-started/introduction'},
+        {label: 'Installation', href: '/getting-started/installation'},
+        {label: 'Angular CLI and Express', href: '/getting-started/express'},
+        {label: 'Vite and Analog', href: '/getting-started/vite'},
+        {label: 'Standalone CLI', href: '/getting-started/cli'},
+        {label: 'Popup and hub', href: '/getting-started/popup-and-hub', status: 'new'},
+        {label: 'Browser overlay', href: '/getting-started/overlay'},
+        {label: 'Chrome extension', href: '/getting-started/chrome-extension'},
       ],
     },
     {
       label: 'Inspectors',
       items: [
-        { label: 'Dashboard', href: '/inspectors/dashboard' },
-        { label: 'Components', href: '/inspectors/components' },
-        { label: 'Injectors', href: '/inspectors/injectors' },
-        { label: 'Signals', href: '/inspectors/signals' },
-        { label: 'NgRx Store', href: '/inspectors/ngrx-store' },
-        { label: 'Forms', href: '/inspectors/forms' },
-        { label: 'Router', href: '/inspectors/router' },
-        { label: 'Pipes', href: '/inspectors/pipes' },
-        { label: 'SSR & HTTP', href: '/inspectors/ssr-http' },
-        { label: 'Analog', href: '/inspectors/analog' },
+        {label: 'Dashboard', href: '/inspectors/dashboard'},
+        {label: 'Components', href: '/inspectors/components'},
+        {label: 'Injectors', href: '/inspectors/injectors', status: 'updated'},
+        {label: 'Signals', href: '/inspectors/signals'},
+        {label: 'NgRx Store', href: '/inspectors/ngrx-store'},
+        {label: 'Forms', href: '/inspectors/forms', status: 'new'},
+        {label: 'Router', href: '/inspectors/router', status: 'new'},
+        {label: 'Pipes', href: '/inspectors/pipes', status: 'new'},
+        {label: 'SSR & HTTP', href: '/inspectors/ssr-http', status: 'new'},
+        {label: 'Analog', href: '/inspectors/analog', status: 'new'},
       ],
     },
     {
       label: 'Agent Tools',
       items: [
-        { label: 'MCP server', href: '/agents/mcp-server' },
-        { label: 'Tools', href: '/agents/tools' },
-        { label: 'Resources', href: '/agents/resources' },
+        {label: 'MCP server', href: '/agents/mcp-server'},
+        {label: 'Tools', href: '/agents/tools'},
+        {label: 'Resources', href: '/agents/resources'},
       ],
     },
     {
       label: 'Guides',
       items: [
-        { label: 'Restore NgRx signal state', href: '/guides/ngrx-signals-restore' },
-        { label: 'Set up SSR & HTTP', href: '/guides/ssr-http' },
-        { label: 'Set up Analog', href: '/guides/analog' },
+        {label: 'Restore NgRx signal state', href: '/guides/ngrx-signals-restore'},
+        {label: 'Set up SSR & HTTP', href: '/guides/ssr-http'},
+        {label: 'Set up Analog', href: '/guides/analog'},
       ],
     },
     {
       label: 'Security',
-      items: [{ label: 'Access and redaction', href: '/security' }],
+      items: [{label: 'Access and redaction', href: '/security'}],
     },
     {
       label: 'Community',
       items: [
-        { label: 'Get involved', href: '/community' },
-        { label: 'Sponsors', href: '/sponsors' },
+        {label: 'Get involved', href: '/community'},
+        {label: 'Sponsors', href: '/sponsors'},
       ],
     },
     {
       label: 'Contributing',
       items: [
-        { label: 'Development setup', href: '/contributing/development' },
-        { label: 'Demo apps', href: '/contributing/demo-apps' },
-        { label: 'Build the extension', href: '/contributing/chrome-extension' },
-        { label: 'Publishing', href: '/contributing/publishing' },
+        {label: 'Development setup', href: '/contributing/development'},
+        {label: 'Demo apps', href: '/contributing/demo-apps'},
+        {label: 'Build the extension', href: '/contributing/chrome-extension'},
+        {label: 'Publishing', href: '/contributing/publishing'},
       ],
     },
   ],

@@ -3,39 +3,145 @@ title: Injectors
 description: The injector hierarchy, token lookup paths and the providers at each level.
 ---
 
+<ngmd-hero title="Injectors" gradient>
+  The injector tree of the running page. Find a token, see who provides it, and follow the path Angular takes to resolve it.
+</ngmd-hero>
+
 # Injectors
 
-Every component and directive gets an injector. When it asks for a token, Angular walks up this tree, then through the environment injectors, until something provides it. The Injectors tab shows that tree.
+When a component asks for a token, Angular walks up the element injectors, then through the environment injectors, until something provides it. The Injectors tab shows that tree. Without a live page, it lists the DI found in your source.
+
+## What it shows
+
+### Elements and Environment
+
+A switch at the top picks the view:
+
+- **Elements**: one node per host element that has a component or a directive.
+- **Environment**: the environment injectors, such as the root and platform injectors.
+
+Each row shows a kind letter (`C`, `D` or `E`), the tag or injector name, and icons with the number of injected and provided tokens.
+
+### Search and filters
+
+- Search for a token, component, directive or injector. When a token matches, **Provided by** chips list the injectors that provide it. Click one to jump there.
+- **Components only** hides elements without a component. It keeps an element when it is an ancestor of one that stays. It is on by default, in the Elements view only.
+- **With providers** hides injectors that provide nothing.
+- Hover or focus an element injector to highlight its element in the page.
+
+### Lookup path
+
+Select an injector to see the **Lookup path**: the injectors Angular asks, in order, until one has the token. The path ends at the null injector, which throws `NullInjectorError`. Click any step, except the null injector, to open it.
+
+### Injected here
+
+For element injectors, **Injected here** lists each token requested at this level and the injector that answered. A token that nobody provides is marked **not provided anywhere**. When the element has more than one class, each row says which class asked.
+
+### Provides
+
+**Provides** lists each provider with its kind: `useClass`, `useValue`, `useFactory` or `useExisting`. A bare class shows as `useClass`. Chips mark **viewProviders** and **multi** providers. Providers that come from imported modules show the import path, as `via A › B`.
+
+### Source mode
+
+Without a live tree, the tab lists DI found in your source files, in four groups:
+
+| Group                          | Lists                                                                                               |
+| ------------------------------ | --------------------------------------------------------------------------------------------------- |
+| **Root Providers (provide\*)** | Calls to known Angular `provide*()` functions, such as `provideRouter()` and `provideHttpClient()`. |
+| **Injectable Services**        | `@Injectable` classes, plus `signalStore` and `InjectionToken` declarations with `providedIn`.      |
+| **inject() Calls**             | `inject(T)` field initializers and `@Inject(T)` parameters.                                         |
+| **Component Providers**        | Any `providers` or `viewProviders` array, in components, routes, app config or NgModules.           |
 
 ## Where the data comes from
 
-- **Live**: the [overlay](/getting-started/overlay) reads the injector tree from Angular's debug API. This needs Angular 17 or later and a development build.
-- **Source**: without a live tree, the tab lists DI found in your files, grouped as **Root Providers (provide\*)**, **Injectable Services**, **inject() Calls** and **Component Providers**.
+<ngmd-card-grid columns="2">
+  <ngmd-card icon="zap" title="Live page">
+    The overlay reads the tree with Angular's debug API and pushes it with the component tree, every 3 seconds.
+  </ngmd-card>
+  <ngmd-card icon="file" title="Source scan">
+    The server reads your <code>.ts</code> files, skipping specs and type declarations.
+  </ngmd-card>
+</ngmd-card-grid>
 
-## The tree
+### Debug APIs
 
-Switch between **Elements** (component and directive injectors) and **Environment** (the environment injectors, such as the root injector).
+The live tree needs a development build. It uses `ng.getInjector`, `ng.getComponent`, `ng.getDirectives` and these private helpers:
 
-- Search for a token, component or injector. A match shows **Provided by** chips; click one to jump to that injector.
-- **Components only** hides directive injectors. It is on by default.
-- **With providers** hides injectors that provide nothing.
-- Hover an element injector to highlight its element in the page.
+- `ɵgetInjectorMetadata` tells element and environment injectors apart.
+- `ɵgetInjectorProviders` lists the providers of each injector.
+- `ɵgetInjectorResolutionPath` gives the lookup path.
+- `ɵgetDependenciesFromInjectable` gives the tokens each class injects.
 
-## Details
+The source-mode notice says to connect the overlay on Angular 17 or later for the live tree.
 
-Select an injector to see:
+## How to use it
 
-- **Lookup path**: the injectors Angular asks, in order, until one has the token. The path ends at the null injector, which throws `NullInjectorError`. Click any step to open it.
-- **Injected here** (element injectors): each token requested at this level, the directive that asked for it, and the injector that answered, or **not provided anywhere**.
-- **Provides**: each provider with its kind (`useClass`, `useValue`, `useFactory` or `useExisting`), and whether it is a view provider or a multi provider. Providers that come from imported modules show the import path.
+### Fix a NullInjectorError
 
-## For agents
+<ngmd-workflow>
+  <ngmd-step title="Search for the token">
+    Type the token name in the search box. If no <strong>Provided by</strong> chip appears, nothing on the page provides it.
+  </ngmd-step>
+  <ngmd-step title="Select the component that asks for it">
+    Read <strong>Injected here</strong>. The token is marked <strong>not provided anywhere</strong>.
+  </ngmd-step>
+  <ngmd-step title="Read the lookup path">
+    Each step is an injector Angular asked. Add the provider to one of them, usually the app config or the component.
+  </ngmd-step>
+</ngmd-workflow>
 
-- `ng-devtools:get-providers` lists DI providers from source.
-- `ng-devtools:inspect-providers` returns the injector tree a page reported.
-- The `ng-devtools:injector-tree` resource holds the live tree.
+### Find which instance a component gets
 
-## Tips
+<ngmd-workflow>
+  <ngmd-step title="Select the component">
+    Open its element injector.
+  </ngmd-step>
+  <ngmd-step title="Read Injected here">
+    Each token shows the injector that answered. A component-level provider shadows the root one.
+  </ngmd-step>
+</ngmd-workflow>
 
-- If a token throws `NullInjectorError`, search for it and read the lookup path of the component that asks for it.
-- The tree shows up to 2000 injectors.
+### Keyboard
+
+Arrow keys, Home and End move the selection through the tree. The first row is selected when nothing else is.
+
+## Agent tools
+
+| Tool or resource                | Kind     | What it does                                                                                |
+| ------------------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| `ng-devtools:get-providers`     | tool     | DI providers from source: `@Injectable` services, `inject()` calls and `providers` arrays.  |
+| `ng-devtools:inspect-providers` | tool     | The injector tree a page reported. `pageId` picks a tab. `selector` only labels the answer. |
+| `ng-devtools:injector-tree`     | resource | The live tree last reported by a page.                                                      |
+
+See [Tools](/agents/tools) and [Resources](/agents/resources).
+
+## Limits and gotchas
+
+<ngmd-callout type="warning" title="Up to 2000 element injectors">
+  The Elements view stops at 2000 injectors, without a notice. Environment injectors are not capped.
+</ngmd-callout>
+
+<ngmd-callout type="info" title="Source mode only knows some provide functions">
+  The <strong>Root Providers</strong> group matches a fixed list of Angular <code>provide*()</code> functions. Your own provider functions are not listed there.
+</ngmd-callout>
+
+<ngmd-alert severity="helpful">
+  Constructor parameters without <code>&#64;Inject()</code> are not found by the source scan. The live tree has them.
+</ngmd-alert>
+
+## Related pages
+
+<ngmd-card-grid columns="2">
+  <ngmd-card icon="layers" title="Components" link="/inspectors/components" cta="Open">
+    Each instance, with the services it injects.
+  </ngmd-card>
+  <ngmd-card icon="box" title="NgRx Store" link="/inspectors/ngrx-store" cta="Open">
+    Signal stores, found through the injectors.
+  </ngmd-card>
+  <ngmd-card icon="sparkles" title="Agent tools" link="/agents/tools" cta="Browse">
+    Every tool a coding agent can call.
+  </ngmd-card>
+  <ngmd-card icon="compass" title="Browser overlay" link="/getting-started/overlay" cta="Set up">
+    The script that reports the live page.
+  </ngmd-card>
+</ngmd-card-grid>

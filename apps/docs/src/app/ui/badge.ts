@@ -1,5 +1,5 @@
-import { Component, computed, input } from '@angular/core';
-import { BADGE_VARIANTS, type BadgeVariant } from '../../types/badge';
+import {Component, computed, input} from '@angular/core';
+import {BADGE_VARIANTS, type BadgeVariant} from '../../types/badge';
 
 /**
  * Small inline status pill, designed to sit next to a heading or in a

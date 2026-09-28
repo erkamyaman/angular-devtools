@@ -1,5 +1,5 @@
-import type { MarkedExtension } from 'marked';
-import { getHighlighter, LANGS, escapeHtml } from './shiki-shared.ts';
+import type {MarkedExtension} from 'marked';
+import {getHighlighter, LANGS, escapeHtml} from './shiki-shared.ts';
 
 /**
  * Adjacent fenced code blocks tagged with `group="..."` merge into a tabbed
@@ -49,7 +49,7 @@ async function renderCode(body: string, lang: string): Promise<string> {
   const highlighter = await getHighlighter();
   return highlighter.codeToHtml(body, {
     lang: safeLang,
-    themes: { light: 'github-light', dark: 'github-dark' },
+    themes: {light: 'github-light', dark: 'github-dark'},
     defaultColor: false,
   });
 }

@@ -1,8 +1,8 @@
-import { create, insertMultiple, search as oramaSearch, type AnyOrama } from '@orama/orama';
-import { searchIndex } from 'virtual:ngmd/search-index';
-import { apiIndex } from 'virtual:ngmd/api-index';
-import type { IndexDoc, SearchHit, SearchHitKind, SearchProvider } from '../../../types/search';
-import type { SymbolRecord } from '../../../types/api';
+import {create, insertMultiple, search as oramaSearch, type AnyOrama} from '@orama/orama';
+import {searchIndex} from 'virtual:ngmd/search-index';
+import {apiIndex} from 'virtual:ngmd/api-index';
+import type {IndexDoc, SearchHit, SearchHitKind, SearchProvider} from '../../../types/search';
+import type {SymbolRecord} from '../../../types/api';
 
 /**
  * Default search backend. Builds an in-memory Orama index once on init,
@@ -56,7 +56,7 @@ export class OramaSearchProvider implements SearchProvider {
       properties: ['pageTitle', 'heading', 'body'],
       // Heading > title > body so a query that matches a heading ranks above
       // the same query merely appearing in body prose.
-      boost: { heading: 3, pageTitle: 2, body: 1 },
+      boost: {heading: 3, pageTitle: 2, body: 1},
       limit: 20,
       // Scale fuzzy tolerance with query length. Short queries (≤4 chars)
       // with 1-edit fuzzy match too many neighbouring words and drag in

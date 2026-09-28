@@ -1,17 +1,17 @@
 /// <reference types="vitest" />
 
-import { defineConfig, type Plugin } from 'vite';
+import {defineConfig, type Plugin} from 'vite';
 import analog from '@analogjs/platform';
 import tailwindcss from '@tailwindcss/vite';
-import { readFileSync } from 'node:fs';
-import { getBuildExtensions } from './src/marked-extensions/index.ts';
-import { pageMetaPlugin } from './page-meta.plugin.ts';
-import { internalLinkGuard } from './link-guard.plugin.ts';
-import { sitemapPlugin } from './sitemap.plugin.ts';
-import { searchIndexPlugin } from './search-index.plugin.ts';
-import { rawMdPlugin } from './raw-md.plugin.ts';
-import { varsPlugin } from './vars.plugin.ts';
-import { apiGenPlugin } from './api-gen.plugin.ts';
+import {readFileSync} from 'node:fs';
+import {getBuildExtensions} from './src/marked-extensions/index.ts';
+import {pageMetaPlugin} from './page-meta.plugin.ts';
+import {internalLinkGuard} from './link-guard.plugin.ts';
+import {sitemapPlugin} from './sitemap.plugin.ts';
+import {searchIndexPlugin} from './search-index.plugin.ts';
+import {rawMdPlugin} from './raw-md.plugin.ts';
+import {varsPlugin} from './vars.plugin.ts';
+import {apiGenPlugin} from './api-gen.plugin.ts';
 import config from './src/ngmd.config.ts';
 
 /**
@@ -76,8 +76,8 @@ export default defineConfig(async () => ({
     varsPlugin(),
     externalLinkGuard(),
     internalLinkGuard(),
-    pageMetaPlugin({ repoUrl: config.site.githubUrl, branch: 'main', dir: 'apps/docs' }),
-    sitemapPlugin({ siteUrl: config.site.url }),
+    pageMetaPlugin({repoUrl: config.site.githubUrl, branch: 'main', dir: 'apps/docs'}),
+    sitemapPlugin({siteUrl: config.site.url}),
     rawMdPlugin(),
     searchIndexPlugin(),
     apiGenPlugin(),
@@ -90,7 +90,7 @@ export default defineConfig(async () => ({
         },
         shikiOptions: {
           highlight: {
-            themes: { light: 'github-light', dark: 'github-dark' },
+            themes: {light: 'github-light', dark: 'github-dark'},
             defaultColor: false,
           },
           highlighter: {

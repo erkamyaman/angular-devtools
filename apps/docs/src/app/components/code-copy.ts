@@ -1,8 +1,8 @@
-import { AfterViewInit, Component, DestroyRef, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { ToastService } from '../services/toast/toast.service';
-import { writeToClipboard } from '../utils/clipboard';
-import { enhanceOnNavigation } from '../utils/enhance-on-navigation';
+import {AfterViewInit, Component, DestroyRef, inject} from '@angular/core';
+import {Router} from '@angular/router';
+import {ToastService} from '../services/toast/toast.service';
+import {writeToClipboard} from '../utils/clipboard';
+import {enhanceOnNavigation} from '../utils/enhance-on-navigation';
 
 /**
  * Scans rendered markdown for <pre> code blocks and injects a copy button

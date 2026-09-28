@@ -1,5 +1,5 @@
-import { TestBed } from '@angular/core/testing';
-import { NgmdAccordionItem } from './accordion';
+import {TestBed} from '@angular/core/testing';
+import {NgmdAccordionItem} from './accordion';
 
 describe('NgmdAccordionItem', () => {
   it('toggles aria-expanded and rotates the chevron', async () => {

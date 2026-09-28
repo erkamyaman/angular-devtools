@@ -1,6 +1,6 @@
-import { execFileSync } from 'node:child_process';
-import { readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {readdirSync, statSync} from 'node:fs';
+import {join, relative} from 'node:path';
 
 /**
  * Shared helpers for the build-time Vite plugins (`page-meta`, `sitemap`,
@@ -19,7 +19,7 @@ import { join, relative } from 'node:path';
 
 /** Walk `src/app/pages/**\/*.page.ts` and return paths relative to `root`. */
 export function walkPageFiles(dir: string, root: string, out: string[] = []): string[] {
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+  for (const entry of readdirSync(dir, {withFileTypes: true})) {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       walkPageFiles(full, root, out);
@@ -41,7 +41,7 @@ export function walkContentFiles(
   baseDir: string = dir,
   out: Array<[string, string]> = [],
 ): Array<[string, string]> {
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+  for (const entry of readdirSync(dir, {withFileTypes: true})) {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       walkContentFiles(full, root, baseDir, out);

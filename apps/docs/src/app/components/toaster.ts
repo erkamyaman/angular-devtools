@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import {Component, DestroyRef, effect, inject, signal} from '@angular/core';
 import {
   LucideDynamicIcon,
   LucideCircleAlert,
@@ -6,7 +6,7 @@ import {
   LucideInfo,
   LucideX,
 } from '@lucide/angular';
-import { ToastService, type Toast } from '../services/toast/toast.service';
+import {ToastService, type Toast} from '../services/toast/toast.service';
 
 /** ms the slide-out keyframes take. Matches `ngmd-toast-slide-out` in
  * `styles.css`. Toasts dwell `duration` ms, then play the exit animation

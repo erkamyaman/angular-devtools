@@ -1,7 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { LucideDynamicIcon, LucideChevronRight, LucideHouse } from '@lucide/angular';
-import { RouteUrlService } from '../services/route-url/route-url.service';
+import {Component, computed, inject} from '@angular/core';
+import {RouterLink} from '@angular/router';
+import {LucideDynamicIcon, LucideChevronRight, LucideHouse} from '@lucide/angular';
+import {RouteUrlService} from '../services/route-url/route-url.service';
 
 interface Crumb {
   label: string;

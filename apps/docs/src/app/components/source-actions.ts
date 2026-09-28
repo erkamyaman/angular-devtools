@@ -1,8 +1,8 @@
-import { Component, computed, inject } from '@angular/core';
-import { LucideDynamicIcon, LucideCode, LucidePencil } from '@lucide/angular';
-import { pageMeta } from 'virtual:ngmd/page-meta';
-import { LlmActions } from './llm-actions';
-import { RouteUrlService } from '../services/route-url/route-url.service';
+import {Component, computed, inject} from '@angular/core';
+import {LucideDynamicIcon, LucideCode, LucidePencil} from '@lucide/angular';
+import {pageMeta} from 'virtual:ngmd/page-meta';
+import {LlmActions} from './llm-actions';
+import {RouteUrlService} from '../services/route-url/route-url.service';
 
 /**
  * Top-right floating icon row showing two GitHub links per route:

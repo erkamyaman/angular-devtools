@@ -1,7 +1,11 @@
 ---
 title: MCP server
-description: Connect a coding agent to the devtools over stdio or HTTP.
+description: Connect a coding agent to the devtools over stdio or HTTP, in Claude Code, Cursor or VS Code.
 ---
+
+<ngmd-hero title="MCP server" logo="https://cdn.simpleicons.org/modelcontextprotocol/71717A" gradient>
+  Give your coding agent the same view of the app that you have. Routes, components, forms, stores and the live page, as MCP tools and resources.
+</ngmd-hero>
 
 # MCP server
 
@@ -9,18 +13,34 @@ The devtools expose their inspectors to coding agents as *MCP tools and resource
 
 There are two ways to connect. Pick one based on the data your agent needs.
 
+## Pick a transport
+
+<ngmd-card-grid columns="2">
+  <ngmd-card icon="terminal" title="stdio" cta="Source only">
+    Your client starts <code>ng-devtools mcp</code> in the project folder. The server scans your source. No page ever connects to it.
+  </ngmd-card>
+  <ngmd-card icon="zap" title="HTTP" cta="Source and live page">
+    Your client calls <code>/__devframes/__mcp</code> on the server that runs your app. Pages open in a browser report to it, so the live tools work.
+  </ngmd-card>
+</ngmd-card-grid>
+
 | Transport                   | Live page data                       | Setup                                |
 | --------------------------- | ------------------------------------ | ------------------------------------ |
 | stdio (`ng-devtools mcp`)   | No. Source scan tools only.          | A command in your MCP client config. |
 | HTTP (`/__devframes/__mcp`) | Yes, with the app open in a browser. | A URL on your app's dev server.      |
 
-## stdio
+## Connect over stdio
 
-The `mcp` command starts a server over stdio in the current directory. It scans your source, but no page ever connects to it, so tools that need the running app answer that no page is attached.
+The package ships an `ng-devtools` binary. Its `mcp` command starts an MCP server on stdin and stdout.
 
-**Claude Desktop**: add to `claude_desktop_config.json`:
+### Add the stdio server to your client
 
-```json
+```bash group="stdio" name="Claude Code" active
+claude mcp add ng-devtools -- npx @santoshyadavdev/ng-devtools mcp
+```
+
+```json group="stdio" name="Cursor"
+// .cursor/mcp.json
 {
   "mcpServers": {
     "ng-devtools": {
@@ -31,12 +51,12 @@ The `mcp` command starts a server over stdio in the current directory. It scans 
 }
 ```
 
-**VS Code**: add to `.vscode/mcp.json`:
-
-```json
+```json group="stdio" name="VS Code"
+// .vscode/mcp.json
 {
   "servers": {
     "ng-devtools": {
+      "type": "stdio",
       "command": "npx",
       "args": ["@santoshyadavdev/ng-devtools", "mcp"]
     }
@@ -44,9 +64,27 @@ The `mcp` command starts a server over stdio in the current directory. It scans 
 }
 ```
 
-## HTTP
+### Start it in the project folder
 
-When the devtools are embedded in your app's server, the MCP endpoint is also available over HTTP at `/__devframes/__mcp` (or `/__ng-devtools/__mcp` without the hub). This endpoint sees the pages that are connected to that server, so the live tools work. Open the app in a browser with the [overlay](/getting-started/overlay) loaded, then call the tools.
+The server scans the folder it starts in. Start it from the root of your Angular or Analog project, next to `package.json` and `angular.json`.
+
+<ngmd-alert severity="helpful">
+  Inside this repository, <code>pnpm devtools:mcp</code> runs the same server against the demo app.
+</ngmd-alert>
+
+### What stdio can answer
+
+Over stdio, the source scan tools work: `get-routes`, `get-components`, `get-signals`, `get-providers`, `get-ngrx-store`, `get-pipes` and `build-meta`. So do the tools that read files only, like `lint-pipes`, `analog-routes` and `analog-lint`.
+
+Tools that need the running app reply that no page is attached. Resources stay empty. Use HTTP for those.
+
+## Connect over HTTP
+
+When the devtools are embedded in your app's server, the same tools are served over HTTP. This endpoint sees the pages that connect to that server.
+
+### Find your endpoint
+
+The path depends on how you mount the devtools. Use the port your server actually runs on.
 
 | Setup                                   | Endpoint                                  |
 | --------------------------------------- | ----------------------------------------- |
@@ -54,38 +92,98 @@ When the devtools are embedded in your app's server, the MCP endpoint is also av
 | [Vite plugin](/getting-started/vite)    | `http://localhost:5173/__devframes/__mcp` |
 | [Standalone CLI](/getting-started/cli)  | `http://localhost:9999/__mcp`             |
 
-Use the port your server actually runs on.
+If you mount the devtools panel without the hub, at `/__ng-devtools/`, the endpoint is `/__ng-devtools/__mcp`.
 
-<ngmd-callout type="warning" title="Send an Origin header">
+### Send an Origin header
+
+<ngmd-callout type="warning" title="Requests without an Origin header get 403">
   The HTTP endpoint only answers requests from this machine that carry a local <code>Origin</code> header, such as <code>http://localhost:4000</code>. Requests without one get <code>403 Forbidden</code>. If your MCP client does not send an <code>Origin</code> header, add it in the client config.
 </ngmd-callout>
 
-For example, in `.vscode/mcp.json`:
+The header value is the origin of your dev server. Every example below sets it.
 
-```json
+### Add the HTTP endpoint to your client
+
+```bash group="http" name="Claude Code" active
+claude mcp add --transport http ng-devtools http://localhost:4000/__devframes/__mcp \
+  --header "Origin: http://localhost:4000"
+```
+
+```json group="http" name="Cursor"
+// .cursor/mcp.json
 {
-  "servers": {
+  "mcpServers": {
     "ng-devtools": {
-      "type": "http",
       "url": "http://localhost:4000/__devframes/__mcp",
-      "headers": { "Origin": "http://localhost:4000" }
+      "headers": {"Origin": "http://localhost:4000"}
     }
   }
 }
 ```
 
-## Tool names
+```json group="http" name="VS Code"
+// .vscode/mcp.json
+{
+  "servers": {
+    "ng-devtools": {
+      "type": "http",
+      "url": "http://localhost:4000/__devframes/__mcp",
+      "headers": {"Origin": "http://localhost:4000"}
+    }
+  }
+}
+```
 
-Tools are registered with a colon, as `ng-devtools:get-routes`. MCP clients see these with an underscore, as `ng-devtools_get-routes`. Calls with either form work.
+### Open the app in a browser
 
-Read-only tools are marked read-only for your client. Tools that act on the app (`highlight`, `navigate`, `form-action`, `fill-form` and `analog-call-api`) are not, so your client can ask before it runs them.
+The live tools read what the page reports. Without an open page, they have nothing to answer with.
 
-## Pages
+<ngmd-workflow>
+  <ngmd-step title="Start your app">
+    Run the server that mounts the devtools: your Express SSR server, the Vite dev server, or <code>ng-devtools dev</code>.
+  </ngmd-step>
+  <ngmd-step title="Open it in a browser">
+    Load the app with the <a href="/getting-started/overlay">overlay</a>. The page connects to the devtools and starts reporting.
+  </ngmd-step>
+  <ngmd-step title="Call a tool">
+    Ask your agent something the page knows, like "why is the checkout form invalid?". It calls <code>explain-form-invalid</code> on the connected page.
+  </ngmd-step>
+</ngmd-workflow>
 
-Each browser tab reports on its own and gets a page id. Tools that read live data use the most recent page by default. Pass `page` (or `pageId`) to pick another tab. Pages that stop reporting are dropped after a short time.
+## How tools behave
 
-## Next steps
+### Tool names
 
-- [Tools](/agents/tools): every tool with its inputs.
-- [Resources](/agents/resources): live state an agent can read.
-- [Security](/security): what leaves the page and what is redacted.
+Tools are registered with a colon, as `ng-devtools:get-routes`. MCP clients see them with an underscore, as `ng-devtools_get-routes`. Calls with either form work.
+
+### Read and action tools
+
+Read-only tools are marked read-only for your client. Five tools act on the app, so they are not:
+
+<ngmd-pill-row>
+  <ngmd-pill href="/agents/tools#components-signals-and-di" title="highlight"></ngmd-pill>
+  <ngmd-pill href="/agents/tools#act-on-the-router" title="navigate"></ngmd-pill>
+  <ngmd-pill href="/agents/tools#act-on-a-form" title="form-action"></ngmd-pill>
+  <ngmd-pill href="/agents/tools#act-on-a-form" title="fill-form"></ngmd-pill>
+  <ngmd-pill href="/agents/tools#call-a-server-route" title="analog-call-api"></ngmd-pill>
+</ngmd-pill-row>
+
+Your client can ask you before it runs them.
+
+### Pages and tabs
+
+Each browser tab reports on its own and gets a page id. Tools that read live data use the most recent page by default. Pass `page` (or `pageId` for `inspect-providers`) to pick another tab. Pages that stop reporting are dropped after a short time.
+
+## Where to next
+
+<ngmd-card-grid columns="3">
+  <ngmd-card icon="wrench" title="Tools" link="/agents/tools" cta="Every tool">
+    Each tool grouped by inspector, with what it answers and its arguments.
+  </ngmd-card>
+  <ngmd-card icon="layers" title="Resources" link="/agents/resources" cta="Live state">
+    The live state an agent can read as JSON.
+  </ngmd-card>
+  <ngmd-card icon="shield" title="Security" link="/security" cta="Redaction">
+    What leaves the page and what is redacted.
+  </ngmd-card>
+</ngmd-card-grid>

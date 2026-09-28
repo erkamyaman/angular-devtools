@@ -1,6 +1,6 @@
-import { Injectable, computed } from '@angular/core';
+import {Injectable, computed} from '@angular/core';
 import config from '../../../ngmd.config';
-import type { VersionEntry } from '../../../ngmd.config';
+import type {VersionEntry} from '../../../ngmd.config';
 
 /**
  * Version registry for the header switcher.
@@ -20,7 +20,7 @@ import type { VersionEntry } from '../../../ngmd.config';
  *     uses this to link visitors stuck on `next` / `rc` / `deprecated`
  *     deployments toward the live production docs.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class VersionService {
   /** Static registry from config. `null` when versions are not configured. */
   readonly config = computed(() => config.versions ?? null);

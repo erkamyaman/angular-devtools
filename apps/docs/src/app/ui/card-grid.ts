@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import {Component, computed, input} from '@angular/core';
 
 /**
  * Grid container around `<ngmd-card>` (or any block children). Two- or

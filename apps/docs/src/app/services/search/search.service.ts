@@ -8,9 +8,9 @@ import {
   type Signal,
 } from '@angular/core';
 import config from '../../../ngmd.config';
-import type { SearchHit, SearchProvider } from '../../../types/search';
-import { OramaSearchProvider } from './orama-provider';
-import { AlgoliaSearchProvider } from './algolia-provider';
+import type {SearchHit, SearchProvider} from '../../../types/search';
+import {OramaSearchProvider} from './orama-provider';
+import {AlgoliaSearchProvider} from './algolia-provider';
 
 const SEARCH_DEBOUNCE = 200;
 const HISTORY_KEY = 'ngmd-search-history-v1';
@@ -42,7 +42,7 @@ export interface HistoryItem {
  * Swap to Algolia by populating `site.algolia` in `ngmd.config.ts`. Nothing
  * in this file changes when you do; the provider just picks itself up.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class SearchService {
   private readonly isBrowser = typeof window !== 'undefined';
 
@@ -69,7 +69,7 @@ export class SearchService {
    * treated as "no params" so the loader doesn't run on an empty input. */
   private readonly resultsResource = resource({
     params: () => this.debouncedQuery() || undefined,
-    loader: async ({ params }) => {
+    loader: async ({params}) => {
       if (!params) return [] as SearchHit[];
       try {
         return await this.provider.search(params);
@@ -154,7 +154,7 @@ export class SearchService {
   toggleFavorite(url: string): void {
     if (!this.isBrowser) return;
     this.historyState.update((items) => {
-      const flipped = items.map((h) => (h.url === url ? { ...h, isFavorite: !h.isFavorite } : h));
+      const flipped = items.map((h) => (h.url === url ? {...h, isFavorite: !h.isFavorite} : h));
       const favorites = flipped.filter((h) => h.isFavorite);
       const recents = flipped.filter((h) => !h.isFavorite).slice(0, HISTORY_MAX);
       return [...favorites, ...recents];

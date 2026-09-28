@@ -1,8 +1,8 @@
-import { Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { LucideDynamicIcon, LucideArrowLeft, LucideArrowRight } from '@lucide/angular';
-import { navItems } from '../../ngmd.config';
-import { RouteUrlService } from '../services/route-url/route-url.service';
+import {Component, computed, inject} from '@angular/core';
+import {RouterLink} from '@angular/router';
+import {LucideDynamicIcon, LucideArrowLeft, LucideArrowRight} from '@lucide/angular';
+import {navItems} from '../../ngmd.config';
+import {RouteUrlService} from '../services/route-url/route-url.service';
 
 const RELATED_MAX = 4;
 

@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { GithubIcon } from '../ui/github-icon';
-import { DiscordIcon } from '../ui/discord-icon';
+import {Component} from '@angular/core';
+import {RouterLink} from '@angular/router';
+import {GithubIcon} from '../ui/github-icon';
+import {DiscordIcon} from '../ui/discord-icon';
 import siteConfig from '../../ngmd.config';
 
 @Component({

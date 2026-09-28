@@ -1,99 +1,262 @@
 ---
 title: Tools
-description: Every agent tool the devtools expose, with its inputs.
+description: Every agent tool the devtools expose, grouped by inspector, with what it answers and its arguments.
 ---
+
+<ngmd-hero title="Tools" logo="https://cdn.simpleicons.org/modelcontextprotocol/71717A" gradient>
+  Forty-three tools, grouped by inspector. Each one answers a question you would otherwise answer by clicking through the panel.
+</ngmd-hero>
 
 # Tools
 
-MCP clients see these with an underscore, as `ng-devtools_get-routes`. Tools marked **live** need a connected page, which means the [HTTP endpoint](/agents/mcp-server#http) with the app open in a browser. The others read your source and also work over stdio.
+This page lists every tool the [MCP server](/agents/mcp-server) exposes. Each group matches an inspector in the panel.
 
-Most live tools take an optional `page` input to pick a browser tab. It defaults to the most recent one.
+## Before you call a tool
+
+### Names
+
+Tool ids use a colon, as `ng-devtools:get-routes`. MCP clients see them with an underscore, as `ng-devtools_get-routes`. The tables below drop the `ng-devtools:` prefix.
+
+### Source and live tools
+
+Each tool reads from one of three places.
+
+<ngmd-card-grid columns="3">
+  <ngmd-card icon="file" title="Source">
+    Reads your files. Works over stdio and HTTP, with or without a browser.
+  </ngmd-card>
+  <ngmd-card icon="zap" title="Page">
+    Reads what a connected page reported. Needs the HTTP endpoint and the app open in a browser.
+  </ngmd-card>
+  <ngmd-card icon="terminal" title="Vite plugin">
+    Reads what the Vite dev server recorded. Needs the Vite plugin.
+  </ngmd-card>
+</ngmd-card-grid>
+
+### The page argument
+
+Most page tools take an optional `page` argument to pick a browser tab. It defaults to the most recent one. `inspect-providers` calls it `pageId`. The tables below leave `page` out.
+
+### Action tools
+
+<ngmd-alert severity="important">
+  <code>highlight</code>, <code>navigate</code>, <code>form-action</code>, <code>fill-form</code> and <code>analog-call-api</code> act on the app. Every other tool is marked read-only for your client.
+</ngmd-alert>
 
 ## Source scan
 
-These tools take no inputs.
+These seven tools take no arguments. They all read your source.
 
-| Tool                         | Description                                                                                                                                                                |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ng-devtools:get-routes`     | Angular routes from your route files, with full URL path, kind (page, group, redirect or wildcard), guards, resolvers, and file and line. In Analog apps, the file routes. |
-| `ng-devtools:get-components` | Components and directives from `@Component` and `@Directive` classes, with selector, kind, inputs, outputs, and file and line.                                             |
-| `ng-devtools:get-signals`    | `signal()`, `computed()`, `linkedSignal()`, `effect()`, `toSignal()` and resource declarations, plus signal inputs, models and queries.                                    |
-| `ng-devtools:get-providers`  | DI providers: `@Injectable` services, `inject()` calls and `providers` arrays.                                                                                             |
-| `ng-devtools:get-ngrx-store` | NgRx declarations: actions, reducers, effects, selectors, features, store setup, `signalStore` (with its members), `signalState` and `signalMethod`.                       |
-| `ng-devtools:get-pipes`      | Custom `@Pipe` classes, and built-in pipes in use in templates, with purity and standalone status.                                                                         |
-| `ng-devtools:build-meta`     | Angular and TypeScript versions, the project name and SSR status.                                                                                                          |
+| Tool             | What it answers                                                                                                                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get-routes`     | Angular routes from your route files, with full URL path (parents and `loadChildren` prefixes included), kind (page, group, redirect or wildcard), guards, resolvers, and file and line.  |
+| `get-components` | Components and directives from `@Component` and `@Directive` classes, with class name, selector, kind, inputs, outputs, and file and line.                                                |
+| `get-signals`    | `signal()`, `computed()`, `linkedSignal()`, `effect()`, `toSignal()` and resource declarations (`resource`, `httpResource`, `rxResource`), plus signal inputs, models and queries.        |
+| `get-providers`  | DI providers: `@Injectable` services, `inject()` calls and `providers` arrays, with token, file and where each one is provided.                                                           |
+| `get-ngrx-store` | NgRx declarations: `@ngrx/store` actions, reducers, effects, selectors, features and store setup, and `@ngrx/signals` `signalStore` (with its members), `signalState` and `signalMethod`. |
+| `get-pipes`      | Custom `@Pipe` classes, and built-in pipes from `@angular/common` in use in templates, with purity, standalone status, and where each is declared or used.                                |
+| `build-meta`     | The Angular and TypeScript versions and SSR status.                                                                                                                                       |
 
 ## Components, signals and DI
 
-| Tool                            | Live | Inputs                                                                   | Description                                                                                  |
-| ------------------------------- | ---- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| `ng-devtools:highlight`         | yes  | `selector` (required): instance id, class name, host tag or CSS selector | Highlights a component in the page and makes it the target of `inspect-signals`.             |
-| `ng-devtools:inspect-signals`   | yes  | `selector` (required)                                                    | The signal graph the page reported, with dependency edges and recent value history per node. |
-| `ng-devtools:inspect-providers` | yes  | `selector`, `pageId`                                                     | The injector hierarchy a page reported, with the providers at each level.                    |
+### highlight
+
+Highlights a component in the page and makes it the target of `inspect-signals`. Reads: page. <ngmd-badge variant="alpha">Action</ngmd-badge>
+
+| Argument   | Required | Value                                                                                                         |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `selector` | yes      | An instance id from the `component-tree` resource (like `c12`), a class name, a host tag or any CSS selector. |
+
+An instance id targets that exact instance, for example the second card of a list.
+
+### inspect-signals
+
+The signal graph the page reported: nodes (`signal`, `computed`, `linkedSignal`, `effect`), dependency edges, the component they belong to, and recent value history per node. Reads: page.
+
+| Argument   | Required | Value                                                                  |
+| ---------- | -------- | ---------------------------------------------------------------------- |
+| `selector` | yes      | Host tag, class name or instance id of the component, like `app-root`. |
+
+<ngmd-callout type="tip" title="One graph per page">
+  The page reports one graph: the component picked on the Signals page or with <code>highlight</code>, otherwise the deepest component in the primary router outlet. Call <code>highlight</code> first to switch the graph to another component. Only signals a template or an effect has read appear.
+</ngmd-callout>
+
+### inspect-providers
+
+The injector hierarchy a page reported, with the providers at each level. Element injectors list what each component injected and which injector supplied it. Environment injectors run from the platform down to the root and route injectors. Reads: page.
+
+| Argument   | Required | Value                                                           |
+| ---------- | -------- | --------------------------------------------------------------- |
+| `selector` | no       | Only labels the answer. The page always reports the whole tree. |
+| `pageId`   | no       | The tab to read. Defaults to the most recent.                   |
 
 ## Router
 
-| Tool                              | Live   | Inputs                                                                                                                | Description                                                                                                                                                                                  |
-| --------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ng-devtools:inspect-route`       | yes    | `selector`                                                                                                            | The current route: URL, params, data, guards, resolvers, the navigation in flight and the outlet tree. With `selector`, the route a component was rendered for, or whether a link is active. |
-| `ng-devtools:explain-navigation`  | yes    | `url`, `id`, `limit` (1 to 50, default 5), `perf`                                                                     | Recent navigations and why each succeeded or not, with timing, redirects and guard verdicts. `perf` lists the slowest navigations and preloads.                                              |
-| `ng-devtools:list-routes`         | yes    | `match`, `audit`, `filter`                                                                                            | The live route config with source files and example URLs. `match` predicts which route a URL hits. `audit` lists the guards that protect each page.                                          |
-| `ng-devtools:lint-routes`         | yes    |                                                                                                                       | Route config mistakes, each with a fix.                                                                                                                                                      |
-| `ng-devtools:router-config`       | yes    |                                                                                                                       | Router options, features and strategies in effect.                                                                                                                                           |
-| `ng-devtools:export-navigation`   | yes    | `id`                                                                                                                  | A markdown repro of a navigation. Defaults to the latest one that did not succeed.                                                                                                           |
-| `ng-devtools:explain-render-mode` | partly | `url`                                                                                                                 | The `ServerRoute` and render mode for a URL, read from `*.routes.server.ts`.                                                                                                                 |
-| `ng-devtools:navigate`            | yes    | `action` (required), `url`, `pattern`, `params`, `id`, `on`, `routeId`, `replaceUrl`, `skipLocationChange`, `waitFor` | Acts on the router, in development only. Actions: `navigate`, `abort`, `replay`, `probe`, `instrument` and `resolve-lazy`. Only same-origin relative URLs are accepted.                      |
+All router tools read the page, except `explain-render-mode`, which also reads your `*.routes.server.ts` files.
+
+### Read the current route
+
+| Tool                 | What it answers                                                                                                                                                                                                                                                | Arguments                                             |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `inspect-route`      | The current route: URL, query params, fragment, title, the navigation in flight, the active route tree (component, params, data, guards, resolvers) and the outlet tree. With `selector`, the route a component was rendered for, or whether a link is active. | `selector`: component class, element tag or link text |
+| `explain-navigation` | Recent navigations, newest first: who started each one, redirects, per-phase timing, guard and resolver verdicts, lazy loads, and the cancel or error reason in plain language.                                                                                | `url`, `id`, `limit` (1 to 50, default 5), `perf`     |
+| `export-navigation`  | A markdown repro of one navigation, with router options and the relevant slice of the route config. Defaults to the latest one that did not succeed.                                                                                                           | `id`                                                  |
+
+Use `explain-navigation` for "why was I redirected". Pass `perf: true` for "why is navigation slow": it lists the slowest navigations and preloads.
+
+### Read the route config
+
+| Tool                  | What it answers                                                                                                                                                                     | Arguments                       |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `list-routes`         | The live route config: every route with its full path, component or redirect, lazy state, guards, resolvers, title, source file and an example URL.                                 | `match`, `audit`, `filter`      |
+| `lint-routes`         | Route config mistakes, such as routes after `**`, redirect cycles, deprecated class guards, missing titles and param typos. Each finding says how Angular reacts and how to fix it. | none                            |
+| `router-config`       | How the router is set up: `provideRouter` or `forRoot`, effective options, enabled features, strategies, base href and hydration.                                                   | none                            |
+| `explain-render-mode` | The `ServerRoute` and render mode (Server, Client, Prerender) a URL gets, plus server entries that match no client route.                                                           | `url`, defaults to the page URL |
+
+`list-routes` takes three optional arguments:
+
+- `match`: a URL such as `/users/42`. The tool predicts which route it hits, or the nearest routes when it hits none.
+- `audit`: set to `true` to list the guards that protect each page.
+- `filter`: only routes whose path or component contains this text.
+
+### Act on the router
+
+`navigate` acts on the running app's router, in development only. Reads: page. <ngmd-badge variant="alpha">Action</ngmd-badge>
+
+| Action         | What it does                                                                                     | Arguments                                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `navigate`     | Goes to `url`, or to `pattern` with `params`, and waits for the outcome.                         | `url` or `pattern` + `params`, `replaceUrl`, `skipLocationChange`, `waitFor` (`navigation` or `stable`) |
+| `abort`        | Stops the navigation in flight.                                                                  | none                                                                                                    |
+| `replay`       | Runs navigation `id` again and compares the outcome.                                             | `id`                                                                                                    |
+| `probe`        | Runs the real matcher for `url` without navigating. It runs `canMatch` and may load lazy chunks. | `url`                                                                                                   |
+| `instrument`   | Turns per-guard and per-resolver recording on or off.                                            | `on`                                                                                                    |
+| `resolve-lazy` | Reads the routes of an unloaded lazy route without registering them.                             | `routeId`, from `list-routes`                                                                           |
+
+`action` is required. Only same-origin URLs that start with `/` are accepted.
 
 ## Forms
 
-`form` is a form id (like `Checkout.form@ab12`) or part of its label. `path` is a dotted field path, like `address.city` or `items.0.qty`.
+All forms tools read the page. They cover Signal Forms, reactive forms and template-driven forms.
 
-| Tool                                 | Inputs                                                                                          | Description                                                                                                |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `ng-devtools:inspect-forms`          | `form`, `path`, `onlyInvalid`, `includeValues`                                                  | Forms on the page with every field's state and errors.                                                     |
-| `ng-devtools:explain-form-invalid`   | `form`                                                                                          | Which fields make a form invalid, and why. Without `form`, every invalid or pending form.                  |
-| `ng-devtools:explain-field`          | `form`, `path`, `selector`                                                                      | One field: error sources, skip reasons, binding and source. `selector` starts from a CSS selector instead. |
-| `ng-devtools:explain-submit`         | `form`                                                                                          | What submit will do, and why it might do nothing.                                                          |
-| `ng-devtools:form-payload`           | `form`                                                                                          | What the form sends: value vs raw value, and unvalidated fields.                                           |
-| `ng-devtools:form-history`           | `form`, `path`, `type`, `origin`, `since`, `limit`                                              | Change timeline with origin (user, code, devtools). Returns the current marker.                            |
-| `ng-devtools:form-diff`              | `form`, `since`                                                                                 | Net change since a marker.                                                                                 |
-| `ng-devtools:lint-forms`             | `form`                                                                                          | Form bugs and model-aware accessibility checks.                                                            |
-| `ng-devtools:explain-custom-control` | `form`, `path`                                                                                  | How a field is bound, and what is wrong with the binding.                                                  |
-| `ng-devtools:export-form`            | `form`, `format` (`snapshot` or `fixture`)                                                      | JSON snapshot or test fixture.                                                                             |
-| `ng-devtools:wait-for-form`          | `form`, `until` (`settled`, `valid`, `not-pending` or `submitted`), `since`, `timeoutMs`        | Waits until the condition holds, or reports the state on timeout.                                          |
-| `ng-devtools:form-action`            | `action` (required), `form` (required), `path`, `value`, `mode`, `confirm`, `force`, `snapshot` | Set, touch, revalidate, reset, submit, focus, snapshot, restore and more.                                  |
-| `ng-devtools:fill-form`              | `form` (required), `values` (required), `mode`, `submit`, `confirm`                             | Fills several fields through the inputs, like a user would.                                                |
+Two arguments come up in almost every tool:
 
-All forms tools are live. `form-action` needs a development build. `reset`, `submit` and `restore` need `confirm: true`, and so does `fill-form` with `submit`. Secret, hidden and readonly fields are never written.
+- `form`: a form id (like `Checkout.form@ab12`) or part of its label (`Component.property`).
+- `path`: a dotted field path, like `address.city` or `items.0.qty`. Empty for the form itself.
+
+### Read form state
+
+| Tool                     | What it answers                                                                                                                                                     | Arguments                                      |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `inspect-forms`          | Without arguments, each form with its status and error count. With `form`, its field tree: value, status, touched, dirty and errors.                                | `form`, `path`, `onlyInvalid`, `includeValues` |
+| `explain-form-invalid`   | Which fields make a form invalid, and why: the failing validator, its message, the value and whether it was touched. Without `form`, every invalid or pending form. | `form`                                         |
+| `explain-field`          | One field: where each error comes from, why validation is skipped, the binding and DOM facts like the label and visible error text.                                 | `form`, `path`, or `selector` (a CSS selector) |
+| `explain-submit`         | What submit will do, and why it might do nothing.                                                                                                                   | `form`                                         |
+| `form-payload`           | What the form sends: `value` against `getRawValue()`, fields that are sent without validation, and which fields the user changed.                                   | `form`                                         |
+| `explain-custom-control` | How a field is bound to its element, and what is wrong with the binding, such as value drift or a missing `setDisabledState`.                                       | `form`, `path`                                 |
+
+For "why is this form invalid", call `explain-form-invalid` first. Password and other secret-looking values are redacted.
+
+### Track changes
+
+| Tool            | What it answers                                                                                                              | Arguments                                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `form-history`  | A timeline of changes, each tagged with its origin (`user`, `code`, `devtools`, `binding`). Returns the current marker.      | `form`, `path`, `type`, `origin`, `since`, `limit` (default 50, at most 200)                                           |
+| `form-diff`     | The net change since a marker: each field whose value or status ended up different.                                          | `form`, `since`                                                                                                        |
+| `wait-for-form` | Waits until a condition holds, or reports the state on timeout.                                                              | `form`, `until` (`settled`, `valid`, `not-pending` or `submitted`), `since`, `timeoutMs` (default 5000, at most 30000) |
+| `export-form`   | A JSON snapshot, or a test fixture with the expected status. Secret values stay redacted.                                    | `form`, `format` (`snapshot` or `fixture`)                                                                             |
+| `lint-forms`    | Form bugs, NG01xxx setup errors and model-aware accessibility checks, like a missing label or error text that is not linked. | `form`                                                                                                                 |
+
+Markers let an agent check its own work: read the marker, act, then call `form-diff` with `since` set to it.
+
+### Act on a form
+
+Both tools are action tools and need a development build. Secret, hidden and readonly fields are never written.
+
+| Tool          | What it does                                                                                       | Arguments                                                                                                                       |
+| ------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `form-action` | One action on a form or field.                                                                     | `action` (required), `form` (required, the full id), `path`, `value`, `mode` (`code` or `user`), `confirm`, `force`, `snapshot` |
+| `fill-form`   | Fills several fields by path, through the inputs like a user would. Optionally submits afterwards. | `form` (required), `values` (required, a map of path to value), `mode`, `submit`, `confirm`                                     |
+
+`form-action` accepts these actions: `set-value`, `mark-touched`, `mark-untouched`, `mark-dirty`, `mark-pristine`, `touch-all`, `revalidate`, `reset`, `enable`, `disable`, `submit`, `focus`, `focus-first-invalid`, `store-as-global`, `snapshot`, `restore` and `instrument`.
+
+<ngmd-callout type="warning" title="Some actions need confirm">
+  <code>reset</code>, <code>submit</code> and <code>restore</code> need <code>confirm: true</code>, and so does <code>fill-form</code> with <code>submit</code>. Disabled reactive fields need <code>force</code>.
+</ngmd-callout>
 
 ## Pipes
 
-| Tool                       | Live   | Inputs            | Description                                                                                                                                   |
-| -------------------------- | ------ | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ng-devtools:lint-pipes`   | no     |                   | Impure pipes inside `@for`, `\| json` left in templates, and pure pipes that read signals.                                                    |
-| `ng-devtools:explain-pipe` | partly | `name` (required) | One pipe: where it is declared or used, purity, live counts, last input and output (when recording), a stale-value warning and lint findings. |
+### Lint pipes
+
+`lint-pipes` checks the pipes in your source. Reads: source. No arguments.
+
+It finds impure pipes used inside `@for`, `| json` left in templates, and pure pipes whose `transform()` reads a signal.
+
+### Explain a pipe
+
+`explain-pipe` explains one pipe: where it is declared or used, whether it is pure, live instance and call counts, the last input and output, a stale-value warning and lint findings. Reads: source, plus the page for live counts.
+
+| Argument | Required | Value                                           |
+| -------- | -------- | ----------------------------------------------- |
+| `name`   | yes      | The pipe name as used after `\|` in a template. |
+
+Live counts, input and output appear when recording is on in the [Pipes inspector](/inspectors/pipes).
 
 ## Analog
 
-| Tool                                | Live   | Inputs                                         | Description                                                                                       |
-| ----------------------------------- | ------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `ng-devtools:analog-routes`         | no     | `filter`                                       | Analog file routes with their page, layout and server files.                                      |
-| `ng-devtools:analog-explain-url`    | no     | `url` (required)                               | Which Analog files render a URL, or why nothing matches.                                          |
-| `ng-devtools:analog-current-page`   | yes    |                                                | The open page's files, `load()` data and hydration state.                                         |
-| `ng-devtools:analog-server-calls`   | yes    | `kind`, `route`, `limit`                       | Page renders, `load()`, server function and API calls.                                            |
-| `ng-devtools:analog-api-routes`     | no     |                                                | Server routes with method, URL and file.                                                          |
-| `ng-devtools:analog-call-api`       | yes    | `path` (required), `method`, `body`, `confirm` | Sends a request to a server route. Methods other than GET, HEAD and OPTIONS need `confirm: true`. |
-| `ng-devtools:analog-render-modes`   | partly |                                                | SSR, prerendered or client only, per page.                                                        |
-| `ng-devtools:analog-prerender-plan` | no     |                                                | `prerender.routes` compared with pages and build output.                                          |
-| `ng-devtools:analog-content`        | no     | `filter`                                       | Markdown content with slug and frontmatter.                                                       |
-| `ng-devtools:analog-lint`           | partly |                                                | Analog routing, server, prerender and content mistakes.                                           |
+These tools cover *Analog apps. Most read your source. Two read what the Vite plugin recorded.
 
-`analog-server-calls` and `analog-call-api` need the [Vite plugin](/getting-started/vite), because the plugin records calls and knows the dev server address.
+### Routes and files
+
+| Tool                 | What it answers                                                                                                               | Arguments        |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `analog-routes`      | File routes in match order: URL pattern, page or layout file, route groups, params, the sibling `.server.ts`, and route meta. | `filter`         |
+| `analog-explain-url` | Which files render a URL (layouts, page, `.server.ts` load), the params, or why nothing matches.                              | `url` (required) |
+| `analog-api-routes`  | Server routes under `src/server/routes` with method, URL and file, plus server middleware.                                    | none             |
+| `analog-content`     | Markdown content files with slug, frontmatter, the route that serves them and parse errors.                                   | `filter`         |
+
+### The running page
+
+| Tool                  | What it answers                                                                                                                    | Reads       | Arguments                                                |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------- |
+| `analog-current-page` | The open page: its files, the `load()` data it received, server rendering and hydration state, and hydration errors.               | page        | none                                                     |
+| `analog-server-calls` | Recent page renders, `load()` fetches, server functions and API calls, with status, time and size. Flags a `load()` fetched twice. | Vite plugin | `kind` (`page`, `load`, `fn` or `api`), `route`, `limit` |
+
+### Rendering
+
+| Tool                    | What it answers                                                                                      | Arguments |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- | --------- |
+| `analog-render-modes`   | For each page: server rendered, prerendered, or client only, and what the last request actually did. | none      |
+| `analog-prerender-plan` | `prerender.routes` compared with the page files and the build output.                                | none      |
+
+### Call a server route
+
+`analog-call-api` sends a request to a route on the running dev server, like `GET /api/v1/hello`, and returns the status, time and body. Reads: Vite plugin. <ngmd-badge variant="alpha">Action</ngmd-badge>
+
+| Argument  | Required | Value                                                         |
+| --------- | -------- | ------------------------------------------------------------- |
+| `path`    | yes      | The route path.                                               |
+| `method`  | no       | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD` or `OPTIONS`. |
+| `body`    | no       | A JSON body.                                                  |
+| `confirm` | no       | Required for methods other than `GET`, `HEAD` and `OPTIONS`.  |
+
+### Lint
+
+`analog-lint` finds Analog mistakes: two files for one URL, a missing default export, a layout without `router-outlet`, bad API method suffixes, prerender entries that match nothing, and frontmatter errors. It also reports live problems, like a `load()` fetched twice or a restart needed. No arguments.
+
+<ngmd-alert severity="helpful">
+  <code>analog-server-calls</code> and <code>analog-call-api</code> need the <a href="/getting-started/vite">Vite plugin</a>. The plugin records the calls and knows the dev server address.
+</ngmd-alert>
 
 ## Shared state
 
-| Tool                  | Inputs | Description                                                                                                           |
-| --------------------- | ------ | --------------------------------------------------------------------------------------------------------------------- |
-| `devframe_state_read` | `key`  | Reads the devtools' live shared state. Call it without arguments to list the keys, then with a key to read its value. |
+`devframe_state_read` reads the devtools' live shared state. Call it without arguments to list the keys, then with `key` to read a value as JSON.
 
-This is the way to read data that has no dedicated tool, such as the SSR & HTTP timeline (`ng-devtools:http`) or live pipe usage (`ng-devtools:pipe-usage`). See [Resources](/agents/resources).
+Use it for data that has no dedicated tool, such as the SSR & HTTP timeline (`ng-devtools:http`) or live pipe usage (`ng-devtools:pipe-usage`). See [Resources](/agents/resources) for every key.
+
+## Where to next
+
+<ngmd-pill-row>
+  <ngmd-pill href="/agents/mcp-server" title="MCP server"></ngmd-pill>
+  <ngmd-pill href="/agents/resources" title="Resources"></ngmd-pill>
+  <ngmd-pill href="/security" title="Security"></ngmd-pill>
+</ngmd-pill-row>

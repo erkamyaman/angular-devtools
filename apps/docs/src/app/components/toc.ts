@@ -1,6 +1,6 @@
-import { AfterViewInit, Component, DestroyRef, inject, input, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { onNavigation } from '../utils/enhance-on-navigation';
+import {AfterViewInit, Component, DestroyRef, inject, input, signal} from '@angular/core';
+import {Router} from '@angular/router';
+import {onNavigation} from '../utils/enhance-on-navigation';
 
 interface Heading {
   id: string;
@@ -71,7 +71,7 @@ export class Toc implements AfterViewInit {
           this.active.set(list[list.length - 1].id);
         }
       };
-      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('scroll', onScroll, {passive: true});
       this.destroyRef.onDestroy(() => window.removeEventListener('scroll', onScroll));
     }
 
@@ -85,7 +85,7 @@ export class Toc implements AfterViewInit {
     event.preventDefault();
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.scrollIntoView({behavior: 'smooth', block: 'start'});
       // Force-activate the clicked id. The IntersectionObserver uses a
       // `rootMargin: '0px 0px -70% 0px'` so only the top 30% of viewport
       // counts as "in view"; the LAST heading can't reach that region if
@@ -123,7 +123,7 @@ export class Toc implements AfterViewInit {
     this.contentObserver = new MutationObserver(() => {
       if (this.tryScan()) this.contentObserver?.disconnect();
     });
-    this.contentObserver.observe(main, { childList: true, subtree: true });
+    this.contentObserver.observe(main, {childList: true, subtree: true});
   }
 
   private tryScan(): boolean {
@@ -173,7 +173,7 @@ export class Toc implements AfterViewInit {
           }
         }
       },
-      { rootMargin: '0px 0px -70% 0px', threshold: 0 },
+      {rootMargin: '0px 0px -70% 0px', threshold: 0},
     );
     nodes.forEach((node) => this.observer!.observe(node));
     // The bottom-of-page scroll guard lives in `ngAfterViewInit` so it

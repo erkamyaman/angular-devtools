@@ -1,7 +1,7 @@
-import { Injectable, computed, inject, type Signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
-import { filter, map, startWith } from 'rxjs';
+import {Injectable, computed, inject, type Signal} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {NavigationEnd, Router} from '@angular/router';
+import {filter, map, startWith} from 'rxjs';
 
 /**
  * Single source of truth for the current route URL as a signal.
@@ -12,7 +12,7 @@ import { filter, map, startWith } from 'rxjs';
  * `router.events.pipe(filter(NavigationEnd))` ladder verbatim. Inject this
  * instead and read the signal.
  */
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class RouteUrlService {
   private readonly router = inject(Router);
 
@@ -24,7 +24,7 @@ export class RouteUrlService {
       map(() => this.router.url),
       startWith(this.router.url),
     ),
-    { initialValue: this.router.url || '/' },
+    {initialValue: this.router.url || '/'},
   );
 
   /** `url` with the query string and `#fragment` stripped. The shape

@@ -1,6 +1,6 @@
-import { AfterViewInit, Component, DestroyRef, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { enhanceOnNavigation } from '../utils/enhance-on-navigation';
+import {AfterViewInit, Component, DestroyRef, inject} from '@angular/core';
+import {Router} from '@angular/router';
+import {enhanceOnNavigation} from '../utils/enhance-on-navigation';
 
 /**
  * Wires tab-switching for `<div class="ngmd-code-group">` blocks emitted by

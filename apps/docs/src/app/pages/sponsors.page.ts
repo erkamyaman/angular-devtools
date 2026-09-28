@@ -1,7 +1,7 @@
-import { Component, inject } from '@angular/core';
-import type { RouteMeta } from '@analogjs/router';
-import { LayoutMode } from '../layout-mode.service';
-import { SponsorList } from '../components/sponsor-list';
+import {Component, inject} from '@angular/core';
+import type {RouteMeta} from '@analogjs/router';
+import {LayoutMode} from '../layout-mode.service';
+import {SponsorList} from '../components/sponsor-list';
 import siteConfig from '../../ngmd.config';
 
 export const routeMeta: RouteMeta = {

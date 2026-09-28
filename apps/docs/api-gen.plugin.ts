@@ -1,8 +1,8 @@
-import { existsSync } from 'node:fs';
-import { join, relative } from 'node:path';
-import type { Plugin } from 'vite';
-import { Project, ts } from 'ts-morph';
-import type { ApiConfig, SymbolRecord, SymbolKind } from './src/types/api.ts';
+import {existsSync} from 'node:fs';
+import {join, relative} from 'node:path';
+import type {Plugin} from 'vite';
+import {Project, ts} from 'ts-morph';
+import type {ApiConfig, SymbolRecord, SymbolKind} from './src/types/api.ts';
 
 /**
  * API-reference auto-generation plugin.
@@ -39,7 +39,7 @@ export function apiGenPlugin(): Plugin {
     if (!existsSync(path)) return null;
     try {
       const proj = new Project({
-        compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+        compilerOptions: {target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext},
       });
       const sourceFile = proj.addSourceFileAtPath(path);
       // We can't trivially evaluate the TS without a runtime; instead lift
@@ -102,11 +102,11 @@ export function apiGenPlugin(): Plugin {
         const jsDocHost = jsDocHostFor(first);
         const jsDoc = (
           jsDocHost && 'getJsDocs' in jsDocHost
-            ? (jsDocHost as { getJsDocs: () => unknown[] }).getJsDocs()
+            ? (jsDocHost as {getJsDocs: () => unknown[]}).getJsDocs()
             : []
         ) as Array<{
           getDescription: () => string;
-          getTags: () => Array<{ getTagName: () => string }>;
+          getTags: () => Array<{getTagName: () => string}>;
         }>;
         const description = jsDoc[0]?.getDescription().trim() ?? '';
         const tags = jsDoc.flatMap((d) => d.getTags().map((t) => t.getTagName()));
@@ -148,7 +148,7 @@ export function apiGenPlugin(): Plugin {
       const records = extractRecords(config);
       return `export const apiIndex = ${JSON.stringify(records, null, 2)};\n`;
     },
-    handleHotUpdate({ file, server }) {
+    handleHotUpdate({file, server}) {
       // Invalidate the project cache when any source under scope changes.
       // Cheap because `Project` re-uses TypeScript's incremental machinery.
       if (file.endsWith('.ts') || file.endsWith('ngmd.api.ts')) {
@@ -169,7 +169,7 @@ export function apiGenPlugin(): Plugin {
 }
 
 function symbolKindOf(decl: unknown): SymbolKind | null {
-  const kindGetter = (decl as { getKindName?: () => string }).getKindName;
+  const kindGetter = (decl as {getKindName?: () => string}).getKindName;
   const kindName = typeof kindGetter === 'function' ? kindGetter.call(decl) : '';
   switch (kindName) {
     case 'ClassDeclaration':
@@ -237,12 +237,12 @@ function parseLiteralAsConfig(literal: {
     getInitializer?: () => unknown;
   }>;
 }): ApiConfig {
-  const out: Partial<ApiConfig> = { scope: [], exclude: [] };
+  const out: Partial<ApiConfig> = {scope: [], exclude: []};
   for (const prop of literal.getProperties()) {
     const name = prop.getName?.();
     const init = prop.getInitializer?.();
     if (!name || !init) continue;
-    const text = (init as { getText: () => string }).getText().trim();
+    const text = (init as {getText: () => string}).getText().trim();
     if (name === 'scope' || name === 'exclude' || name === 'badgesFromJsDoc') {
       const matches = text.match(/'([^']+)'|"([^"]+)"/g) ?? [];
       const values = matches.map((m) => m.slice(1, -1));

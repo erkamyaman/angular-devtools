@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import {AsyncPipe} from '@angular/common';
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -8,14 +8,14 @@ import {
   inject,
   resource,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { Router, RouterLink } from '@angular/router';
-import { injectContent, MarkdownComponent } from '@analogjs/content';
-import { LucideDynamicIcon, LucideArrowRight, LucideSearch } from '@lucide/angular';
-import { LayoutMode } from '../layout-mode.service';
-import { SearchService } from '../services/search/search.service';
-import { RouteUrlService } from '../services/route-url/route-url.service';
-import { ContentBanners } from '../components/content-banners';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {Router, RouterLink} from '@angular/router';
+import {injectContent, MarkdownComponent} from '@analogjs/content';
+import {LucideDynamicIcon, LucideArrowRight, LucideSearch} from '@lucide/angular';
+import {LayoutMode} from '../layout-mode.service';
+import {SearchService} from '../services/search/search.service';
+import {RouteUrlService} from '../services/route-url/route-url.service';
+import {ContentBanners} from '../components/content-banners';
 
 /**
  * Catch-all route for every markdown page.
@@ -113,7 +113,7 @@ export default class DocPage implements OnDestroy {
   readonly searchIcon = LucideSearch;
   readonly arrowIcon = LucideArrowRight;
 
-  readonly content$ = injectContent<{ title: string }>('slug', NOT_FOUND);
+  readonly content$ = injectContent<{title: string}>('slug', NOT_FOUND);
   private readonly doc = toSignal(this.content$);
   private readonly missing = computed(() => this.doc()?.content === NOT_FOUND);
 
@@ -131,7 +131,7 @@ export default class DocPage implements OnDestroy {
    * search session. */
   private readonly suggestionsResource = resource({
     params: () => this.suggestionTerm() || undefined,
-    loader: async ({ params }) => (params ? this.search.searchOnce(params) : []),
+    loader: async ({params}) => (params ? this.search.searchOnce(params) : []),
   });
 
   /** Single best guess for the failed URL, or `null` when Orama has

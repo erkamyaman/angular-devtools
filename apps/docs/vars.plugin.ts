@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import type { Plugin } from 'vite';
+import {readFileSync} from 'node:fs';
+import {join} from 'node:path';
+import type {Plugin} from 'vite';
 
 /**
  * Single source of truth for "the current published version" in markdown
@@ -32,7 +32,7 @@ function readVars(root: string): Record<string, string> {
       }
     } catch {}
   }
-  memo = { 'ngmd-version': version };
+  memo = {'ngmd-version': version};
   return memo;
 }
 
@@ -61,7 +61,7 @@ export function varsPlugin(): Plugin {
       if (!id.endsWith('.md')) return null;
       const out = substituteMdVars(code, root);
       if (out === code) return null;
-      return { code: out, map: null };
+      return {code: out, map: null};
     },
   };
 }
