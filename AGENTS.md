@@ -66,3 +66,20 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - The devtools popup appears on the demo app page; click it to open the inspector panel
 - Changes to `app/src/` (devtools SPA) are visible live via `pnpm devtools:dev`; the SSR server serves the SPA built into `packages/ng-devtools/dist/public` (or the npm-published copy when it has not been built), so run `pnpm devtools:build-pkg` to refresh it
 - To publish: update the version in `packages/ng-devtools/package.json`, then run `pnpm devtools:publish` (the package build bundles the SPA)
+
+## Project guidelines, skills and roles
+
+Follow the repository guides in `docs/contributing/`:
+
+- `commit-message-guidelines.md`: `type(scope): summary` commits and pull request titles (types and this repo's scopes).
+- `coding-standards.md`: TypeScript and Angular rules, and how collectors read the inspected page (debug APIs, stable `WeakMap` ids, no DOM writes, `pageId` with expiry, cheap pushes).
+- `ui-guidelines.md`: theme tokens, brand palette, page anatomy and accessibility for the panel.
+
+Use the matching skill for the task:
+
+- `.claude/skills/devtools-ui` for panel UI work.
+- `.claude/skills/devtools-inspector` for data collection, the server side and agent tools.
+- `.claude/skills/devtools-verify` before calling a change done.
+- `.claude/skills/devtools-commit` for commits and pull requests.
+
+Roles for delegating work live in `.claude/agents/`: `ui-engineer`, `inspector-engineer`, `a11y-reviewer` and `devtools-reviewer`.

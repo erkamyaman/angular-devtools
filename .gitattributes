@@ -1,0 +1,4 @@
+extension/ui/** linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
+*.mjs text eol=lf
+.githooks/* text eol=lf

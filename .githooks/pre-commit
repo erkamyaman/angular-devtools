@@ -1,0 +1,8 @@
+#!/bin/sh
+root="$(git rev-parse --show-toplevel)"
+files="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|mjs|js|json|scss|css|html|md|yml|yaml)$' | grep -v '^extension/ui/')"
+[ -z "$files" ] && exit 0
+cd "$root" || exit 0
+echo "$files" | xargs pnpm --silent exec prettier --write --ignore-unknown >/dev/null 2>&1 || echo "WARNING: failed to format staged files."
+echo "$files" | xargs git add -- 2>/dev/null
+exit 0

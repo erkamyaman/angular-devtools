@@ -1,0 +1,16 @@
+
+# <type>(<scope>): <short summary>
+#   │       │             │
+#   │       │             └─> Imperative, present tense. No period at the end.
+#   │       │
+#   │       └─> hub|ui|popup|overlay|components|signals|injectors|router|forms|store|
+#   │           pipes|http|analog|mcp|extension|vite|demo|deps (or leave it out)
+#   │
+#   └─> feat|fix|perf|refactor|test|docs|build|ci|revert
+#
+# Body (required except for docs, 20+ characters): why the change is needed,
+# and how the old behavior compares with the new one.
+#
+# Footer (optional): Fixes #123, BREAKING CHANGE: ..., DEPRECATED: ...
+#
+# See docs/contributing/commit-message-guidelines.md
