@@ -322,6 +322,11 @@ const SCENARIOS: { value: Scenario; label: string; query: string }[] = [
         opacity: 0.45;
       }
     }
+    @media (prefers-reduced-motion: reduce) {
+      .skeleton span {
+        animation: none;
+      }
+    }
     @media (max-width: 480px) {
       .controls label {
         flex: 1 1 100%;

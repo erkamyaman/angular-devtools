@@ -61,7 +61,7 @@ import { TravelStore } from '../travel/travel.store';
             </div>
             <div>
               <dt>Group size</dt>
-              <dd>Up to 12</dd>
+              <dd>Up to {{ trip.groupSize }}</dd>
             </div>
           </dl>
         </div>

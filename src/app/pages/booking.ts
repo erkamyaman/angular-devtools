@@ -1,5 +1,5 @@
 import { CurrencyPipe, NgOptimizedImage } from '@angular/common';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import {
   email,
   form,
@@ -621,6 +621,7 @@ export class Booking implements LeavesSafely {
   readonly destination = input.required<Destination>();
   private readonly store = inject(TravelStore);
   private readonly account = inject(Account);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly earliest = isoDay(7);
   protected readonly status = signal('');
@@ -670,6 +671,7 @@ export class Booking implements LeavesSafely {
         action: async (tree) => {
           const value = tree().value();
           await new Promise((resolve) => setTimeout(resolve, 600));
+          if (this.destroyRef.destroyed) return;
           const trip = this.live();
           const created = this.store.book({
             destinationId: trip.id,
@@ -678,6 +680,7 @@ export class Booking implements LeavesSafely {
             travelers: value.travelers,
             name: value.name,
             email: value.email,
+            ...(value.requests.trim() ? { requests: value.requests.trim() } : {}),
             total: value.travelers * trip.price,
           });
           if (!created) {

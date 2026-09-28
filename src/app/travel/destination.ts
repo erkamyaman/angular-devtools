@@ -16,6 +16,7 @@ export interface Destination {
   highlights: string[];
   bestTime: string;
   seats: number;
+  groupSize: number;
 }
 
 export const DESTINATIONS: Destination[] = [
@@ -36,6 +37,7 @@ export const DESTINATIONS: Destination[] = [
     highlights: ['Bosphorus ferry at sunset', 'Food walk in Kadıköy', 'Hagia Sophia and Topkapı'],
     bestTime: 'April to June, September to November',
     seats: 7,
+    groupSize: 12,
   },
   {
     id: 'santorini',
@@ -54,6 +56,7 @@ export const DESTINATIONS: Destination[] = [
     highlights: ['Caldera sailing trip', 'Cave suite in Oia', 'Vineyard tasting in Pyrgos'],
     bestTime: 'May to October',
     seats: 8,
+    groupSize: 12,
   },
   {
     id: 'kyoto',
@@ -72,6 +75,7 @@ export const DESTINATIONS: Destination[] = [
     highlights: ['Sunrise at Fushimi Inari', 'Tea ceremony in Gion', 'Two nights in a ryokan'],
     bestTime: 'March to May, October to November',
     seats: 3,
+    groupSize: 12,
   },
   {
     id: 'lisbon',
@@ -90,6 +94,7 @@ export const DESTINATIONS: Destination[] = [
     highlights: ['Day trip to Sintra', 'Fado night in Alfama', 'Food walk in Mouraria'],
     bestTime: 'April to October',
     seats: 12,
+    groupSize: 12,
   },
   {
     id: 'iceland',
@@ -108,6 +113,7 @@ export const DESTINATIONS: Destination[] = [
     highlights: ['Goðafoss and Dettifoss', 'Mývatn Nature Baths', 'Whale watching'],
     bestTime: 'June to September',
     seats: 0,
+    groupSize: 10,
   },
   {
     id: 'bali',
@@ -126,6 +132,7 @@ export const DESTINATIONS: Destination[] = [
     highlights: ['Tegallalang at dawn', 'Balinese cooking class', 'Two nights in Sanur'],
     bestTime: 'April to October',
     seats: 6,
+    groupSize: 12,
   },
   {
     id: 'swiss-alps',
@@ -144,6 +151,7 @@ export const DESTINATIONS: Destination[] = [
     highlights: ['Jungfrau railway', 'Hut-to-hut hike', 'Swiss Travel Pass included'],
     bestTime: 'June to September',
     seats: 5,
+    groupSize: 12,
   },
   {
     id: 'cape-town',
@@ -162,6 +170,7 @@ export const DESTINATIONS: Destination[] = [
     highlights: ['Table Mountain', 'Cape Point drive', 'Two nights in Franschhoek'],
     bestTime: 'November to March',
     seats: 9,
+    groupSize: 12,
   },
 ];
 

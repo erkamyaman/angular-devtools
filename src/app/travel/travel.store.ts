@@ -12,6 +12,7 @@ export interface Booking {
   travelers: number;
   name: string;
   email: string;
+  requests?: string;
   total: number;
 }
 
