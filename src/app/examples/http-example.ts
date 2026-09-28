@@ -49,11 +49,7 @@ const SCENARIOS: { value: Scenario; label: string; query: string }[] = [
         </button>
       </div>
 
-      <section
-        class="block"
-        aria-labelledby="products-heading"
-        [attr.aria-busy]="products.isLoading()"
-      >
+      <section class="block" aria-labelledby="products-heading">
         <div class="block-head">
           <h3 id="products-heading">Products</h3>
           <p class="status" role="status">{{ status() }}</p>
@@ -69,7 +65,11 @@ const SCENARIOS: { value: Scenario; label: string; query: string }[] = [
         }
         @if (products.hasValue()) {
           @if (products.value().length) {
-            <ul class="grid" [class.stale]="products.isLoading()">
+            <ul
+              class="grid"
+              [class.stale]="products.isLoading()"
+              [attr.aria-busy]="products.isLoading()"
+            >
               @for (product of products.value(); track product.id) {
                 <li class="card">
                   <button

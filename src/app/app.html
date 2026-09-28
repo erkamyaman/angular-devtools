@@ -29,7 +29,7 @@
       <span class="count" [class.empty]="!store.savedCount()">{{ store.savedCount() }}</span>
     </a>
     @if (account.signedIn()) {
-      <button type="button" class="account" (click)="account.signOut()">Sign Out</button>
+      <button type="button" class="account" (click)="signOut()">Sign Out</button>
     } @else {
       <a class="account" routerLink="/sign-in">Sign In</a>
     }

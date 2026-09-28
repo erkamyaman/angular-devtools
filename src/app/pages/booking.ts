@@ -29,7 +29,9 @@ interface BookingModel {
 function isoDay(offsetDays: number): string {
   const day = new Date();
   day.setDate(day.getDate() + offsetDays);
-  return day.toISOString().slice(0, 10);
+  const month = String(day.getMonth() + 1).padStart(2, '0');
+  const date = String(day.getDate()).padStart(2, '0');
+  return `${day.getFullYear()}-${month}-${date}`;
 }
 
 @Component({
@@ -647,6 +649,11 @@ export class Booking implements LeavesSafely {
           : null,
       );
       min(path.travelers, 1, { message: 'At least one traveler' });
+      validate(path.travelers, ({ value }) =>
+        Number.isInteger(value())
+          ? null
+          : { kind: 'whole-number', message: 'Enter a whole number of travelers' },
+      );
       max(path.travelers, () => this.live().seats, {
         message: 'There are not enough seats left',
       });
@@ -664,18 +671,23 @@ export class Booking implements LeavesSafely {
           const value = tree().value();
           await new Promise((resolve) => setTimeout(resolve, 600));
           const trip = this.live();
+          const created = this.store.book({
+            destinationId: trip.id,
+            destinationName: trip.name,
+            startDate: value.startDate,
+            travelers: value.travelers,
+            name: value.name,
+            email: value.email,
+            total: value.travelers * trip.price,
+          });
+          if (!created) {
+            this.status.set(
+              `Only ${trip.seats} seats are left now. Change the number of travelers.`,
+            );
+            return;
+          }
           this.account.signIn(value.name, value.email);
-          this.confirmed.set(
-            this.store.book({
-              destinationId: trip.id,
-              destinationName: trip.name,
-              startDate: value.startDate,
-              travelers: value.travelers,
-              name: value.name,
-              email: value.email,
-              total: value.travelers * trip.price,
-            }),
-          );
+          this.confirmed.set(created);
           this.status.set('');
         },
         onInvalid: () => this.status.set('Check the highlighted fields.'),

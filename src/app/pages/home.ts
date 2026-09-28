@@ -40,13 +40,14 @@ import { TravelStore } from '../travel/travel.store';
             <path d="m20 20-3.5-3.5" />
           </svg>
           <input
+            #searchInput
             id="hero-search"
             name="q"
             type="search"
             autocomplete="off"
             placeholder="Try “Istanbul” or “mountains”…"
             [value]="query()"
-            (input)="query.set($any($event.target).value)"
+            (input)="query.set(searchInput.value)"
           />
           <button type="submit" class="btn btn-primary">Find Trips</button>
         </form>

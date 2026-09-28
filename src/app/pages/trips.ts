@@ -267,14 +267,19 @@ export class Trips {
   protected readonly account = inject(Account);
   private readonly store = inject(TravelStore);
   protected readonly message = signal('');
-  protected readonly trips = computed(() =>
-    this.store.upcomingTrips().map((booking) => ({
-      booking,
-      destination: this.store.destinations().find((d) => d.id === booking.destinationId),
-    })),
-  );
+  protected readonly trips = computed(() => {
+    const email = this.account.email();
+    return this.store
+      .upcomingTrips()
+      .filter((booking) => booking.email === email)
+      .map((booking) => ({
+        booking,
+        destination: this.store.destinations().find((d) => d.id === booking.destinationId),
+      }));
+  });
 
   protected cancel(id: string) {
+    if (!this.trips().some((trip) => trip.booking.id === id)) return;
     this.store.cancel(id);
     this.message.set(`Trip ${id} was cancelled and the seats were released.`);
   }

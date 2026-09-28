@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ThemeToggle } from './theme-toggle';
 import { Account } from './travel/auth';
 import { TravelStore } from './travel/travel.store';
@@ -13,6 +13,12 @@ import { TravelStore } from './travel/travel.store';
 export class App {
   protected readonly store = inject(TravelStore);
   protected readonly account = inject(Account);
+  private readonly router = inject(Router);
+
+  protected signOut() {
+    this.account.signOut();
+    if (this.router.url.startsWith('/trips')) void this.router.navigateByUrl('/');
+  }
 
   /**
    * `<base href="/">` makes a bare `#main` resolve to `/#main`, so the browser

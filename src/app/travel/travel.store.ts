@@ -22,6 +22,7 @@ interface TravelState {
   sort: SortOrder;
   saved: string[];
   bookings: Booking[];
+  nextBookingNumber: number;
 }
 
 const initialState: TravelState = {
@@ -31,6 +32,7 @@ const initialState: TravelState = {
   sort: 'popular',
   saved: [],
   bookings: [],
+  nextBookingNumber: 1041,
 };
 
 export const TravelStore = signalStore(
@@ -78,14 +80,17 @@ export const TravelStore = signalStore(
           : [...state.saved, id],
       }));
     },
-    book(booking: Omit<Booking, 'id'>): Booking {
-      const created = { ...booking, id: `TRV-${1040 + store.bookings().length + 1}` };
+    book(booking: Omit<Booking, 'id'>): Booking | null {
+      const destination = store.destinations().find((d) => d.id === booking.destinationId);
+      if (!destination || booking.travelers < 1 || booking.travelers > destination.seats) {
+        return null;
+      }
+      const created = { ...booking, id: `TRV-${store.nextBookingNumber()}` };
       patchState(store, (state) => ({
+        nextBookingNumber: state.nextBookingNumber + 1,
         bookings: [...state.bookings, created],
         destinations: state.destinations.map((d) =>
-          d.id === booking.destinationId
-            ? { ...d, seats: Math.max(0, d.seats - booking.travelers) }
-            : d,
+          d.id === booking.destinationId ? { ...d, seats: d.seats - booking.travelers } : d,
         ),
       }));
       return created;
