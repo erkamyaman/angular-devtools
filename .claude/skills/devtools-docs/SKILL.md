@@ -51,7 +51,7 @@ Don't mix explainer and tutorial content on one page.
 ```md
 ---
 title: Router
-description: One sentence for search and link previews.
+description: One sentence that summarizes the page.
 ---
 
 <ngmd-hero title="Router" gradient>
