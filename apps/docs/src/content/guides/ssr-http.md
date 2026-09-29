@@ -90,7 +90,7 @@ A call counts as a transfer cache hit when the cached response comes back right 
 
 The interceptor on the server hands its calls to the devtools through the Node process. So SSR and the devtools middleware must run in the same Express process.
 
-```ts {4,9-14}
+```ts {4,9-12}
 // src/server.ts
 import {AngularNodeAppEngine, createNodeRequestHandler} from '@angular/ssr/node';
 import express from 'express';
@@ -101,8 +101,6 @@ const angularApp = new AngularNodeAppEngine();
 
 const devtools = initNgDevtoolsHub({
   ws: {sidecar: true},
-  auth: false,
-  allowedOrigins: false,
 });
 app.use(devtools.nodeMiddleware);
 
@@ -111,7 +109,7 @@ app.use(devtools.nodeMiddleware);
 export const reqHandler = createNodeRequestHandler(app);
 ```
 
-This is adapted from the demo app's `src/server.ts`. See [Angular CLI and Express](/getting-started/express) for every option.
+This is adapted from the demo app's `src/server.ts`. It keeps the one-time code and the origin check on, which are the defaults. See [Angular CLI and Express](/getting-started/express) for every option.
 
 ## Step 4: Render the pages you test on the server
 

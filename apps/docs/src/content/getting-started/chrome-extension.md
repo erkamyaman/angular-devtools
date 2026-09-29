@@ -93,11 +93,11 @@ When the inspected page navigates, the panel looks for the server again.
 
 ### Host access
 
-The extension requests no permissions beyond host access to `localhost` and `127.0.0.1`, over HTTP and HTTPS.
+The manifest asks for no `permissions`. Its host permissions cover only `localhost` and `127.0.0.1`, over HTTP and HTTPS.
 
 ### Content scripts
 
-Content scripts run on every page to detect Angular, but the panel only connects to local dev servers. The Vite plugin accepts requests from Chrome extension origins. See [Access and redaction](/security).
+The content scripts are wider. Two of them run on every page. They check for an `ng-version` attribute or `window.ng`, and pass the Angular version to the extension. The panel only connects to local dev servers. The Vite plugin accepts requests from Chrome extension origins. See [Access and redaction](/security).
 
 ## FAQ
 

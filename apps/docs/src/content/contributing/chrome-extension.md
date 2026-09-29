@@ -15,7 +15,7 @@ The Chrome extension lives in `extension/`. It detects Angular pages, creates th
 
 ```text
 extension/
-  manifest.json          # Manifest V3, host access to localhost and 127.0.0.1
+  manifest.json          # Manifest V3, host permissions for localhost and 127.0.0.1
   background.js          # Tracks which tabs run Angular
   content-script.js      # Relays the detection result to the background worker
   detect-angular.js      # Runs in the page, looks for ng-version or window.ng
@@ -33,8 +33,8 @@ extension/
   <ngmd-card icon="shield" title="No permissions">
     <code>permissions</code> is empty.
   </ngmd-card>
-  <ngmd-card icon="compass" title="Loopback hosts only">
-    Host access to <code>localhost</code> and <code>127.0.0.1</code>, over HTTP and HTTPS.
+  <ngmd-card icon="compass" title="Loopback host permissions">
+    Host permissions for <code>localhost</code> and <code>127.0.0.1</code>, over HTTP and HTTPS. The content scripts still run on every page.
   </ngmd-card>
   <ngmd-card icon="settings" title="Chrome 111 or later">
     Set by <code>minimum_chrome_version</code>.

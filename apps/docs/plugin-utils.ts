@@ -102,3 +102,17 @@ export function slugify(s: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 }
+
+export function fenceTracker(): (line: string) => boolean {
+  let open = '';
+  return (line) => {
+    const m = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    if (!open) {
+      if (!m) return false;
+      open = m[1];
+      return true;
+    }
+    if (m && m[1][0] === open[0] && m[1].length >= open.length && !m[2].trim()) open = '';
+    return true;
+  };
+}

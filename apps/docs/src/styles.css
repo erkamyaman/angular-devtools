@@ -159,6 +159,7 @@
 :is(analog-markdown, analog-markdown-route) ngmd-pill:not(:defined),
 :is(analog-markdown, analog-markdown-route) ngmd-pill-row:not(:defined),
 :is(analog-markdown, analog-markdown-route) ngmd-step:not(:defined),
+:is(analog-markdown, analog-markdown-route) ngmd-tab:not(:defined),
 :is(analog-markdown, analog-markdown-route) ngmd-tabs:not(:defined),
 :is(analog-markdown, analog-markdown-route) ngmd-video:not(:defined),
 :is(analog-markdown, analog-markdown-route) ngmd-workflow:not(:defined) {

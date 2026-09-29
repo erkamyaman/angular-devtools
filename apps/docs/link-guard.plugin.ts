@@ -1,7 +1,13 @@
 import {readFileSync, statSync} from 'node:fs';
 import {join, relative} from 'node:path';
 import type {Plugin} from 'vite';
-import {routeFromPagePath, slugify, walkContentFiles, walkPageFiles} from './plugin-utils.ts';
+import {
+  fenceTracker,
+  routeFromPagePath,
+  slugify,
+  walkContentFiles,
+  walkPageFiles,
+} from './plugin-utils.ts';
 
 /**
  * Build-time guard that errors on broken internal links inside markdown files.
@@ -22,10 +28,11 @@ import {routeFromPagePath, slugify, walkContentFiles, walkPageFiles} from './plu
 
 function extractHeadings(markdown: string): Set<string> {
   const slugs = new Set<string>();
-  const headingRe = /^#{1,6}\s+(.+?)\s*$/gm;
-  let m;
-  while ((m = headingRe.exec(markdown)) !== null) {
-    slugs.add(slugify(m[1]));
+  const inFence = fenceTracker();
+  for (const line of markdown.split(/\r?\n/)) {
+    if (inFence(line)) continue;
+    const m = /^#{1,6}\s+(.+?)\s*$/.exec(line);
+    if (m) slugs.add(slugify(m[1]));
   }
   return slugs;
 }

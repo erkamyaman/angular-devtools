@@ -105,7 +105,7 @@ const dispose = await initOverlay({baseURL: '/__my-devtools/'});
 ### Avoid two overlays
 
 <ngmd-callout type="danger" title="Importing the module already starts one">
-  By the time you call <code>initOverlay</code>, the import has already started an overlay on the default URLs. Dispose of that one before starting another. Otherwise the page ends up with two connections and two polling intervals.
+  The import starts an overlay on the default URLs, and it does not hand you a function to stop it. When the devtools live only at your custom path, that overlay finds no connection, logs an error and stops. Your <code>initOverlay</code> call is then the only one running. If the devtools also answer on a default URL, don't call <code>initOverlay</code>. Otherwise the page ends up with two connections and two polling intervals.
 </ngmd-callout>
 
 ## NgRx signal stores

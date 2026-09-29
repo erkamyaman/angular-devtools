@@ -12,7 +12,7 @@ The full documentation lives in [`apps/docs`](./apps/docs/src/content/getting-st
 - [Security](./apps/docs/src/content/security.md): local-only access and what is redacted
 - [Contributing](./apps/docs/src/content/contributing/development.md): development setup, demo apps, the extension and publishing
 
-Run the docs site locally with `pnpm docs:dev`.
+Links inside these pages point to docs site routes, so they don't work when you read the files on GitHub. To follow them, run the docs site locally with `pnpm docs:dev`.
 
 ## Quick start
 

@@ -179,8 +179,8 @@ Agents can loop: inspect, act, `wait-for-form`, then `form-diff` from the marker
   In the tab, the button turns into <strong>Confirm reset</strong>, <strong>Confirm submit</strong> or <strong>Confirm restore</strong>. Click again to run it. Agents pass <code>confirm: true</code> for the same actions, and for <code>fill-form</code> with <code>submit</code>.
 </ngmd-callout>
 
-<ngmd-callout type="info" title="Fields that are never written">
-  Secret fields are never written. For Signal Forms, hidden, readonly and rule-disabled fields are skipped too. Disabled reactive fields are written only with <code>force</code>.
+<ngmd-callout type="info" title="Fields that are not written">
+  Secret fields are not written unless you unmask them. See <a href="/security#opt-fields-in-or-out">Access and redaction</a>. For Signal Forms, hidden, readonly and rule-disabled fields are skipped too. Disabled reactive fields are written only with <code>force</code>.
 </ngmd-callout>
 
 <ngmd-callout type="info" title="Snapshots">

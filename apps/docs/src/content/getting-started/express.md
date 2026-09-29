@@ -116,7 +116,7 @@ const devtools = initNgDevtoolsHub({
 app.use(devtools.nodeMiddleware);
 ```
 
-It turns the origin check off because it runs as a public demo. Keep the check on for your own apps.
+It turns the one-time code off unless `NG_DEVTOOLS_AUTH` is `true`, and it turns the origin check off because it runs as a public demo. Don't copy these two settings. Keep both checks on for your own apps.
 
 <ngmd-alert severity="warning">
   <code>initNgDevtoolsHub()</code> has no production switch of its own. If your <code>server.ts</code> also runs in production, decide there whether to mount it.

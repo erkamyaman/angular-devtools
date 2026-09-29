@@ -2,7 +2,7 @@ import {readFileSync, statSync} from 'node:fs';
 import {join} from 'node:path';
 import type {Plugin} from 'vite';
 import type {IndexDoc, SearchHitKind} from './src/types/search.ts';
-import {slugify, walkContentFiles} from './plugin-utils.ts';
+import {fenceTracker, slugify, walkContentFiles} from './plugin-utils.ts';
 
 /**
  * Build-time search index. Walks `src/content/**\/*.md` and emits a flat list
@@ -71,8 +71,9 @@ function splitSections(body: string): Array<{heading: string; body: string}> {
   const lines = body.split(/\r?\n/);
   const sections: Array<{heading: string; body: string}> = [];
   let current: {heading: string; body: string} = {heading: '', body: ''};
+  const inFence = fenceTracker();
   for (const line of lines) {
-    const m = line.match(/^(##+)\s+(.+?)\s*$/);
+    const m = !inFence(line) && line.match(/^(##+)\s+(.+?)\s*$/);
     if (m) {
       if (current.heading || current.body.trim()) sections.push(current);
       current = {heading: m[2], body: ''};

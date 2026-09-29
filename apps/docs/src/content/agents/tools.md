@@ -4,7 +4,7 @@ description: Every agent tool the devtools expose, grouped by inspector, with wh
 ---
 
 <ngmd-hero title="Tools" logo="https://cdn.simpleicons.org/modelcontextprotocol/71717A" gradient>
-  Forty-three tools, grouped by inspector. Each one answers a question you would otherwise answer by clicking through the panel.
+  Forty-four tools, grouped by inspector. Each one answers a question you would otherwise answer by clicking through the panel.
 </ngmd-hero>
 
 # Tools
@@ -170,7 +170,7 @@ Markers let an agent check its own work: read the marker, act, then call `form-d
 
 ### Act on a form
 
-Both tools are action tools and need a development build. Secret, hidden and readonly fields are never written.
+Both tools are action tools and need a development build. Secret fields are not written unless you unmask them. See [Access and redaction](/security#opt-fields-in-or-out). For Signal Forms, hidden and readonly fields are not written either.
 
 | Tool          | What it does                                                                                       | Arguments                                                                                                                       |
 | ------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |

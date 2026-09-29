@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   signal,
@@ -382,6 +383,7 @@ app.use(devtools.nodeMiddleware);
 })
 export default class Home implements AfterViewInit {
   private readonly toast = inject(ToastService);
+  private copyTimer: ReturnType<typeof setTimeout> | undefined;
   readonly hero = viewChild<ElementRef<HTMLElement>>('hero');
 
   readonly angularGradient =
@@ -397,6 +399,10 @@ export default class Home implements AfterViewInit {
   readonly sponsorUrl = siteConfig.site.links?.sponsor ?? '';
 
   readonly copied = signal('');
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.copyTimer));
+  }
 
   readonly installCommands = [
     {
@@ -432,7 +438,8 @@ export default class Home implements AfterViewInit {
       return;
     }
     this.copied.set(cmd);
-    setTimeout(() => this.copied.set(''), 1500);
+    clearTimeout(this.copyTimer);
+    this.copyTimer = setTimeout(() => this.copied.set(''), 1500);
   }
 
   ngAfterViewInit(): void {

@@ -1,4 +1,15 @@
-import {Component, DestroyRef, computed, inject, OnInit, signal} from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import {Router, RouterLink, RouterOutlet} from '@angular/router';
 import {
   LucideDynamicIcon,
@@ -61,8 +72,9 @@ import {VersionSwitcher} from './components/version-switcher';
       >
         @if (showSidebar()) {
           <button
+            #menuButton
             type="button"
-            (click)="drawerOpen.set(!drawerOpen())"
+            (click)="toggleDrawer()"
             class="lg:hidden rounded p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-900"
             [attr.aria-label]="drawerOpen() ? 'Close menu' : 'Open menu'"
           >
@@ -185,10 +197,12 @@ import {VersionSwitcher} from './components/version-switcher';
             [class.opacity-0]="!drawerOpen()"
             [class.opacity-100]="drawerOpen()"
             [class.pointer-events-none]="!drawerOpen()"
-            (click)="drawerOpen.set(false)"
+            (click)="closeDrawer()"
             aria-hidden="true"
           ></div>
           <aside
+            #drawer
+            (keydown.escape)="closeDrawer()"
             class="lg:hidden fixed left-0 top-[57px] bottom-0 z-40 w-64 overflow-y-auto border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 transform transition-transform duration-200 ease-out"
             [class.-translate-x-full]="!drawerOpen()"
             [class.translate-x-0]="drawerOpen()"
@@ -258,6 +272,9 @@ export class App implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   protected readonly layout = inject(LayoutMode);
   private readonly routeUrl = inject(RouteUrlService);
+  private readonly injector = inject(Injector);
+  private readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
+  private readonly drawer = viewChild<ElementRef<HTMLElement>>('drawer');
 
   readonly menuIcon = LucideMenu;
   readonly closeIcon = LucideX;
@@ -280,6 +297,24 @@ export class App implements OnInit {
   readonly showBreadcrumb = this.isDocsRoute;
   readonly showToc = this.isDocsRoute;
   readonly showFooter = this.isDocsRoute;
+
+  toggleDrawer(): void {
+    if (this.drawerOpen()) {
+      this.closeDrawer();
+      return;
+    }
+    this.drawerOpen.set(true);
+    afterNextRender(
+      () => this.drawer()?.nativeElement.querySelector<HTMLElement>('a[href], button')?.focus(),
+      {injector: this.injector},
+    );
+  }
+
+  closeDrawer(): void {
+    if (!this.drawerOpen()) return;
+    this.drawerOpen.set(false);
+    this.menuButton()?.nativeElement.focus();
+  }
 
   ngOnInit(): void {
     this.theme.initFromStorage();

@@ -19,7 +19,7 @@ The devtools read your running app and send what they find to a server on your m
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="zap" title="Vite plugin">
-    Loopback requests only. Origins limited to loopback hosts, Chrome extensions, <code>allowedOrigins</code> and Vite's <code>server.allowedHosts</code>.
+    Loopback requests only. A request that sends an <code>Origin</code> must come from a loopback host, a Chrome extension, <code>allowedOrigins</code> or Vite's <code>server.allowedHosts</code>.
   </ngmd-card>
   <ngmd-card icon="layers" title="Express hub">
     A one-time code and a loopback origin check. Both on by default.
@@ -36,7 +36,7 @@ The devtools read your running app and send what they find to a server on your m
 
 ### Vite plugin
 
-The devtools only answer this machine, and only pages served from `localhost`, `127.0.0.1` or the Chrome extension, so another website open in your browser can't reach them.
+The devtools only answer requests from this machine. When a request carries an `Origin` header, that origin must be a loopback host, the Chrome extension or an origin you allowed. Requests without an `Origin` header pass the origin check. Browsers leave the header out of some cross-site requests, such as image loads and link clicks, so the origin check alone does not stop every request from another website.
 
 In detail, a request to the devtools must:
 
@@ -57,6 +57,10 @@ export default defineConfig({
 
 The Vite plugin turns the one-time code off. The loopback and origin checks take its place.
 
+<ngmd-callout type="warning" title="Tunnels look local">
+  A tunnel client runs on your machine, so the requests it forwards come from a loopback address. Anyone who can reach the tunnel can then reach the devtools. Only allow a tunnel origin that only you can reach.
+</ngmd-callout>
+
 ### Express hub
 
 `initNgDevtoolsHub()` has two checks, both on by default:
@@ -66,17 +70,16 @@ The Vite plugin turns the one-time code off. The loopback and origin checks take
 | One-time code | `auth`           | The server prints a code. A browser can read data only after it exchanges that code. |
 | Origin check  | `allowedOrigins` | Only loopback origins can open the WebSocket. Pass a list to allow more origins.     |
 
-```ts {3-4}
+```ts {3}
 // server.ts
 const devtools = initNgDevtoolsHub({
-  auth: false,
   allowedOrigins: ['https://tunnel.example'],
 });
 app.use(devtools.nodeMiddleware);
 ```
 
 <ngmd-callout type="warning" title="Turning the checks off">
-  Pass <code>auth: false</code> only on a machine only you use. <code>allowedOrigins: false</code> turns the origin check off. The demo app in this repository sets it because it runs as a public demo. Keep the check on for your own apps.
+  Pass <code>auth: false</code> only on a machine only you use. Keep it on when you allow a tunnel origin: the origin check does not tell who is on the other end of the tunnel. <code>allowedOrigins: false</code> turns the origin check off. The demo app in this repository sets it because it runs as a public demo. Keep the check on for your own apps.
 </ngmd-callout>
 
 ### Standalone CLI
@@ -104,7 +107,7 @@ A field's value is replaced with `[redacted]` when the field:
 - sits inside `.sentry-mask`, `.rr-mask`, `[data-private]` or `[data-ng-devtools="mask"]`, or
 - has a name that contains a secret word (password, token, card, cvv, apiKey and similar).
 
-Those values are also removed from error messages. DevTools never writes secret fields. Other values are sent as they are, so keep real credentials out of forms you inspect.
+Those values are also removed from error messages. DevTools does not write secret fields unless you unmask them, see below. Other values are sent as they are, so keep real credentials out of forms you inspect.
 
 ### Opt fields in or out
 
@@ -120,6 +123,8 @@ window.__NG_DEVTOOLS_FORMS__ = {mask: ['iban'], unmask: ['passport']};
 ```
 
 `[data-ng-devtools="unmask"]` opts a field back in. The `window` setting does the same by key.
+
+Unmasking also changes what DevTools can write. A key listed in `unmask` on `window` can be written. The element marker only lifts the checks that come from the element (password type, `autocomplete` and mask markers), so a field with a secret-looking name is still not written.
 
 <ngmd-accordion>
   <ngmd-accordion-item title="The full list of secret words">
