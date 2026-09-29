@@ -72,6 +72,10 @@ export interface SiteConfig {
    *  "view source" link on API symbol pages). Defaults to `main` when
    *  omitted. Set this if the repo's default branch isn't `main`. */
   githubBranch?: string;
+  /** Path from the repository root to this site, for sites inside a
+   *  monorepo (e.g. `apps/docs`). Prefixes the file paths in GitHub edit and
+   *  source links. Omit when the site is the repository root. */
+  githubDir?: string;
   /** Optional community links. `discord` adds an icon to the header and a
    *  link to the footer; `sponsor` adds a "Sponsor" link to the footer. */
   links?: {
@@ -105,7 +109,7 @@ export interface NgmdConfig {
    *  paths route in-app; `http(s)` URLs open in a new tab. Leave undefined
    *  for no header links. */
   headerNav?: NavItem[];
-  /** Sponsors listed by `<ngmd-sponsors>`. Leave undefined to render
+  /** Sponsors listed by `<app-sponsor-list>`. Leave undefined to render
    *  nothing. */
   sponsors?: Sponsor[];
   /** Sidebar sections, in render order. */
@@ -135,6 +139,7 @@ const config: NgmdConfig = {
     tagline: 'Devtools for Angular apps and coding agents',
     url: 'https://santoshyadavdev.github.io/angular-devtools',
     githubUrl: 'https://github.com/santoshyadavdev/angular-devtools',
+    githubDir: 'apps/docs',
     links: {
       discord: 'https://discord.gg/YRTyJd6Qx',
       sponsor: 'https://github.com/sponsors/santoshyadavdev',

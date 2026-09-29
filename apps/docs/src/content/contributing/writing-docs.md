@@ -73,7 +73,7 @@ Every page follows the same skeleton.
 ```md
 ---
 title: Router
-description: One sentence for search results and link previews.
+description: One sentence that summarizes the page.
 ---
 
 <ngmd-hero title="Router" gradient>
@@ -99,7 +99,7 @@ A short intro: what the tab is and when you open it.
 
 ### Frontmatter
 
-`title` is the browser tab and sidebar title. `description` is used for search, the page meta tags and the sitemap. Keep it to one sentence.
+`title` is the page title in search results. The sidebar and the browser tab use the page's `label` in `nav`. Keep `description` to one sentence that summarizes the page.
 
 ### Headings
 
@@ -140,7 +140,7 @@ Card icons come from a fixed set: `book`, `box`, `code`, `compass`, `file`, `lay
 - End a page with a pill row or a card grid that points to the next pages, not both.
 - Always write a closing tag, such as `<ngmd-pill ...></ngmd-pill>`. HTML doesn't honour self-closing custom elements, so the next element ends up nested inside.
 - Write external links in raw HTML with `target="_blank" rel="noopener noreferrer"`, or the build fails. Markdown links get both automatically.
-- Components that contain HTML use HTML for inline formatting: `<code>`, `<strong>` and `<a>`. Markdown doesn't render inside them. Write `@` as `&#64;` inside components, because the renderer can read a bare `@` as Angular template syntax.
+- Components that contain HTML use HTML for inline formatting: `<code>`, `<strong>` and `<a>`. Markdown doesn't render inside them. Write `@` as `&#64;` inside components.
 
 ### Keyword links
 

@@ -67,7 +67,7 @@ export const appConfig: ApplicationConfig = {
 
 ### Line highlights
 
-```ts {2,5-7}
+```ts {2,6-8}
 // src/main.ts
 import {bootstrapApplication} from '@angular/platform-browser';
 import {App} from './app/app';
@@ -279,7 +279,9 @@ Text between alerts.
 
 ### Image
 
-<ngmd-image src="/og.png" alt="The Angular DevTools social card" caption="An image with a caption." width="640"></ngmd-image>
+<ngmd-image src="/images/cats.jpg" alt="Two tabby kittens, Angular and Excel, looking up, one sitting in a flower pot" width="360"></ngmd-image>
+
+<p style="max-width: 360px; margin-top: -1rem; text-align: center; font-size: 0.875rem; color: var(--muted)">Say hi to <a href="https://github.com/erkamyaman" target="_blank" rel="noopener noreferrer">my</a> cats Angular and Excel 👋</p>
 
 ### Video
 

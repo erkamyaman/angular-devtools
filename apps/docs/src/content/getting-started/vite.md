@@ -84,7 +84,7 @@ It records Analog page renders, `load()` fetches, server functions and API calls
 
 ### Answers only your machine
 
-The plugin only answers requests from a loopback address (`127.0.0.1` or `::1`). Other requests to the devtools get `403` with the message "ng-devtools only answers requests from this machine." WebSocket upgrades follow the same rules.
+The plugin only answers requests from a loopback address (any `127.x.x.x` address or `::1`). Other requests to the devtools get `403` with the message "ng-devtools only answers requests from this machine." WebSocket upgrades follow the same rules.
 
 The Vite plugin turns the one-time code off. The loopback and origin checks take its place. [Access and redaction](/security) covers both checks.
 

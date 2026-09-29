@@ -12,6 +12,7 @@ import {searchIndexPlugin} from './search-index.plugin.ts';
 import {rawMdPlugin} from './raw-md.plugin.ts';
 import {varsPlugin} from './vars.plugin.ts';
 import {apiGenPlugin} from './api-gen.plugin.ts';
+import {withoutCode} from './plugin-utils.ts';
 import config from './src/ngmd.config.ts';
 
 /**
@@ -28,14 +29,15 @@ function externalLinkGuard(): Plugin {
     name: 'ngmd-external-link-guard',
     enforce: 'pre',
     transform(_code, id) {
-      if (!id.endsWith('.md')) return null;
-      const content = readFileSync(id.split('?')[0], 'utf8');
+      const file = id.split('?')[0];
+      if (!file.endsWith('.md')) return null;
+      const content = withoutCode(readFileSync(file, 'utf8'));
       const anchorRe = /<a\b[^>]*href=["']https?:\/\/[^"']+["'][^>]*>/g;
       const matches = content.match(anchorRe) ?? [];
       for (const m of matches) {
         if (!/target=["']_blank["']/.test(m)) {
           this.error(
-            `[ngmd] External anchor in ${id} is missing target="_blank":\n  ${m}\n` +
+            `[ngmd] External anchor in ${file} is missing target="_blank":\n  ${m}\n` +
               `Add target="_blank" rel="noopener noreferrer" so external links open in a new tab.`,
           );
         }
@@ -76,7 +78,11 @@ export default defineConfig(async () => ({
     varsPlugin(),
     externalLinkGuard(),
     internalLinkGuard(),
-    pageMetaPlugin({repoUrl: config.site.githubUrl, branch: 'main', dir: 'apps/docs'}),
+    pageMetaPlugin({
+      repoUrl: config.site.githubUrl,
+      branch: config.site.githubBranch ?? 'main',
+      dir: config.site.githubDir,
+    }),
     sitemapPlugin({siteUrl: config.site.url}),
     rawMdPlugin(),
     searchIndexPlugin(),
@@ -90,7 +96,7 @@ export default defineConfig(async () => ({
         },
         shikiOptions: {
           highlight: {
-            themes: {light: 'github-light', dark: 'github-dark'},
+            themes: {light: 'github-light-default', dark: 'github-dark-default'},
             defaultColor: false,
           },
           highlighter: {
