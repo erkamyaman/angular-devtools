@@ -78,7 +78,7 @@ The devtools keep their live data in shared-state keys. Every key is also listed
 
 ### Keys
 
-This covers data without its own resource.
+This table covers the data that has no resource of its own.
 
 | Key                      | Content                                                                        |
 | ------------------------ | ------------------------------------------------------------------------------ |
@@ -87,7 +87,7 @@ This covers data without its own resource.
 | `ng-devtools:analog`     | Analog page data and the server call log                                       |
 | `ng-devtools:routes`     | Declared but not filled. Use `get-routes` or `list-routes` instead.            |
 
-The keys behind the six resources above (`ng-devtools:component-tree`, `ng-devtools:forms`, and so on) are listed too.
+The list also includes the keys behind the six resources above (`ng-devtools:component-tree`, `ng-devtools:forms`, and so on).
 
 ### Read a key with a tool
 

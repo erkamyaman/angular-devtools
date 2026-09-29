@@ -76,9 +76,11 @@ Every setup has two parts:
 Pick the tab that matches your app:
 
 ```ts group="setup" name="Angular CLI + Express" image="https://cdn.simpleicons.org/express/71717A" active
-// server.ts
+// src/server.ts
+import express from 'express';
 import {initNgDevtoolsHub} from '@santoshyadavdev/ng-devtools/hub';
 
+const app = express();
 const devtools = initNgDevtoolsHub({ws: false});
 app.use(devtools.nodeMiddleware);
 ```
@@ -104,7 +106,11 @@ npx @santoshyadavdev/ng-devtools
 Load the overlay after bootstrap, in development only. The check depends on your build tool:
 
 ```ts group="overlay" name="Angular CLI" image="https://cdn.simpleicons.org/angular/DD0031" active
-// main.ts
+// src/main.ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {App} from './app/app';
+import {appConfig} from './app/app.config';
+
 bootstrapApplication(App, appConfig)
   .then(() => {
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
@@ -117,6 +123,10 @@ bootstrapApplication(App, appConfig)
 
 ```ts group="overlay" name="Analog (Vite)" image="https://cdn.simpleicons.org/vite/646CFF"
 // src/main.ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {App} from './app/app';
+import {appConfig} from './app/app.config';
+
 bootstrapApplication(App, appConfig).then(() => {
   if (import.meta.env.DEV) void import('@santoshyadavdev/ng-devtools/overlay');
 });

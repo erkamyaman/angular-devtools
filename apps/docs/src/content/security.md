@@ -40,15 +40,19 @@ The devtools only answer requests from this machine. When a request carries an `
 
 In detail, a request to the devtools must:
 
-- come from a loopback address (`127.0.0.1` or `::1`), and
+- come from a loopback address (any `127.x.x.x` address or `::1`), and
 - have no `Origin` header, or an origin that is a loopback host, a Chrome extension, an entry in `allowedOrigins`, or a host that Vite's `server.allowedHosts` accepts.
 
 Other requests get `403` with the message "ng-devtools only answers requests from this machine." WebSocket upgrades follow the same rules.
 
-If you open the dev server through another hostname that points to your machine (for example `myapp.test`), list it in Vite's `server.allowedHosts` and the devtools trust it too. Other origins can be added with `allowedOrigins`:
+If you open the dev server through another hostname that points to your machine (for example `myapp.test`), list it in Vite's `server.allowedHosts` and the devtools trust it too. Add other origins with `allowedOrigins`:
 
-```ts {3-4}
+```ts {7-8}
 // vite.config.ts
+import analog from '@analogjs/platform';
+import ngDevtools from '@santoshyadavdev/ng-devtools/vite';
+import {defineConfig} from 'vite';
+
 export default defineConfig({
   server: {allowedHosts: ['myapp.test']},
   plugins: [analog(), ngDevtools({allowedOrigins: ['https://tunnel.example']})],
@@ -65,13 +69,18 @@ The Vite plugin turns the one-time code off. The loopback and origin checks take
 
 `initNgDevtoolsHub()` has two checks, both on by default:
 
-| Check         | Option           | What it does                                                                         |
-| ------------- | ---------------- | ------------------------------------------------------------------------------------ |
-| One-time code | `auth`           | The server prints a code. A browser can read data only after it exchanges that code. |
-| Origin check  | `allowedOrigins` | Only loopback origins can open the WebSocket. Pass a list to allow more origins.     |
+| Check         | Option           | What it does                                                                                                        |
+| ------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
+| One-time code | `auth`           | The server prints a code. A browser can read data only after it exchanges that code.                                |
+| Origin check  | `allowedOrigins` | Only loopback origins, or clients that send no `Origin`, can open the WebSocket. Pass a list to allow more origins. |
 
-```ts {3}
-// server.ts
+```ts {8}
+// src/server.ts
+import {initNgDevtoolsHub} from '@santoshyadavdev/ng-devtools/hub';
+import express from 'express';
+
+const app = express();
+
 const devtools = initNgDevtoolsHub({
   allowedOrigins: ['https://tunnel.example'],
 });
@@ -79,7 +88,7 @@ app.use(devtools.nodeMiddleware);
 ```
 
 <ngmd-callout type="warning" title="Turning the checks off">
-  Pass <code>auth: false</code> only on a machine only you use. Keep it on when you allow a tunnel origin: the origin check does not tell who is on the other end of the tunnel. <code>allowedOrigins: false</code> turns the origin check off. The demo app in this repository sets it because it runs as a public demo. Keep the check on for your own apps.
+  Pass <code>auth: false</code> only on a machine only you use. Keep it on when you allow a tunnel origin: the origin check does not tell who is on the other end of the tunnel. <code>allowedOrigins: false</code> turns the origin check off. The demo app in this repository sets it. Keep the check on for your own apps.
 </ngmd-callout>
 
 ### Standalone CLI
@@ -107,7 +116,7 @@ A field's value is replaced with `[redacted]` when the field:
 - sits inside `.sentry-mask`, `.rr-mask`, `[data-private]` or `[data-ng-devtools="mask"]`, or
 - has a name that contains a secret word (password, token, card, cvv, apiKey and similar).
 
-Those values are also removed from error messages. DevTools does not write secret fields unless you unmask them, see below. Other values are sent as they are, so keep real credentials out of forms you inspect.
+Those values are also removed from error messages. The devtools don't write secret fields unless you unmask them (see [Opt fields in or out](#opt-fields-in-or-out)). Other values are sent as they are, so keep real credentials out of forms you inspect.
 
 ### Opt fields in or out
 
@@ -124,7 +133,7 @@ window.__NG_DEVTOOLS_FORMS__ = {mask: ['iban'], unmask: ['passport']};
 
 `[data-ng-devtools="unmask"]` opts a field back in. The `window` setting does the same by key.
 
-Unmasking also changes what DevTools can write. A key listed in `unmask` on `window` can be written. The element marker only lifts the checks that come from the element (password type, `autocomplete` and mask markers), so a field with a secret-looking name is still not written.
+Unmasking also changes what the devtools can write. A key listed in `unmask` on `window` can be written. The element marker only lifts the checks that come from the element (password type, `autocomplete` and mask markers), so a field with a secret-looking name is still not written.
 
 <ngmd-accordion>
   <ngmd-accordion-item title="The full list of secret words">
@@ -156,9 +165,7 @@ Server call previews and URLs are redacted: secret-looking keys in JSON bodies, 
 
 ### Not redacted
 
-<ngmd-callout type="danger" title="SSR & HTTP values are sent as they are">
-  Response previews and TransferState values in the <a href="/inspectors/ssr-http">SSR & HTTP tab</a> are not redacted. They reach the devtools server unchanged, so don't expose the dev server beyond localhost.
-</ngmd-callout>
+Response previews and TransferState values in the [SSR & HTTP tab](/inspectors/ssr-http) are not redacted. They reach the devtools server unchanged, so don't expose the dev server beyond localhost.
 
 ## Checklist
 

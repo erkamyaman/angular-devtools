@@ -58,9 +58,7 @@ pnpm devtools:build-pkg
 
 ### 3. Refresh the extension UI
 
-<ngmd-callout type="warning" title="extension/ui must be fresh">
-  If <code>app/</code> changed since the last release, run <code>pnpm extension:build</code> and commit <code>extension/ui</code> before you publish. CI fails when the committed copy is stale.
-</ngmd-callout>
+If `app/` changed since the last release, run `pnpm extension:build` and commit `extension/ui` before you publish. CI fails when the committed copy is stale.
 
 ### 4. Publish
 

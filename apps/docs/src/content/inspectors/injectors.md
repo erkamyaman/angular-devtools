@@ -13,14 +13,14 @@ When a component asks for a token, Angular walks up the element injectors, then 
 
 ## What it shows
 
-### Elements and Environment
+### View switch
 
 A switch at the top picks the view:
 
 - **Elements**: one node per host element that has a component or a directive.
 - **Environment**: the environment injectors, such as the root and platform injectors.
 
-Each row shows a kind letter (`C`, `D` or `E`), the tag or injector name, and icons with the number of injected and provided tokens.
+Each row shows a kind letter (`C`, `D` or `E`), the tag or injector name, the component or directive classes, and icons with the number of injected and provided tokens.
 
 ### Search and filters
 
@@ -35,7 +35,7 @@ Select an injector to see the **Lookup path**: the injectors Angular asks, in or
 
 ### Injected here
 
-For element injectors, **Injected here** lists each token requested at this level and the injector that answered. A token that nobody provides is marked **not provided anywhere**. When the element has more than one class, each row says which class asked.
+For element injectors, **Injected here** lists each token requested at this level and the injector that answered. The block marks a token that nobody provides as **not provided anywhere**. When the element has more than one class, each row says which class asked.
 
 ### Provides
 
@@ -45,12 +45,12 @@ For element injectors, **Injected here** lists each token requested at this leve
 
 Without a live tree, the tab lists DI found in your source files, in four groups:
 
-| Group                          | Lists                                                                                               |
-| ------------------------------ | --------------------------------------------------------------------------------------------------- |
-| **Root Providers (provide\*)** | Calls to known Angular `provide*()` functions, such as `provideRouter()` and `provideHttpClient()`. |
-| **Injectable Services**        | `@Injectable` classes, plus `signalStore` and `InjectionToken` declarations with `providedIn`.      |
-| **inject() Calls**             | `inject(T)` field initializers and `@Inject(T)` parameters.                                         |
-| **Component Providers**        | Any `providers` or `viewProviders` array, in components, routes, app config or NgModules.           |
+| Group                          | Lists                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| **Root Providers (provide\*)** | Calls to known Angular `provide*()` functions, such as `provideRouter()` and `provideHttpClient()`.           |
+| **Injectable Services**        | `@Injectable` and `@Service` classes, plus `signalStore` and `InjectionToken` declarations with `providedIn`. |
+| **inject() Calls**             | `x = inject(T)` assignments and `@Inject(T)` parameters.                                                      |
+| **Component Providers**        | Any `providers` or `viewProviders` array, in components, routes, app config or NgModules.                     |
 
 ## Where the data comes from
 
@@ -103,7 +103,7 @@ The source-mode notice says to connect the overlay on Angular 17 or later for th
 
 ### Keyboard
 
-Arrow keys, Home and End move the selection through the tree. The first row is selected when nothing else is.
+Arrow keys, Home and End move the selection through the tree. The right arrow expands a row or moves to its first child. The left arrow collapses a row or moves to its parent. The first row is selected when nothing else is.
 
 ## Agent tools
 
@@ -117,19 +117,26 @@ See [Tools](/agents/tools) and [Resources](/agents/resources).
 
 ## Limits and gotchas
 
-<ngmd-callout type="warning" title="Up to 2000 element injectors">
-  The Elements view stops at 2000 injectors, without a notice. Environment injectors are not capped.
-</ngmd-callout>
+### Up to 2000 element injectors
 
-<ngmd-callout type="info" title="Source mode only knows some provide functions">
-  The <strong>Root Providers</strong> group matches a fixed list of Angular <code>provide*()</code> functions. Your own provider functions are not listed there.
-</ngmd-callout>
+The **Elements** view stops at 2000 injectors, without a notice. Environment injectors have no cap.
 
-<ngmd-alert severity="helpful">
-  Constructor parameters without <code>&#64;Inject()</code> are not found by the source scan. The live tree has them.
-</ngmd-alert>
+### Source mode only knows some provide functions
 
-## Related pages
+The **Root Providers** group matches a fixed list of Angular `provide*()` functions. It doesn't list your own provider functions.
+
+## FAQ
+
+<ngmd-accordion>
+  <ngmd-accordion-item title="Why is a constructor-injected service missing from source mode?">
+    The source scan doesn't find constructor parameters without <code>&#64;Inject()</code>. The live tree has them.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Why does the tab show source mode instead of the live tree?">
+    No live tree has reached the tab. The live tree needs the overlay, a development build and Angular 17 or later.
+  </ngmd-accordion-item>
+</ngmd-accordion>
+
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="layers" title="Components" link="/inspectors/components" cta="Open">

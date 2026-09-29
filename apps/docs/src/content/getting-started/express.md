@@ -36,10 +36,12 @@ In an *Angular app with server-side rendering, the devtools run inside your Expr
 
 ### Add the middleware
 
-```ts {4-7}
-// server.ts
+```ts {3,6-7}
+// src/server.ts
+import express from 'express';
 import {initNgDevtoolsHub} from '@santoshyadavdev/ng-devtools/hub';
 
+const app = express();
 const devtools = initNgDevtoolsHub({ws: false});
 app.use(devtools.nodeMiddleware);
 ```
@@ -51,7 +53,7 @@ The full-page viewer is at `http://localhost:4000/__devframes/`. The hub is buil
 Mount the middleware before `express.static` and the Angular SSR handler, so the devtools routes answer first.
 
 ```ts
-// server.ts
+// src/server.ts
 const app = express();
 const devtools = initNgDevtoolsHub({ws: false});
 app.use(devtools.nodeMiddleware); // devtools first
@@ -72,16 +74,18 @@ The middleware only handles requests under its base path (`/__devframes/` by def
 The browser talks to the hub over server-sent events or a WebSocket. Pick one with the `ws` option:
 
 ```ts group="transport" name="Server-sent events" active
-// No WebSocket. The browser connects over SSE on the same port.
+// src/server.ts
 const devtools = initNgDevtoolsHub({ws: false});
 ```
 
 ```ts group="transport" name="WebSocket side-car"
-// The WebSocket runs on its own port, picked automatically.
+// src/server.ts
 const devtools = initNgDevtoolsHub({ws: {sidecar: true}});
 ```
 
-`ws: false` is the simplest choice. Every request goes through your Express server, including under `ng serve`.
+With `ws: false` there is no WebSocket, and the browser connects over SSE on the same port. It is the simplest choice: every request goes through your Express server, including under `ng serve`.
+
+With `ws: {sidecar: true}`, the WebSocket runs on its own port, picked automatically.
 
 ### Hub options
 
@@ -97,9 +101,7 @@ const devtools = initNgDevtoolsHub({ws: {sidecar: true}});
 
 ### Access control
 
-<ngmd-callout type="warning" title="One-time code">
-  The hub protects its connection with a one-time code by default. The server prints the code, and a browser can read data only after it exchanges that code. On a machine only you use, pass <code>auth: false</code> to turn the gate off.
-</ngmd-callout>
+The hub protects its connection with a one-time code by default. The server prints the code, and a browser can read data only after it exchanges that code. On a machine only you use, pass `auth: false` to turn the gate off.
 
 The origin check is on by default too. Only loopback origins can open the WebSocket. [Access and redaction](/security) covers both checks.
 
@@ -116,7 +118,7 @@ const devtools = initNgDevtoolsHub({
 app.use(devtools.nodeMiddleware);
 ```
 
-It turns the one-time code off unless `NG_DEVTOOLS_AUTH` is `true`, and it turns the origin check off because it runs as a public demo. Don't copy these two settings. Keep both checks on for your own apps.
+It turns the one-time code off unless `NG_DEVTOOLS_AUTH` is `true`, and it turns the origin check off. Don't copy these two settings. Keep both checks on for your own apps.
 
 <ngmd-alert severity="warning">
   <code>initNgDevtoolsHub()</code> has no production switch of its own. If your <code>server.ts</code> also runs in production, decide there whether to mount it.
@@ -128,8 +130,12 @@ It turns the one-time code off unless `NG_DEVTOOLS_AUTH` is `true`, and it turns
 
 The [overlay](/getting-started/overlay) collects live data from the page. Import it after bootstrap, in development only:
 
-```ts {4-6}
-// main.ts
+```ts {8-10}
+// src/main.ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {App} from './app/app';
+import {appConfig} from './app/app.config';
+
 bootstrapApplication(App, appConfig)
   .then(() => {
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
@@ -151,8 +157,8 @@ A floating button appears on your page. It opens the devtools with one dock entr
 | Angular      | Dashboard, components, routes, signals, injectors, forms, pipes, and SSR & HTTP |
 | NgRx         | Store patterns from source, and live state and actions                          |
 | Analog       | File routes, server calls, render modes and lint (a notice in non-Analog apps)  |
-| NativeScript | Coming soon                                                                     |
-| Capacitor    | Coming soon                                                                     |
+| NativeScript | A **Coming Soon** placeholder                                                   |
+| Capacitor    | A **Coming Soon** placeholder                                                   |
 
 [Popup and hub](/getting-started/popup-and-hub) covers the panel, its dock modes and deep links.
 
@@ -187,9 +193,11 @@ To test the real Express process, build with the development configuration and s
 
 To fill the SSR & HTTP tab, add the interceptor and hydration hooks to your app config:
 
-```ts {2,7-8}
-// app.config.ts
+```ts {5,10-11}
+// src/app/app.config.ts
 import {provideHttpClient, withFetch} from '@angular/common/http';
+import {ApplicationConfig} from '@angular/core';
+import {provideClientHydration} from '@angular/platform-browser';
 import {provideNgDevtoolsHttp, withNgDevtools} from '@santoshyadavdev/ng-devtools/http';
 
 export const appConfig: ApplicationConfig = {
@@ -203,11 +211,9 @@ export const appConfig: ApplicationConfig = {
 
 `withNgDevtools()` records requests and applies fault rules. `provideNgDevtoolsHttp()` captures hydration warnings before the overlay loads. In production builds the interceptor passes requests through untouched.
 
-### Put withNgDevtools first
+### Put `withNgDevtools` first
 
-<ngmd-callout type="tip" title="Interceptor order">
-  Register <code>withNgDevtools()</code> before your own interceptors, for example <code>provideHttpClient(withNgDevtools(), withInterceptors([auth]))</code>. It then records requests as the app makes them, and fault rules apply before anything else.
-</ngmd-callout>
+Register `withNgDevtools()` before your own interceptors, for example `provideHttpClient(withNgDevtools(), withInterceptors([authInterceptor]))`. It then records requests as the app makes them, and fault rules apply before anything else.
 
 ### Run SSR in the same process
 
@@ -220,7 +226,7 @@ The [SSR & HTTP guide](/guides/ssr-http) covers interceptor order and fault inje
 To mount only the devtools panel without the dock, use `initDevframe()` from `devframe/initiate`:
 
 ```ts
-// server.ts
+// src/server.ts
 import {initDevframe} from 'devframe/initiate';
 import ngDevtools from '@santoshyadavdev/ng-devtools/devframe';
 
@@ -247,7 +253,7 @@ The overlay looks for `/__ng-devtools/` too. Without the hub, every tab sits in 
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Next steps
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="zap" title="Browser overlay" link="/getting-started/overlay" cta="How it connects">

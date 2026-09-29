@@ -225,6 +225,8 @@ const config: NgmdConfig = {
         {label: 'Demo apps', href: '/contributing/demo-apps'},
         {label: 'Build the extension', href: '/contributing/chrome-extension'},
         {label: 'Publishing', href: '/contributing/publishing'},
+        {label: 'Write documentation', href: '/contributing/writing-docs'},
+        {label: 'Kitchen sink', href: '/contributing/kitchen-sink'},
       ],
     },
   ],

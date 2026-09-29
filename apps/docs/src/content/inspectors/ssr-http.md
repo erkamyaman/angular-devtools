@@ -15,15 +15,16 @@ The SSR & HTTP tab shows the HTTP calls your app makes during server rendering a
 
 The timeline and fault rules need the interceptor. The hydration warnings need the provider. Add both to the app config, with `withNgDevtools()` before your own interceptors:
 
-```ts {8-9}
-// app.config.ts
+```ts {9-10}
+// src/app/app.config.ts
 import {ApplicationConfig} from '@angular/core';
 import {provideHttpClient, withFetch, withInterceptors} from '@angular/common/http';
 import {provideNgDevtoolsHttp, withNgDevtools} from '@santoshyadavdev/ng-devtools/http';
+import {authInterceptor} from './auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(withFetch(), withNgDevtools(), withInterceptors([auth])),
+    provideHttpClient(withFetch(), withNgDevtools(), withInterceptors([authInterceptor])),
     provideNgDevtoolsHttp(),
   ],
 };
@@ -67,7 +68,7 @@ A status of 400 or more fails the request with an `HttpErrorResponse`. A lower s
 
 ### TransferState payload
 
-Each entry in the page's `{APP_ID}-state` script, with its size. HttpClient and Analog cache entries are decoded to status, URL and body. `__nghData__` and `__nghDeferData__` are labelled as hydration annotations.
+Each entry in the page's `{APP_ID}-state` script, with its size. The tab decodes HttpClient and Analog cache entries to status, URL and body. It labels `__nghData__` and `__nghDeferData__` as hydration annotations.
 
 ## Where the data comes from
 
@@ -79,7 +80,7 @@ Each entry in the page's `{APP_ID}-state` script, with its size. HttpClient and 
     The overlay reports client calls, hydration stats and the payload.
   </ngmd-card>
   <ngmd-card icon="settings" title="Rules">
-    Fault rules live on the devtools server and are sent to every page.
+    Fault rules live on the devtools server, which sends them to every page.
   </ngmd-card>
 </ngmd-card-grid>
 
@@ -154,25 +155,25 @@ Two router tools cover related ground:
 
 ## Limits and gotchas
 
-<ngmd-callout type="warning" title="Prerendered routes make no requests">
-  Routes prerendered at build time make no requests at runtime and ignore SSR rules. Use <code>RenderMode.Server</code> in <code>app.routes.server.ts</code> for pages you want to test this way.
-</ngmd-callout>
-
-<ngmd-callout type="info" title="SSR mocks are not transferred">
-  SSR mocks are not written to TransferState, so the browser requests the URL again. Apply the rule on <strong>SSR + client</strong> to mock both.
-</ngmd-callout>
-
-<ngmd-callout type="info" title="When rules apply">
-  Client rules apply right away. SSR rules apply from the next page load. Client rules are also kept in <code>sessionStorage</code>, so they apply on reload before the overlay connects. Rules live in the devtools server's memory, so a server restart clears them.
-</ngmd-callout>
-
 <ngmd-callout type="danger" title="Nothing is redacted here">
-  Response previews and TransferState values are sent to the devtools server as they are. Don't expose the dev server beyond localhost. See <a href="/security">Security</a>.
+  The devtools send response previews and TransferState values to the devtools server as they are. Don't expose the dev server beyond localhost. See <a href="/security">Security</a>.
 </ngmd-callout>
 
-<ngmd-alert severity="helpful">
-  The timeline keeps the last 200 SSR calls and the last 200 client calls per page. You can add up to 50 fault rules.
-</ngmd-alert>
+### Prerendered routes make no requests
+
+Routes prerendered at build time make no requests at runtime and ignore SSR rules. For pages you want to test this way, use `RenderMode.Server` in `app.routes.server.ts`.
+
+### SSR mocks are not transferred
+
+The devtools don't write SSR mocks to TransferState, so the browser requests the URL again. To mock both, apply the rule on **SSR + client**.
+
+### When rules apply
+
+Client rules apply right away. SSR rules apply from the next page load. The page also keeps client rules in `sessionStorage`, so they apply on reload before the overlay connects. Rules live in the devtools server's memory, so a server restart clears them.
+
+### Timeline and rule caps
+
+The timeline keeps the last 200 SSR calls in total, and the last 200 client calls of each page. You can add up to 50 fault rules.
 
 ## FAQ
 
@@ -184,11 +185,11 @@ Two router tools cover related ground:
     <code>provideNgDevtoolsHttp()</code> is missing from the app providers.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Why did my client calls disappear?">
-    Client calls live in the page. A reload starts a new list. SSR calls stay until <strong>Clear timeline</strong> or a server restart.
+    Client calls live in the page, so a reload clears them. SSR calls stay until <strong>Clear timeline</strong> or a server restart.
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Related pages
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="wrench" title="Set up SSR & HTTP" link="/guides/ssr-http" cta="Guide">

@@ -15,7 +15,7 @@ The Routes tab reads the running app's Router. The top section, **Live router**,
 
 ### Current
 
-The route the page is on right now:
+The route the page is on:
 
 - The URL, and the browser URL when the two differ.
 - The navigation in flight, with an **Abort** button.
@@ -31,13 +31,13 @@ Every navigation as one story:
 - The extras, redirect chains and loops.
 - A phase bar: recognize, guards, resolve, activate.
 - Guards and resolvers, lazy loads, reused components, HTTP requests, scroll, and the title afterwards.
-- Router warnings, and the cancel or error reason. NG04xxx errors are explained.
+- Router warnings, and the cancel or error reason. The tab explains NG04xxx errors.
 
 Filter by URL, or check **Only problems**. Each row has **Replay** and **Copy repro** (a markdown repro). **Export JSON** saves the list.
 
 ### Routes
 
-The live route config. Lazy children are merged in once they load, and the active branch is marked.
+The live route config. The tab merges lazy children in once they load, and marks the active branch.
 
 - **Test a URL** and click **Predict** to see which route matches it, or the nearest ones.
 - **Probe in app** runs the real matcher without navigating.
@@ -61,11 +61,11 @@ Route config mistakes, each with a fix:
 - `routerLinkActive` without `ariaCurrentWhenActive`.
 - Emails in URLs, and return URLs taken from query params.
 
-Each finding says whether Angular throws, warns or does not warn. Lazy routes that have not loaded are skipped. Click **Check again** to rerun it.
+Each finding says whether Angular throws, warns or does not warn. The lint skips lazy routes that have not loaded. Click **Check again** to rerun it.
 
 ### Source route config
 
-The routes declared in your files: `*.routes.ts` and `*routing.module.ts` files, the files they lazy load, and Analog pages. Each row shows the path, the component or target, guards and resolvers, the title and the declaring file. Once the live config is available, this table is collapsed. **Show table** opens it.
+The routes declared in your files: `*.routes.ts` and `*routing.module.ts` files, the files they lazy load, and Analog pages. Each row shows the path, the component or target, guards and resolvers, the title and the declaring file. Once the live config is available, the tab collapses this table. **Show table** opens it.
 
 Components rendered by the router show their route and outlet in the [Components tab](/inspectors/components).
 
@@ -86,13 +86,13 @@ The overlay reads the helper `provideRouter()` publishes (`ng.ɵgetRouterInstanc
 
 ### Development builds
 
-The live views need `window.ng`, so they need a development build. In a production build no Router is found, and **Current** says **This page reports no Router**.
+The live views need `window.ng`, so they need a development build. In a production build the overlay finds no Router, and **Current** says **This page reports no Router**.
 
 When the debug API exists but lacks the provider helpers, the tab runs in events-only mode. The **Setup** view says so, and the config, lint and actions are limited.
 
 ### Guard verdicts
 
-The router reports one result for all the guards of a navigation. To see each guard's verdict and time, the devtools wrap every guard and resolver in the live config. The result reads like `authGuard returned UrlTree /login`.
+The router reports one result for all the guards of a navigation. To see each guard's verdict and time, the devtools wrap every guard and resolver in the live config. Each row shows the guard, the route, its result (such as `UrlTree /login`) and its time.
 
 Without that recording, the guards listed for a navigation are candidates: the `canDeactivate` guards of the page being left, and the `canActivate` and `canActivateChild` guards of the target.
 
@@ -162,25 +162,25 @@ Without that recording, the guards listed for a navigation are candidates: the `
 
 ## Limits and gotchas
 
-<ngmd-callout type="info" title="Guard recording is on by default">
-  <strong>Record each guard and resolver</strong> in the Navigations view starts checked. Uncheck it to stop. Turning it off puts every original guard and resolver back. The choice is kept per browser tab, in <code>sessionStorage</code>, so it survives a reload. Agents use <code>navigate</code> with <code>action: "instrument"</code> and <code>on</code>.
-</ngmd-callout>
+### Guard recording is on by default
 
-<ngmd-callout type="warning" title="Abort and probe need Angular 20">
-  Aborting and probing use router APIs that older versions lack. On those versions the action returns an error.
-</ngmd-callout>
+**Record each guard and resolver** in the **Navigations** view starts checked. Uncheck it to stop. Turning it off puts every original guard and resolver back. The page keeps the choice per browser tab, in `sessionStorage`, so it survives a reload. Agents use `navigate` with `action: "instrument"` and `on`.
 
-<ngmd-callout type="info" title="Navigations before the devtools connected">
-  Only the last one is listed, marked <strong>before DevTools connected</strong>, without timing or guard details.
-</ngmd-callout>
+### Abort and probe need Angular 20.2
 
-<ngmd-callout type="tip" title="Redaction">
-  Query, matrix and fragment values with secret-looking keys are replaced with <code>[redacted]</code>. So are tokens, <code>Bearer</code> values, and route params with secret-looking names such as <code>:token</code>. A navigation with a redacted URL cannot be replayed. See <a href="/security">Security</a>.
-</ngmd-callout>
+Aborting and probing use the `currentNavigation` signal and `Navigation.abort()`, which older versions lack. On those versions the action returns an error.
 
-<ngmd-alert severity="helpful">
-  The page keeps the last 50 navigations and 50 preloads. The live config stops at 1000 routes.
-</ngmd-alert>
+### Navigations before the devtools connected
+
+The tab lists only the last one, marked **before DevTools connected**, without timing or guard details. It also lists a navigation still running at that moment.
+
+### Redaction
+
+The devtools replace query, matrix and fragment values with secret-looking keys with `[redacted]`. They also redact tokens, `Bearer` values, and route params with secret-looking names such as `:token`. You can't replay a navigation with a redacted URL. See [what the devtools redact](/security).
+
+### History and config caps
+
+The page keeps the last 50 navigations and 50 preloads. The live config stops at 1000 routes.
 
 ## FAQ
 
@@ -196,7 +196,7 @@ Without that recording, the guards listed for a navigation are candidates: the `
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Related pages
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="layers" title="Components" link="/inspectors/components" cta="Open">

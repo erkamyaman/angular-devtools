@@ -55,13 +55,13 @@ These seven tools take no arguments. They all read your source.
 | `get-providers`  | DI providers: `@Injectable` services, `inject()` calls and `providers` arrays, with token, file and where each one is provided.                                                           |
 | `get-ngrx-store` | NgRx declarations: `@ngrx/store` actions, reducers, effects, selectors, features and store setup, and `@ngrx/signals` `signalStore` (with its members), `signalState` and `signalMethod`. |
 | `get-pipes`      | Custom `@Pipe` classes, and built-in pipes from `@angular/common` in use in templates, with purity, standalone status, and where each is declared or used.                                |
-| `build-meta`     | The Angular and TypeScript versions and SSR status.                                                                                                                                       |
+| `build-meta`     | The project name, the Angular and TypeScript versions, SSR status, the Analog version in Analog apps, and a `builtAt` timestamp.                                                          |
 
 ## Components, signals and DI
 
-### highlight
+### highlight <ngmd-badge variant="alpha">Action</ngmd-badge>
 
-Highlights a component in the page and makes it the target of `inspect-signals`. Reads: page. <ngmd-badge variant="alpha">Action</ngmd-badge>
+Highlights a component in the page and makes it the target of `inspect-signals`. Reads: page.
 
 | Argument   | Required | Value                                                                                                         |
 | ---------- | -------- | ------------------------------------------------------------------------------------------------------------- |
@@ -115,13 +115,15 @@ Use `explain-navigation` for "why was I redirected". Pass `perf: true` for "why 
 
 `list-routes` takes three optional arguments:
 
-- `match`: a URL such as `/users/42`. The tool predicts which route it hits, or the nearest routes when it hits none.
-- `audit`: set to `true` to list the guards that protect each page.
-- `filter`: only routes whose path or component contains this text.
+| Argument | Value                                                                                                      |
+| -------- | ---------------------------------------------------------------------------------------------------------- |
+| `match`  | A URL such as `/users/42`. The tool predicts which route it hits, or the nearest routes when it hits none. |
+| `audit`  | Set to `true` to list the guards that protect each page.                                                   |
+| `filter` | Only routes whose path or component contains this text.                                                    |
 
-### Act on the router
+### Act on the router <ngmd-badge variant="alpha">Action</ngmd-badge>
 
-`navigate` acts on the running app's router, in development only. Reads: page. <ngmd-badge variant="alpha">Action</ngmd-badge>
+`navigate` acts on the running app's router, in development only. Reads: page.
 
 | Action         | What it does                                                                                     | Arguments                                                                                               |
 | -------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
@@ -140,8 +142,10 @@ All forms tools read the page. They cover Signal Forms, reactive forms and templ
 
 Two arguments come up in almost every tool:
 
-- `form`: a form id (like `Checkout.form@ab12`) or part of its label (`Component.property`).
-- `path`: a dotted field path, like `address.city` or `items.0.qty`. Empty for the form itself.
+| Argument | Value                                                                                 |
+| -------- | ------------------------------------------------------------------------------------- |
+| `form`   | A form id (like `Checkout.form@ab12`) or part of its label (`Component.property`).    |
+| `path`   | A dotted field path, like `address.city` or `items.0.qty`. Empty for the form itself. |
 
 ### Read form state
 
@@ -150,11 +154,11 @@ Two arguments come up in almost every tool:
 | `inspect-forms`          | Without arguments, each form with its status and error count. With `form`, its field tree: value, status, touched, dirty and errors.                                | `form`, `path`, `onlyInvalid`, `includeValues` |
 | `explain-form-invalid`   | Which fields make a form invalid, and why: the failing validator, its message, the value and whether it was touched. Without `form`, every invalid or pending form. | `form`                                         |
 | `explain-field`          | One field: where each error comes from, why validation is skipped, the binding and DOM facts like the label and visible error text.                                 | `form`, `path`, or `selector` (a CSS selector) |
-| `explain-submit`         | What submit will do, and why it might do nothing.                                                                                                                   | `form`                                         |
+| `explain-submit`         | What submit does, and why it might do nothing.                                                                                                                      | `form`                                         |
 | `form-payload`           | What the form sends: `value` against `getRawValue()`, fields that are sent without validation, and which fields the user changed.                                   | `form`                                         |
 | `explain-custom-control` | How a field is bound to its element, and what is wrong with the binding, such as value drift or a missing `setDisabledState`.                                       | `form`, `path`                                 |
 
-For "why is this form invalid", call `explain-form-invalid` first. Password and other secret-looking values are redacted.
+For "why is this form invalid", call `explain-form-invalid` first. The tools redact passwords and other secret-looking values.
 
 ### Track changes
 
@@ -170,7 +174,7 @@ Markers let an agent check its own work: read the marker, act, then call `form-d
 
 ### Act on a form
 
-Both tools are action tools and need a development build. Secret fields are not written unless you unmask them. See [Access and redaction](/security#opt-fields-in-or-out). For Signal Forms, hidden and readonly fields are not written either.
+Both tools are action tools and need a development build. They don't write secret fields unless you unmask them. See [Opt fields in or out](/security#opt-fields-in-or-out). For Signal Forms, they don't write hidden, readonly or disabled fields either.
 
 | Tool          | What it does                                                                                       | Arguments                                                                                                                       |
 | ------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -228,9 +232,9 @@ These tools cover *Analog apps. Most read your source. Two read what the Vite pl
 | `analog-render-modes`   | For each page: server rendered, prerendered, or client only, and what the last request actually did. | none      |
 | `analog-prerender-plan` | `prerender.routes` compared with the page files and the build output.                                | none      |
 
-### Call a server route
+### Call a server route <ngmd-badge variant="alpha">Action</ngmd-badge>
 
-`analog-call-api` sends a request to a route on the running dev server, like `GET /api/v1/hello`, and returns the status, time and body. Reads: Vite plugin. <ngmd-badge variant="alpha">Action</ngmd-badge>
+`analog-call-api` sends a request to a route on the running dev server, like `GET /api/v1/hello`, and returns the status, time and body. Reads: Vite plugin.
 
 | Argument  | Required | Value                                                         |
 | --------- | -------- | ------------------------------------------------------------- |

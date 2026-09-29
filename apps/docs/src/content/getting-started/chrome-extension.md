@@ -12,7 +12,7 @@ description: Open the devtools as a panel inside Chrome DevTools.
 The Chrome extension adds a panel named **Angular DevTools** to Chrome DevTools. The panel loads the devtools UI and connects it to the dev server of the page you are inspecting.
 
 <ngmd-callout type="info" title="An extra, not a setup">
-  The page still needs the devtools mounted on its server and the <a href="/getting-started/overlay">overlay</a> loaded. The extension replaces the floating button, not the setup. Start with <a href="/getting-started/express">Angular CLI and Express</a> or <a href="/getting-started/vite">Vite and Analog</a>.
+  The page still needs the devtools mounted on its server and the <a href="/getting-started/overlay">overlay</a> loaded. The extension is one more way to open the devtools. It does not replace the setup. Start with <a href="/getting-started/express">Angular CLI and Express</a> or <a href="/getting-started/vite">Vite and Analog</a>.
 </ngmd-callout>
 
 ## Before you start
@@ -66,7 +66,7 @@ pnpm extension:build
 
 ### Angular detection
 
-A content script checks each page for Angular: an `ng-version` attribute or a `window.ng` global. It checks once, then retries for a few seconds for apps that bootstrap late. The panel is created only on Angular pages.
+A content script checks each page for Angular: an `ng-version` attribute or a `window.ng` global. It checks once, then retries for a few seconds for apps that bootstrap late. The extension creates the panel only on Angular pages.
 
 ### Finding the server
 
@@ -113,7 +113,7 @@ The content scripts are wider. Two of them run on every page. They check for an 
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Next steps
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="wrench" title="Build the extension" link="/contributing/chrome-extension" cta="Build and package">

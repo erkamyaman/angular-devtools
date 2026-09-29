@@ -18,8 +18,8 @@ The Signals tab shows the reactive graph of one component at a time. Only signal
 The **Component** picker at the top selects whose graph you see. It appears when a live component tree exists.
 
 - **Follow the routed component** is the default. It shows the deepest component rendered by a primary `<router-outlet>`.
-- Pick any live component to pin the graph to it. Duplicates are numbered, for example `#2`.
-- Without a routed component, the tab shows the first component that has signals.
+- Pick any live component to pin the graph to it. The picker numbers duplicates, for example `#2`.
+- Without a routed component, the tab shows the first component that has signals, among the first 50 on the page.
 
 A line under the picker names the component, its host path, and why it was chosen: **picked**, **rendered by the router** or **first component with signals**.
 
@@ -27,7 +27,7 @@ A line under the picker names the component, its host path, and why it was chose
 
 Filter by name, or by kind with the chips. Each card shows:
 
-- Its kind (`signal`, `computed`, `linkedSignal` or `effect`) and label. Nodes without a name show **(unnamed)**.
+- Its kind and label. Kinds come from Angular, such as `signal`, `computed`, `linkedSignal`, `effect` and `template`. Nodes without a name show **(unnamed)**.
 - The current value.
 - The epoch, and the number of dependencies and consumers.
 - A **N changes** badge once the value has changed.
@@ -42,17 +42,17 @@ Expand a card to see:
 
 ### Value history
 
-| Tag     | Meaning                                     |
-| ------- | ------------------------------------------- |
-| set     | The value was written. This entry is exact. |
-| sampled | The overlay saw a new value while polling.  |
-| initial | The first value the overlay saw.            |
+| Tag         | Meaning                                        |
+| ----------- | ---------------------------------------------- |
+| **set**     | A write set the value. This entry is exact.    |
+| **sampled** | The overlay saw a changed value while polling. |
+| **initial** | The first value the overlay saw.               |
 
-When values change faster than the overlay polls, an entry says how many earlier values were not captured. Effects have no history.
+When values change faster than the overlay polls, an entry says how many earlier values were not captured. Only `signal`, `computed` and `linkedSignal` nodes have a history.
 
 ### Source mode
 
-Without a live graph, the tab lists `signal()`, `computed()`, `linkedSignal()`, `effect()`, `toSignal()` and resource declarations found in your files. It also lists signal inputs, models and queries. Each card shows the file, line and component.
+Without a live graph, the tab lists `signal()`, `computed()`, `linkedSignal()`, `effect()`, `toSignal()` and resource declarations found in your files. It also lists signal inputs, models and queries. Each card shows the file and line, and the component when the scan finds one.
 
 ## Where the data comes from
 
@@ -71,7 +71,7 @@ The live graph reads `ng.ɵgetSignalGraph` with the component's injector, from `
 
 ### Exact and sampled values
 
-Exact **set** entries come from a hook on signal writes. A write is matched to a node by its label, so only signals with a `debugName` get exact entries. Everything else is **sampled** on each poll.
+Exact **set** entries come from a hook on signal writes. The overlay matches a write to a node by its label, so only signals with a `debugName` get exact entries. It samples everything else on each poll, as **sampled** entries.
 
 <ngmd-callout type="tip" title="Name your signals">
   Pass a <code>debugName</code> to <code>signal()</code> to get exact history entries and a readable label on the card.
@@ -124,23 +124,23 @@ The `ng-devtools:highlight` tool also switches the graph to the component it hig
 
 ## Limits and gotchas
 
-<ngmd-callout type="warning" title="Unread signals are missing">
-  Signals join the graph when a template or an effect reads them. If a signal is missing, check that something reads it.
-</ngmd-callout>
+### Unread signals are missing
 
-<ngmd-callout type="info" title="Caps">
-  The graph shows up to 400 nodes. Extra nodes are dropped without a notice. The history keeps 50 changes per signal.
-</ngmd-callout>
+Signals join the graph when a template or an effect reads them. If a signal is missing, check that something reads it.
 
-<ngmd-alert severity="helpful">
-  A notice appears when the picked component is gone or has no graph. The tab then shows another one.
-</ngmd-alert>
+### Graph and history caps
+
+The graph shows up to 400 nodes, and drops extra nodes without a notice. The history keeps 50 changes per signal.
+
+### Picked component is gone
+
+When the picked component is gone or has no graph, a notice appears and the tab shows another one.
 
 ## FAQ
 
 <ngmd-accordion>
   <ngmd-accordion-item title="Why does the graph show a different component than I expected?">
-    The default follows the deepest component in the primary router outlet. Named outlets are skipped. Pick the component yourself to pin it.
+    The default follows the deepest component in the primary router outlet. It skips named outlets. Pick the component yourself to pin it.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Why are all my history entries sampled?">
     Exact entries need a <code>debugName</code> on the signal. Without one, the overlay samples values on each poll.
@@ -150,7 +150,7 @@ The `ng-devtools:highlight` tool also switches the graph to the component it hig
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Related pages
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="layers" title="Components" link="/inspectors/components" cta="Open">

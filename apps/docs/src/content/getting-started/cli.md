@@ -61,7 +61,7 @@ npx @santoshyadavdev/ng-devtools dev --port 9999 --open
 
 | Flag                  | What it does                                                                        |
 | --------------------- | ----------------------------------------------------------------------------------- |
-| `--port <port>`       | Port to listen on. The default is 9999. If it is taken, the next free port is used. |
+| `--port <port>`       | Port to listen on. The default is 9999. If it is taken, a random free port is used. |
 | `--host <host>`       | Host to bind to. The default is `localhost`.                                        |
 | `--open`, `--no-open` | Open the browser on start, or not.                                                  |
 | `--no-auth`           | Turn off the one-time code the server asks for.                                     |
@@ -75,14 +75,12 @@ npx @santoshyadavdev/ng-devtools dev --port 9999 --open
 
 No page is connected to the CLI server. The tabs show what your source declares:
 
-<ngmd-pill-row>
-  <ngmd-pill href="/inspectors/components" title="Components"></ngmd-pill>
-  <ngmd-pill href="/inspectors/router" title="Routes"></ngmd-pill>
-  <ngmd-pill href="/inspectors/signals" title="Signals"></ngmd-pill>
-  <ngmd-pill href="/inspectors/injectors" title="Providers"></ngmd-pill>
-  <ngmd-pill href="/inspectors/ngrx-store" title="NgRx declarations"></ngmd-pill>
-  <ngmd-pill href="/inspectors/pipes" title="Pipes"></ngmd-pill>
-</ngmd-pill-row>
+- [Components](/inspectors/components)
+- [Routes](/inspectors/router)
+- [Signals](/inspectors/signals)
+- [Providers](/inspectors/injectors)
+- [NgRx declarations](/inspectors/ngrx-store)
+- [Pipes](/inspectors/pipes)
 
 <ngmd-alert severity="helpful">
   For live data, mount the devtools in your app's own server. See <a href="/getting-started/express">Angular CLI and Express</a> or <a href="/getting-started/vite">Vite and Analog</a>.
@@ -135,11 +133,11 @@ The stdio server has no page connected, so only the source scan tools return dat
     The root of your Angular workspace. The scan starts from the current directory.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Port 9999 is taken">
-    The server moves to the next free port. Pass <code>--port</code> to choose one yourself.
+    Without <code>--port</code>, the server picks a random free port. Pass <code>--port</code> to choose one yourself.
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Next steps
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="sparkles" title="MCP server" link="/agents/mcp-server" cta="Connect an agent">

@@ -52,8 +52,10 @@ These tabs read the running page through Angular's debug API. They need a develo
 
 ### Project overview
 
-- **Dashboard**: the Angular and TypeScript versions, SSR status and a count for each inspector. See [Dashboard](/inspectors/dashboard).
-- **Analog**: file routes, server calls, render modes, content and lint for *Analog apps. See [Analog](/inspectors/analog).
+| Tab                                | What it shows                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------- |
+| [Dashboard](/inspectors/dashboard) | The Angular and TypeScript versions, SSR status and a count for each inspector. |
+| [Analog](/inspectors/analog)       | File routes, server calls, render modes, content and lint for *Analog apps.     |
 
 ### Source scan
 
@@ -101,7 +103,7 @@ The devtools are a <a href="https://devfra.me" target="_blank" rel="noopener nor
   <ngmd-card icon="zap" title="RPC and shared state">
     The UI talks to the server over Devframe RPC, and live data sits in shared state that the UI and agents both read.
   </ngmd-card>
-  <ngmd-card icon="sparkles" title="Agent tools for free">
+  <ngmd-card icon="sparkles" title="Agent tools from RPC functions">
     An RPC function marked for agents becomes an MCP tool, and shared state is exposed as MCP resources.
   </ngmd-card>
 </ngmd-card-grid>
@@ -141,7 +143,7 @@ The devtools are a <a href="https://devfra.me" target="_blank" rel="noopener nor
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Next steps
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="box" title="Install" link="/getting-started/installation" cta="Install the package">

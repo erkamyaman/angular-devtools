@@ -2,58 +2,28 @@
 
 Inspect Angular component trees, signals, dependency injection, routes, forms, pipes and NgRx stores at dev time, build time, or through a coding agent. Built with [Devframe](https://devfra.me) so the same tool runs as an embedded panel, standalone CLI, static report, MCP server, or Chrome DevTools extension.
 
-## Documentation
-
-The full documentation lives in [`apps/docs`](./apps/docs/src/content/getting-started/introduction.md):
-
-- [Getting started](./apps/docs/src/content/getting-started/introduction.md): install, Express SSR, Vite and Analog, the CLI, the popup and hub, the overlay, and the Chrome extension
-- [Inspectors](./apps/docs/src/content/inspectors/dashboard.md): Dashboard, Components, Injectors, Signals, NgRx Store, Forms, Router, Pipes, SSR & HTTP, and Analog
-- [Agent tools](./apps/docs/src/content/agents/mcp-server.md): the MCP server, every tool and resource
-- [Security](./apps/docs/src/content/security.md): local-only access and what is redacted
-- [Contributing](./apps/docs/src/content/contributing/development.md): development setup, demo apps, the extension and publishing
-
-Links inside these pages point to docs site routes, so they don't work when you read the files on GitHub. To follow them, run the docs site locally with `pnpm docs:dev`.
-
-## Quick start
+## Get started
 
 ```sh
 npm install @santoshyadavdev/ng-devtools devframe
 ```
 
-**Angular app with SSR (Express)**: mount the devtools hub in your server.
+Then follow the [installation guide](./apps/docs/src/content/getting-started/installation.md) for your setup: Angular CLI with Express, Vite and Analog, or the standalone CLI. For a coding agent, run `npx @santoshyadavdev/ng-devtools mcp`.
 
-```ts
-// server.ts
-import { initNgDevtoolsHub } from '@santoshyadavdev/ng-devtools/hub';
+## Documentation
 
-const devtools = initNgDevtoolsHub({ ws: false });
-app.use(devtools.nodeMiddleware);
-```
+The docs live in [`apps/docs`](./apps/docs). Run them locally with `pnpm docs:dev`.
 
-**Analog (Vite)**: add the plugin next to `analog()`.
+- [Getting started](./apps/docs/src/content/getting-started/introduction.md)
+- [Inspectors](./apps/docs/src/content/inspectors/dashboard.md)
+- [Agent tools](./apps/docs/src/content/agents/mcp-server.md)
+- [Security](./apps/docs/src/content/security.md)
+- [Contributing](./CONTRIBUTING.md)
 
-```ts
-// vite.config.ts
-import analog from '@analogjs/platform';
-import ngDevtools from '@santoshyadavdev/ng-devtools/vite';
-import { defineConfig } from 'vite';
+## Maintainers
 
-export default defineConfig({
-  plugins: [analog(), ngDevtools()],
-});
-```
-
-Then load the overlay in development, and a floating button appears on your page:
-
-```ts
-import '@santoshyadavdev/ng-devtools/overlay';
-```
-
-**Coding agents**: run the MCP server.
-
-```sh
-npx @santoshyadavdev/ng-devtools mcp
-```
+- [Santosh Yadav](https://github.com/santoshyadavdev)
+- [Erkam Yaman](https://github.com/erkamyaman)
 
 ## Community
 
@@ -63,7 +33,7 @@ Join the conversation, ask questions, and share feedback on [Discord](https://di
 
 If Angular DevTools helps your work, please consider [sponsoring the project on GitHub](https://github.com/sponsors/santoshyadavdev). Your support keeps development going.
 
-Thanks to our current sponsors:
+Thanks to the current sponsors:
 
 <!-- sponsors -->
 

@@ -60,13 +60,13 @@ This builds the devtools UI (`pnpm devtools:build`), then replaces `extension/ui
     Go to <code>chrome://extensions</code>.
   </ngmd-step>
   <ngmd-step title="Turn on Developer mode">
-    Use the toggle in the top right corner.
+    Turn on the <strong>Developer mode</strong> toggle in the top right corner.
   </ngmd-step>
   <ngmd-step title="Load it unpacked">
     Click <strong>Load unpacked</strong> and select the <code>extension/</code> directory.
   </ngmd-step>
   <ngmd-step title="Open DevTools on an Angular app">
-    Start a demo app and open DevTools. The <strong>Angular DevTools</strong> panel appears once the page is detected as Angular.
+    Start a demo app and open DevTools. The <strong>Angular DevTools</strong> panel appears once the extension detects Angular on the page.
   </ngmd-step>
 </ngmd-workflow>
 
@@ -78,7 +78,7 @@ After a rebuild, click the reload icon on the extension card, then reopen DevToo
 pnpm extension:zip
 ```
 
-This runs `extension:build`, then writes `dist/ng-devtools-extension.zip`. `.DS_Store` files are left out.
+This runs `extension:build`, then writes `dist/ng-devtools-extension.zip`. The zip leaves out `.DS_Store` files.
 
 ### Upload
 

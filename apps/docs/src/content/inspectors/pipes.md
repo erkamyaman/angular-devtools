@@ -40,7 +40,7 @@ The number of instances and the components that use them. Click, hover or focus 
 
 ### Async subscriptions
 
-When templates use `| async`, the tab lists each subscription with its component and latest value. This needs no recording. Each `| async` subscribes on its own. Two on the same source run the work twice, so those rows are marked **duplicate subscription**.
+When templates use `| async`, the tab lists each subscription with its component and latest value. This needs no recording. Each `| async` subscribes on its own. Two on the same source run the work twice, so the tab marks those rows **duplicate subscription**.
 
 ### Lint
 
@@ -104,7 +104,7 @@ Click **Record calls** to count calls and keep the last input and output of each
   <ngmd-step title="Look for the stale? chip">
     It marks a pure pipe that got an argument whose contents changed while its reference stayed the same.
   </ngmd-step>
-  <ngmd-step title="Pass a new reference">
+  <ngmd-step title="Replace the reference">
     Replace the object or array instead of mutating it, so the pipe reruns.
   </ngmd-step>
 </ngmd-workflow>
@@ -121,23 +121,34 @@ Open **Async subscriptions** and look for **duplicate subscription** rows. Subsc
 | `ng-devtools:lint-pipes`   | no     | Runs the lint rules above.                                                                                                             |
 | `ng-devtools:explain-pipe` | partly | One pipe by `name`: where it is declared or used, purity, live counts, last input and output, the stale warning and the lint findings. |
 
-Agents cannot turn recording on. Click **Record calls** in the panel first to give `explain-pipe` call data. See [Tools](/agents/tools).
+Agents can't turn recording on. To give `explain-pipe` call data, click **Record calls** in the panel first. See [Tools](/agents/tools).
 
 ## Limits and gotchas
 
-<ngmd-callout type="warning" title="The stale warning is experimental">
-  It runs only while recording. It reads the template source, so it needs an unminified development build. When it cannot read the template, it stays quiet.
-</ngmd-callout>
-
-<ngmd-callout type="info" title="Recording ends on reload">
-  Recording is off by default and is not remembered. Reload the page and it is off again.
-</ngmd-callout>
-
 <ngmd-callout type="danger" title="Values are not redacted">
-  Pipe inputs, outputs and async values are sent as they are, cut to 200 characters. Keep the dev server on localhost. See <a href="/security">Security</a>.
+  The devtools send pipe inputs, outputs and async values as they are, cut to 200 characters. Keep the dev server on localhost. See <a href="/security">Security</a>.
 </ngmd-callout>
 
-## Related pages
+### The stale warning is experimental
+
+It runs only while recording. It reads the template source, so it needs an unminified development build. When it can't read the template, it stays quiet.
+
+### Recording ends on reload
+
+Recording is off by default. Reload the page and it is off again.
+
+## FAQ
+
+<ngmd-accordion>
+  <ngmd-accordion-item title="Why does explain-pipe return no call data?">
+    Recording is off. Agents can't turn it on. Click <strong>Record calls</strong> in the panel first.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Why isn't a pipe from another package listed as built-in?">
+    The built-in list covers the <code>&#64;angular/common</code> pipes only.
+  </ngmd-accordion-item>
+</ngmd-accordion>
+
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="layers" title="Components" link="/inspectors/components" cta="Open">

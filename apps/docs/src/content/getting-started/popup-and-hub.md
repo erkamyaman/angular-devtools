@@ -9,7 +9,7 @@ description: The floating button, the panel and its dock modes, the hub rail and
 
 # Popup and hub
 
-When the overlay loads, a floating button appears in the bottom-right corner of your page. Click it to open the devtools in a panel on top of your app. No browser extension is needed.
+When the overlay loads, a floating button appears in the bottom-right corner of your page. Click it to open the devtools in a panel on top of your app. You don't need a browser extension.
 
 ## The floating button
 
@@ -22,12 +22,13 @@ Importing the [overlay](/getting-started/overlay) adds the button. The overlay f
 Most apps never call the popup API. To add the button without the overlay, call `createDevtoolsPopup()`:
 
 ```ts
+// src/main.ts
 import {createDevtoolsPopup} from '@santoshyadavdev/ng-devtools/popup';
 
 createDevtoolsPopup();
 ```
 
-It adds the button and opens the full devtools UI in an iframe. Calling it again returns the same popup.
+It adds the button and opens the full devtools UI in an iframe. Calling it again returns the same popup. Importing the popup module in the browser also adds the button on its own.
 
 <ngmd-alert severity="helpful">
   The popup alone sends no live data. Load the overlay for that.
@@ -38,6 +39,7 @@ It adds the button and opens the full devtools UI in an iframe. Calling it again
 The button reads CSS variables from your page. Set them on `:root` to match your app:
 
 ```css
+/* src/styles.css */
 :root {
   --ng-devtools-accent: #f5a524; /* button background */
   --ng-devtools-accent-ink: #1c1300; /* button icon */
@@ -63,7 +65,7 @@ The values above are the defaults.
   </ngmd-card>
 </ngmd-card-grid>
 
-Only the floating panel can be dragged. Switch modes from the buttons in the panel toolbar.
+You can drag only the floating panel. Switch modes from the buttons in the panel toolbar.
 
 ### Keyboard and mouse
 
@@ -76,7 +78,7 @@ Only the floating panel can be dragged. Switch modes from the buttons in the pan
 
 ### Saved layout
 
-Position, size and dock mode are saved in `localStorage` under `ng-devtools-popup`. The panel keeps its layout across reloads. Clear that key to reset it.
+The panel saves its position, size and dock mode in `localStorage` under `ng-devtools-popup`, so it keeps its layout across reloads. Clear that key to reset it.
 
 ## The hub
 
@@ -89,8 +91,8 @@ When the page's server mounts the hub (`/__devframes/`), the button opens the wh
 | Angular      | Dashboard, Components, Routes, Signals, Injectors, Forms, Pipes, and SSR & HTTP |
 | NgRx         | The Store tab                                                                   |
 | Analog       | The Analog tab, or a notice in apps that do not use Analog                      |
-| NativeScript | Coming soon                                                                     |
-| Capacitor    | Coming soon                                                                     |
+| NativeScript | A **Coming Soon** placeholder                                                   |
+| Capacitor    | A **Coming Soon** placeholder                                                   |
 
 ### Full-page viewer
 
@@ -121,9 +123,7 @@ The URL hash selects a tab. Open `/__devframes/ng-devtools/#tab=signals` to land
 
 ### Limits
 
-<ngmd-callout type="info" title="The tab must exist on load">
-  A hash only works for a tab that exists when the panel opens. The Analog tab appears after the server confirms the app is an Analog app, so <code>#tab=analog</code> does not select it on load. Inside the Angular dock, the Store and Analog tabs live in their own docks.
-</ngmd-callout>
+A hash only works for a tab that exists when the panel opens. The Analog tab appears after the server confirms the app is an Analog app, so `#tab=analog` does not select it on load. Inside the Angular dock, the Store and Analog tabs live in their own docks.
 
 ## Connection status
 
@@ -151,7 +151,7 @@ If the panel cannot reach the server, check that the dev server is running, then
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Next steps
+## Where to next
 
 <ngmd-pill-row>
   <ngmd-pill href="/getting-started/overlay" title="Browser overlay"></ngmd-pill>

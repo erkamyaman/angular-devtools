@@ -92,6 +92,8 @@ The path depends on how you mount the devtools. Use the port your server actuall
 | [Vite plugin](/getting-started/vite)    | `http://localhost:5173/__devframes/__mcp` |
 | [Standalone CLI](/getting-started/cli)  | `http://localhost:9999/__mcp`             |
 
+The standalone CLI uses port 9999 by default. If that port is taken and you did not pass `--port`, it picks a free port. Use the URL it prints.
+
 If you mount the devtools panel without the hub, at `/__ng-devtools/`, the endpoint is `/__ng-devtools/__mcp`.
 
 ### Send an Origin header
@@ -154,25 +156,25 @@ The live tools read what the page reports. Without an open page, they have nothi
 
 ### Tool names
 
-Tools are registered with a colon, as `ng-devtools:get-routes`. MCP clients see them with an underscore, as `ng-devtools_get-routes`. Calls with either form work.
+The server registers tools with a colon, as `ng-devtools:get-routes`. MCP clients see them with an underscore, as `ng-devtools_get-routes`. Calls with either form work.
 
 ### Read and action tools
 
-Read-only tools are marked read-only for your client. Five tools act on the app, so they are not:
+The server marks read-only tools as read-only for your client. Five tools act on the app, so the server does not mark them:
 
-<ngmd-pill-row>
-  <ngmd-pill href="/agents/tools#components-signals-and-di" title="highlight"></ngmd-pill>
-  <ngmd-pill href="/agents/tools#act-on-the-router" title="navigate"></ngmd-pill>
-  <ngmd-pill href="/agents/tools#act-on-a-form" title="form-action"></ngmd-pill>
-  <ngmd-pill href="/agents/tools#act-on-a-form" title="fill-form"></ngmd-pill>
-  <ngmd-pill href="/agents/tools#call-a-server-route" title="analog-call-api"></ngmd-pill>
-</ngmd-pill-row>
+| Tool              | Reference                                                             |
+| ----------------- | --------------------------------------------------------------------- |
+| `highlight`       | [Components, signals and DI](/agents/tools#components-signals-and-di) |
+| `navigate`        | [Act on the router](/agents/tools#act-on-the-router)                  |
+| `form-action`     | [Act on a form](/agents/tools#act-on-a-form)                          |
+| `fill-form`       | [Act on a form](/agents/tools#act-on-a-form)                          |
+| `analog-call-api` | [Call a server route](/agents/tools#call-a-server-route)              |
 
 Your client can ask you before it runs them.
 
 ### Pages and tabs
 
-Each browser tab reports on its own and gets a page id. Tools that read live data use the most recent page by default. Pass `page` (or `pageId` for `inspect-providers`) to pick another tab. Pages that stop reporting are dropped after a short time.
+Each browser tab reports on its own and gets a page id. Tools that read live data use the most recent page by default. Pass `page` (or `pageId` for `inspect-providers`) to pick another tab. The server drops pages that stop reporting after a short time.
 
 ## Where to next
 

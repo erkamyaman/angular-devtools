@@ -26,12 +26,14 @@ The repository has two demo apps. Use them to try a change against a real app be
 
 ### What's inside
 
-- **Destinations**: search, region filter and sort kept in the URL, backed by an `@ngrx/signals` store (`withState`, `withComputed`, `withMethods`).
-- **Trip pages**: loaded by a resolver that redirects unknown trips, with a route title resolver.
-- **Booking**: a Signal Forms checkout with a departure date rule, a seat limit and an unsaved-changes guard.
-- **My Trips**: behind a sign-in guard that redirects to a reactive form and back.
-- **DevTools Lab** (`/examples`): small, focused pages for signals, components, DI, routes, forms, pipes and HTTP.
-- **SSR & HTTP** (`/examples/http`): a product list fetched from `/api/products` during SSR and replayed from the transfer cache. The endpoint accepts `?delay=` and `?fail=` for backend errors.
+| Area                              | What it covers                                                                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Destinations**                  | Search, region filter and sort kept in the URL, backed by an `@ngrx/signals` store (`withState`, `withComputed`, `withMethods`).                             |
+| **Trip pages**                    | Loaded by a resolver that redirects unknown trips, with a route title resolver.                                                                              |
+| **Booking**                       | A Signal Forms checkout with a departure date rule, a seat limit and an unsaved-changes guard.                                                               |
+| **My Trips**                      | Behind a sign-in guard that redirects to a reactive form and back.                                                                                           |
+| **DevTools Lab** (`/examples`)    | Small, focused pages for signals, components, DI, routes, forms, pipes and HTTP.                                                                             |
+| **SSR & HTTP** (`/examples/http`) | A product list fetched from `/api/products` during SSR and replayed from the transfer cache. The endpoint accepts `?delay=` and `?fail=` for backend errors. |
 
 Destination photos are from Unsplash, credited in `public/destinations/CREDITS.md`.
 
@@ -72,9 +74,11 @@ It listens on port 4000, or on `PORT` when set.
 
 `src/app/app.routes.server.ts` sets a render mode per route, so the SSR tools have something to compare:
 
-- `destinations`, `destinations/:id` and `examples/http` render on the server per request.
-- `book/:id`, `trips`, `sign-in` and some `examples/routes` pages render on the client only.
-- Everything else is prerendered.
+| Routes                                                       | Render mode                |
+| ------------------------------------------------------------ | -------------------------- |
+| `destinations`, `destinations/:id`, `examples/http`          | On the server, per request |
+| `book/:id`, `trips`, `sign-in`, some `examples/routes` pages | Client only                |
+| Everything else                                              | Prerendered                |
 
 ## Analog demo
 
@@ -94,7 +98,7 @@ It listens on port 4000, or on `PORT` when set.
 pnpm analog:dev
 ```
 
-The script builds the devtools package, then starts the Vite dev server. The devtools and the MCP endpoint are served by that dev server.
+The script builds the devtools package, then starts the Vite dev server. That dev server also serves the devtools and the MCP endpoint.
 
 ### Build and preview
 

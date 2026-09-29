@@ -9,7 +9,7 @@ description: Every form on the page with each field's state and errors, a change
 
 # Forms
 
-The Forms tab reads the forms of the running page, in development builds only. It covers Signal Forms, reactive forms and template-driven forms. Actions you run from the tab are sent back to the page and run there.
+The Forms tab reads the forms of the running page, in development builds only. It covers Signal Forms, reactive forms and template-driven forms. Actions you run from the tab go back to the page and run there.
 
 ## What it shows
 
@@ -23,7 +23,7 @@ Select a form to see its status, whether it is dirty or touched, whether it was 
 
 Each field shows its value, status, touched and dirty state, and errors. Extra facts depend on the kind:
 
-- **Signal Forms**: constraints (`min`, `max`, `minLength`, `maxLength`, `pattern`), a pending `debounce`, `submitting`, and disabled reasons.
+- **Signal Forms**: constraints (`min`, `max`, `minLength`, `maxLength`, `pattern`), `required`, `readonly` and `hidden`, a pending `debounce`, and disabled reasons.
 - **Reactive and template-driven**: whether validators and async validators are attached, the value `reset()` goes back to, `updateOn`, and the bound `ControlValueAccessor`.
 
 Filter by path, or with the **Invalid**, **Dirty**, **Touched**, **Disabled** and **Error not shown** chips. Hover a field to highlight its input in the page.
@@ -45,17 +45,17 @@ Each error says where it comes from:
 
 ### Field details
 
-Click a field to open its details. There you can set a value, **Focus**, **Touch** or **Revalidate** the field, or **Store as global**. That stores the form as `$form`, and the field as `$control`, in the page console.
+Click a field to open its details. From there, set a value, or click **Focus**, **Touch**, **Revalidate** or **Store as global**. **Store as global** stores the form as `$form`, and the field as `$control`, in the page console.
 
 ### Timeline view
 
-Recent changes, newest first, each tagged with its origin: user, code or devtools. Array items are tracked by identity, so moves show as moves. Async validation times show as **pending** tags.
+Recent changes, newest first, each tagged with its origin: user, code or devtools. Filter the list by origin. The timeline tracks array items by identity, so moves show as moves. Async validation times show as **pending** tags.
 
 Check **Record details** to add the calling code of each change, validator changes, and component renders per keystroke. It is off by default and applies to the whole page.
 
 ### Submit view
 
-What submit will do, and why it might do nothing. It also shows what the form sends. **Copy test fixture** copies a fixture for your tests.
+What submit does, and why it might do nothing. It also shows what the form sends. **Copy test fixture** copies a fixture for your tests.
 
 ### Lint view
 
@@ -67,7 +67,7 @@ The actions bar works on the selected form:
 
 - **Touch all**, **Revalidate** and **Focus first invalid**.
 - **Pick field on page**: click a field in the app to select it. Esc cancels.
-- **Snapshot** saves the form's values. **Restore s1**, **Restore s2** and so on put them back.
+- **Snapshot** saves the form's values as `s1`, `s2` and so on. **Restore** puts back the latest one. The button shows its name, like **Restore s2**.
 - **Reset** and **Submit**.
 
 ## Where the data comes from
@@ -83,16 +83,16 @@ The actions bar works on the selected form:
 
 ### When the page reports
 
-The overlay pushes the forms every 3 seconds, and shortly after each `input`, `change`, `focusout`, `submit` or `reset` event. Reactive and template-driven forms also report each change through `control.events`.
+The overlay reads the forms every 3 seconds and pushes them when they change. It also pushes shortly after each `input`, `change`, `focusout`, `submit` or `reset` event. Reactive and template-driven forms also report each change through `control.events`.
 
 ### Validators run only when needed
 
-To tell where each error comes from, the devtools run the sync validators of reactive and template-driven fields themselves. They do this only for enabled leaf fields. The result is reused for up to 5 seconds while the value and the validators stay the same. With **Record details** on, they run on every report.
+To tell where each error comes from, the devtools run the sync validators of reactive and template-driven fields themselves. They do this only for enabled leaf fields. They reuse the result for up to 5 seconds while the value and the validators stay the same. With **Record details** on, they run on every report.
 
-Async validators are never run by the devtools. The probe emits no form events, so it does not show up in the timeline.
+The devtools never run async validators. The probe emits no form events, so it does not show up in the timeline.
 
 <ngmd-callout type="warning" title="Validators with side effects">
-  The devtools call your sync validators. A validator that logs, counts or changes state will see extra calls while the Forms tab is open.
+  The devtools call your sync validators. A validator that logs, counts or changes state sees extra calls while the Forms tab is open.
 </ngmd-callout>
 
 ## How to use it
@@ -118,7 +118,7 @@ Async validators are never run by the devtools. The probe emits no form events, 
 
 <ngmd-workflow>
   <ngmd-step title="Open Submit">
-    It explains what submit will do.
+    It explains what submit does.
   </ngmd-step>
   <ngmd-step title="Read the payload">
     Compare the value with what your API expects.
@@ -155,7 +155,7 @@ You can also open a form from its component in the [Components tab](/inspectors/
 | `ng-devtools:explain-form-invalid`   | Start here. Every invalid or pending form, with each failing field's value, validator, message and touched state. |
 | `ng-devtools:inspect-forms`          | The forms with status and error counts. With `form`, the field tree. Narrow with `path` or `onlyInvalid`.         |
 | `ng-devtools:explain-field`          | One field: error sources, skip reasons, pending values, binding, visible errors, and source lines.                |
-| `ng-devtools:explain-submit`         | What submit will do, and why it might do nothing.                                                                 |
+| `ng-devtools:explain-submit`         | What submit does, and why it might do nothing.                                                                    |
 | `ng-devtools:form-payload`           | What the form sends: value against raw value, and unvalidated fields.                                             |
 | `ng-devtools:form-history`           | The change timeline with origins. Returns a marker.                                                               |
 | `ng-devtools:form-diff`              | The net change since a marker.                                                                                    |
@@ -175,21 +175,21 @@ Agents can loop: inspect, act, `wait-for-form`, then `form-diff` from the marker
 
 ## Limits and gotchas
 
-<ngmd-callout type="warning" title="Reset, submit and restore ask first">
-  In the tab, the button turns into <strong>Confirm reset</strong>, <strong>Confirm submit</strong> or <strong>Confirm restore</strong>. Click again to run it. Agents pass <code>confirm: true</code> for the same actions, and for <code>fill-form</code> with <code>submit</code>.
-</ngmd-callout>
-
-<ngmd-callout type="info" title="Fields that are not written">
-  Secret fields are not written unless you unmask them. See <a href="/security#opt-fields-in-or-out">Access and redaction</a>. For Signal Forms, hidden, readonly and rule-disabled fields are skipped too. Disabled reactive fields are written only with <code>force</code>.
-</ngmd-callout>
-
-<ngmd-callout type="info" title="Snapshots">
-  Up to 20 snapshots are kept. They are lost on reload. Restore fails when the form's shape has changed, and it keeps the current value of secret fields.
-</ngmd-callout>
-
 <ngmd-callout type="danger" title="Form values leave the page">
-  Values are sent to the devtools server, shown in the tab and returned to agents. Password fields and fields with secret-looking names are replaced with <code>[redacted]</code>. See <a href="/security">Security</a> to mask or unmask a field.
+  The devtools send values to the devtools server, show them in the tab and return them to agents. They replace password fields and fields with secret-looking names with <code>[redacted]</code>. To mask or unmask a field, see <a href="/security">Security</a>.
 </ngmd-callout>
+
+### Reset, submit and restore ask first
+
+In the tab, the button turns into **Confirm reset**, **Confirm submit** or **Confirm restore**. Click again to run it. Agents pass `confirm: true` for the same actions, and for `fill-form` with `submit`.
+
+### Fields that are not written
+
+The actions don't write secret fields unless you unmask them. See [Access and redaction](/security#opt-fields-in-or-out). For Signal Forms, they skip hidden, readonly and rule-disabled fields too. They write disabled reactive fields only with `force`.
+
+### Snapshot limits
+
+The page keeps up to 20 snapshots, and a reload clears them. Restore fails when the form's shape has changed, and it keeps the current value of secret fields.
 
 ## FAQ
 
@@ -198,14 +198,14 @@ Agents can loop: inspect, act, `wait-for-form`, then `form-diff` from the marker
     The current tab has no form yet. Click <strong>Show forms from all pages</strong> to see forms from other tabs.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Why are there no callers in the timeline?">
-    Callers are recorded only with <strong>Record details</strong> checked.
+    The timeline records callers only with <strong>Record details</strong> checked.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Does the tab change my form when I only look at it?">
     No. It reads state and runs sync validators without emitting events. Only the actions write.
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Related pages
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="layers" title="Components" link="/inspectors/components" cta="Open">

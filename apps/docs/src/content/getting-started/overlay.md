@@ -9,11 +9,7 @@ description: The script that runs in your page and sends live data to the devtoo
 
 # Browser overlay
 
-The overlay runs inside your *Angular page. It reads Angular's debug API and sends live data to the devtools server. Importing the module starts it, so in most apps that import is all that is needed:
-
-```ts
-import '@santoshyadavdev/ng-devtools/overlay';
-```
+The overlay runs inside your *Angular page. It reads Angular's debug API and sends live data to the devtools server. Importing the module starts it, so in most apps one dynamic import in `main.ts` is all you need.
 
 ## Load it in development
 
@@ -22,7 +18,11 @@ import '@santoshyadavdev/ng-devtools/overlay';
 Load the overlay after bootstrap, with a dynamic import that only runs in development:
 
 ```ts group="overlay" name="Angular CLI" image="https://cdn.simpleicons.org/angular/DD0031" active
-// main.ts
+// src/main.ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {App} from './app/app';
+import {appConfig} from './app/app.config';
+
 bootstrapApplication(App, appConfig)
   .then(() => {
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
@@ -35,6 +35,10 @@ bootstrapApplication(App, appConfig)
 
 ```ts group="overlay" name="Analog (Vite)" image="https://cdn.simpleicons.org/vite/646CFF"
 // src/main.ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {App} from './app/app';
+import {appConfig} from './app/app.config';
+
 bootstrapApplication(App, appConfig).then(() => {
   if (import.meta.env.DEV) void import('@santoshyadavdev/ng-devtools/overlay');
 });
@@ -42,9 +46,7 @@ bootstrapApplication(App, appConfig).then(() => {
 
 ### Why development only
 
-<ngmd-callout type="warning" title="Production builds have nothing to read">
-  The overlay reads <code>window.ng</code>, Angular's debug API. Production builds remove it, so the overlay has nothing to read there. The dynamic import keeps it out of your production bundle.
-</ngmd-callout>
+The overlay reads `window.ng`, Angular's debug API. Production builds remove it, so the overlay has nothing to read there. The dynamic import keeps the overlay out of your production bundle.
 
 ## What it sends
 
@@ -90,30 +92,42 @@ Each browser tab gets its own page id, kept in `sessionStorage`. The devtools us
 
 ## A custom mount path
 
-### Call initOverlay
+### Call `initOverlay`
 
-`initOverlay` is exported for a devtools mounted somewhere else:
+If you mount the devtools somewhere else, call `initOverlay` with that path:
 
 ```ts
-import {initOverlay} from '@santoshyadavdev/ng-devtools/overlay';
+// src/main.ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {App} from './app/app';
+import {appConfig} from './app/app.config';
 
-const dispose = await initOverlay({baseURL: '/__my-devtools/'});
+bootstrapApplication(App, appConfig).then(async () => {
+  if (typeof ngDevMode === 'undefined' || ngDevMode) {
+    const {initOverlay} = await import('@santoshyadavdev/ng-devtools/overlay');
+    const dispose = await initOverlay({baseURL: '/__my-devtools/'});
+  }
+});
 ```
 
 `baseURL` takes one path or a list of paths to try in order. `initOverlay` resolves to a function that stops the overlay and removes its hooks.
 
 ### Avoid two overlays
 
-<ngmd-callout type="danger" title="Importing the module already starts one">
-  The import starts an overlay on the default URLs, and it does not hand you a function to stop it. When the devtools live only at your custom path, that overlay finds no connection, logs an error and stops. Your <code>initOverlay</code> call is then the only one running. If the devtools also answer on a default URL, don't call <code>initOverlay</code>. Otherwise the page ends up with two connections and two polling intervals.
-</ngmd-callout>
+Importing the module already starts an overlay on the default URLs, and it does not hand you a function to stop it. When the devtools live only at your custom path, that overlay finds no connection, logs an error and stops. Your `initOverlay` call is then the only one running.
+
+If the devtools also answer on a default URL, don't call `initOverlay`. Otherwise the page ends up with two connections and two polling intervals.
 
 ## NgRx signal stores
 
 The overlay also exports `registerNgrxSignals`. Call it once with `patchState` so that restoring a store's state also notifies `watchState` listeners:
 
-```ts {4-7}
-// main.ts
+```ts {8-11}
+// src/main.ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {App} from './app/app';
+import {appConfig} from './app/app.config';
+
 bootstrapApplication(App, appConfig).then(() => {
   if (typeof ngDevMode === 'undefined' || ngDevMode) {
     return Promise.all([
@@ -145,7 +159,7 @@ When you hover a component in the devtools, the overlay draws an amber box aroun
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Next steps
+## Where to next
 
 <ngmd-pill-row>
   <ngmd-pill href="/getting-started/popup-and-hub" title="Popup and hub"></ngmd-pill>

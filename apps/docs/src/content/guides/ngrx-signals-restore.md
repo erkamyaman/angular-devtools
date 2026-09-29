@@ -96,7 +96,7 @@ The Angular CLI version is the demo app's `src/main.ts`. It loads the overlay an
 
 ### What happens
 
-Every state key of the store goes back to its value right after that change. Components that read the store update at once. A new **Restore** entry is added to the log.
+Every state key of the store goes back to its value right after that change. Components that read the store update at once. The log gets a **Restore** entry.
 
 <ngmd-callout type="info" title="Without registerNgrxSignals">
   Restore still works, but the log entry says that <code>watchState</code> listeners were not notified.
@@ -106,8 +106,8 @@ Every state key of the store goes back to its value right after that change. Com
 
 ### Signal stores
 
-- Restore needs every state key to be writable. A read-only store state cannot be restored.
-- The log keeps the last 200 entries per page. Older changes cannot be restored.
+- Restore needs every state key to be writable. It can't restore a read-only store state.
+- The log keeps the last 200 entries per page. You can't restore older changes.
 
 ### @ngrx/store
 
@@ -115,6 +115,7 @@ For `@ngrx/store`, restore uses Store DevTools instead. Add `provideStoreDevtool
 
 ```ts {6}
 // src/app/app.config.ts
+import {ApplicationConfig} from '@angular/core';
 import {provideStoreDevtools} from '@ngrx/store-devtools';
 
 export const appConfig: ApplicationConfig = {

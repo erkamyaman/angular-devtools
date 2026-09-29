@@ -106,11 +106,11 @@ pnpm exec nx affected -t test build
 
 ### Ports
 
-| Command                                                                                  | Port | Notes                                                                                       |
-| ---------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------- |
-| `pnpm start`                                                                             | 4200 | `ng serve` with SSR and hot reload. The popup and live data work without a separate server. |
-| `pnpm build --configuration development && node dist/angular-devtools/server/server.mjs` | 4000 | The demo app as an SSR server.                                                              |
-| `pnpm devtools:dev`                                                                      | 5173 | The devtools UI with hot reload. It needs the SSR server running for live data.             |
+| Command                                                                                  | Port | Notes                                                                                                                                          |
+| ---------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm start`                                                                             | 4200 | `ng serve` with SSR and hot reload. The popup and live data work without a separate server.                                                    |
+| `pnpm build --configuration development && node dist/angular-devtools/server/server.mjs` | 4000 | The demo app as an SSR server.                                                                                                                 |
+| `pnpm devtools:dev`                                                                      | 5173 | The devtools UI with hot reload and its own RPC. Source-scan data only; live tabs need an app page connected, so use the SSR server for those. |
 
 <ngmd-callout type="warning" title="Refresh the bundled UI">
   The SSR server serves the UI built into <code>packages/ng-devtools/dist/public</code>. Run <code>pnpm devtools:build-pkg</code> to refresh it after you change <code>app/</code>.
@@ -169,7 +169,7 @@ pnpm extension:build                # Chrome extension
 
 ### Add an agent tool
 
-Add `agent: { description }` to an RPC function, or call `ctx.agent.registerTool()` in the devframe setup. List the new tool on the [Tools](/agents/tools) page.
+Add `agent: { description }` to an RPC function, or call `ctx.agent.registerTool()` in the devframe setup. List the tool on the [Tools](/agents/tools) page.
 
 <ngmd-callout type="tip" title="Changed app/?">
   Run <code>pnpm extension:build</code> and commit <code>extension/ui</code>. CI fails when it is stale. See <a href="/contributing/chrome-extension">Build the extension</a>.

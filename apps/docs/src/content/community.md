@@ -22,7 +22,7 @@ Angular DevTools is open source under the MIT license. Here is where to reach th
   </ngmd-card>
 </ngmd-card-grid>
 
-## Talk to us <ngmd-badge variant="stable">MIT</ngmd-badge>
+## Get in touch
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="sparkles" title="Discord" link="https://discord.gg/YRTyJd6Qx" cta="Join">
@@ -79,7 +79,7 @@ If the devtools help your work, please consider [sponsoring the project on GitHu
 
 ### Current sponsors
 
-Thanks to everyone who sponsors the project. See the [sponsors](/sponsors) page for the current list.
+Thanks to everyone who sponsors the project. The [Sponsors page](/sponsors) lists the current sponsors.
 
 ## Where to next
 

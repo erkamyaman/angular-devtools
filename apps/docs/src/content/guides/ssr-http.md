@@ -11,7 +11,7 @@ description: Add the interceptor and hydration hooks, in the right order, to fil
 
 The [SSR & HTTP tab](/inspectors/ssr-http) records every `HttpClient` call during server rendering and in the browser. It needs three things: an interceptor, a hydration hook, and SSR running next to the devtools.
 
-## What you'll set up
+## What you set up
 
 <ngmd-card-grid columns="3">
   <ngmd-card icon="zap" title="Interceptor">
@@ -78,8 +78,21 @@ export const appConfig: ApplicationConfig = {
 
 Register `withNgDevtools()` before your own interceptors. Then it records requests as the app makes them, and fault rules apply before anything else.
 
-```ts
-provideHttpClient(withFetch(), withNgDevtools(), withInterceptors([auth]));
+```ts {11}
+// src/app/app.config.ts
+import {provideHttpClient, withFetch, withInterceptors} from '@angular/common/http';
+import {ApplicationConfig} from '@angular/core';
+import {provideClientHydration} from '@angular/platform-browser';
+import {provideNgDevtoolsHttp, withNgDevtools} from '@santoshyadavdev/ng-devtools/http';
+import {authInterceptor} from './auth.interceptor';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideClientHydration(),
+    provideHttpClient(withFetch(), withNgDevtools(), withInterceptors([authInterceptor])),
+    provideNgDevtoolsHttp(),
+  ],
+};
 ```
 
 ### How transfer cache hits are detected
@@ -133,7 +146,7 @@ export const serverRoutes: ServerRoute[] = [
 
 <ngmd-workflow>
   <ngmd-step title="Open Fault injection">
-    Open the SSR & HTTP tab and go to <strong>Fault injection</strong>.
+    Open the <strong>SSR & HTTP</strong> tab and go to <strong>Fault injection</strong>.
   </ngmd-step>
   <ngmd-step title="Match a URL">
     Enter a URL pattern, for example <code>/api/*</code>.

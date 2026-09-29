@@ -172,7 +172,7 @@ import {writeToClipboard} from '../utils/clipboard';
     >
       <div class="mx-auto max-w-5xl px-6 py-20">
         <div class="text-center mb-10">
-          <h2 class="text-3xl sm:text-4xl font-bold tracking-tight">Two lines to a live panel</h2>
+          <h2 class="text-3xl sm:text-4xl font-bold tracking-tight">A few lines to a live panel</h2>
           <p class="mt-3 text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto">
             Mount the hub where your app runs, load the overlay, and open the panel on your page.
           </p>
@@ -196,7 +196,7 @@ import {writeToClipboard} from '../utils/clipboard';
 app.use(devtools.nodeMiddleware);
 
 <span class="text-zinc-400">// src/main.ts</span>
-<span class="text-[color:var(--accent)] font-semibold">import</span> '@santoshyadavdev/ng-devtools/overlay';</code></pre>
+<span class="text-[color:var(--accent)] font-semibold">if</span> (typeof ngDevMode === 'undefined' || ngDevMode) <span class="text-[color:var(--accent)] font-semibold">import</span>('@santoshyadavdev/ng-devtools/overlay');</code></pre>
           </div>
           <div
             class="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden"
@@ -298,7 +298,7 @@ app.use(devtools.nodeMiddleware);
       <div class="mx-auto max-w-3xl px-6 py-20 text-center">
         <h2 class="text-3xl sm:text-4xl font-bold tracking-tight">Sponsors</h2>
         <p class="mt-3 text-zinc-600 dark:text-zinc-400">
-          Thanks to our current sponsors. Your support keeps development going.
+          Thanks to the current sponsors. Your support keeps development going.
         </p>
         <div class="mt-8 flex justify-center">
           <app-sponsor-list />
@@ -556,9 +556,10 @@ export default class Home implements AfterViewInit {
     },
     {
       icon: LucideShieldCheck,
-      title: 'Local only',
+      title: 'Access and redaction',
       link: '/security',
-      description: 'The devtools answer only your machine, and secret-looking values are redacted.',
+      description:
+        'The Vite plugin answers only your machine, the Express hub asks for a one-time code, and secret-looking values are redacted.',
     },
   ];
 }

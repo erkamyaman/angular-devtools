@@ -30,7 +30,7 @@ For *Analog apps, add the *Vite plugin next to `analog()` and load the overlay i
 
 ## Add the plugin
 
-### Register it in vite.config.ts
+### Register it in `vite.config.ts`
 
 ```ts {3,7}
 // vite.config.ts
@@ -47,8 +47,12 @@ export default defineConfig({
 
 The plugin does not inject the overlay. Your app imports it in `main.ts`:
 
-```ts {3}
+```ts {7}
 // src/main.ts
+import {bootstrapApplication} from '@angular/platform-browser';
+import {App} from './app/app';
+import {appConfig} from './app/app.config';
+
 bootstrapApplication(App, appConfig).then(() => {
   if (import.meta.env.DEV) void import('@santoshyadavdev/ng-devtools/overlay');
 });
@@ -80,15 +84,14 @@ It records Analog page renders, `load()` fetches, server functions and API calls
 
 ### Answers only your machine
 
-<ngmd-callout type="warning" title="Loopback only">
-  The plugin only answers requests from a loopback address (<code>127.0.0.1</code> or <code>::1</code>). Other requests to the devtools get <code>403</code> with the message "ng-devtools only answers requests from this machine." WebSocket upgrades follow the same rules. See <a href="/security">Access and redaction</a>.
-</ngmd-callout>
+The plugin only answers requests from a loopback address (`127.0.0.1` or `::1`). Other requests to the devtools get `403` with the message "ng-devtools only answers requests from this machine." WebSocket upgrades follow the same rules.
 
-The Vite plugin turns the one-time code off. The loopback and origin checks take its place.
+The Vite plugin turns the one-time code off. The loopback and origin checks take its place. [Access and redaction](/security) covers both checks.
 
 ## Options
 
 ```ts
+// vite.config.ts
 ngDevtools({
   base: '/__devframes/',
   apiPrefix: 'api',
@@ -102,15 +105,15 @@ ngDevtools({
 | `apiPrefix`      | Analog's `apiPrefix`, or `'api'` | The prefix of your server routes, used to classify API calls.            |
 | `allowedOrigins` | none                             | Extra exact origins allowed to reach the devtools, for example a tunnel. |
 
-### base
+### `base`
 
 Change `base` if `/__devframes/` clashes with a route of your own. The overlay looks for `/__devframes/ng-devtools/` and `/__ng-devtools/` by default, so a custom base also needs a custom overlay path. See [A custom mount path](/getting-started/overlay#a-custom-mount-path).
 
-### apiPrefix
+### `apiPrefix`
 
 The plugin reads `apiPrefix` from your Analog config. Set it here only when the detection is wrong.
 
-### allowedOrigins
+### `allowedOrigins`
 
 Each entry is an exact origin, such as `https://tunnel.example`. The request itself must still come from a loopback address.
 
@@ -120,8 +123,12 @@ Each entry is an exact origin, such as `https://tunnel.example`. The request its
 
 If you open the dev server through another hostname that points to your machine (for example `myapp.test`), list it in Vite's `server.allowedHosts`. The devtools trust it too.
 
-```ts {3}
+```ts {7}
 // vite.config.ts
+import analog from '@analogjs/platform';
+import ngDevtools from '@santoshyadavdev/ng-devtools/vite';
+import {defineConfig} from 'vite';
+
 export default defineConfig({
   server: {allowedHosts: ['myapp.test']},
   plugins: [analog(), ngDevtools()],
@@ -133,6 +140,7 @@ export default defineConfig({
 Add other origins with `allowedOrigins`:
 
 ```ts
+// vite.config.ts
 ngDevtools({allowedOrigins: ['https://tunnel.example']});
 ```
 
@@ -156,7 +164,7 @@ ngDevtools({allowedOrigins: ['https://tunnel.example']});
   </ngmd-accordion-item>
 </ngmd-accordion>
 
-## Next steps
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="rocket" title="Set up Analog" link="/guides/analog" cta="Read the guide">

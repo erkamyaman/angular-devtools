@@ -15,6 +15,8 @@ The Analog dock is always in the rail. In other apps it shows a **This app doesn
 
 ## Setup
 
+### Add the plugin
+
 Add the Vite plugin next to `analog()` and load the overlay. See [Vite and Analog](/getting-started/vite) and the [Analog guide](/guides/analog).
 
 ```ts {3,7}
@@ -29,6 +31,10 @@ export default defineConfig({
 ```
 
 The plugin runs on the dev server only. The app counts as Analog when its `package.json` depends on `@analogjs/platform` or `@analogjs/router`.
+
+### Try the demo
+
+The demo lives in `examples/analog`. It uses Analog 2.7 on Angular 22. Run it with `pnpm analog:dev`.
 
 ## What it shows
 
@@ -46,7 +52,7 @@ Type a URL into **Test a URL** and click **Explain** to see which files render i
 
 Page renders (server rendered or client only), `load()` fetches, server functions and API calls. Each row shows the status, the time, who called it, and a redacted response preview. Filter by kind, and click **Clear calls** to empty the list.
 
-A `load()` that runs during server rendering and again in the browser right after is flagged. It means TransferState did not serve the server result.
+The tab flags a `load()` that runs during server rendering and again in the browser right after. It means TransferState did not serve the server result.
 
 The **API routes** table lists your server routes. Click **Try** to open one in the **Request playground**, which sends real requests to your dev server.
 
@@ -58,7 +64,7 @@ The **Prerender plan** compares `prerender.routes` with your pages and the build
 
 ### Content
 
-Markdown files under `src/content`, with title, URL, slug, date and file. Files with frontmatter errors are marked.
+Markdown files under `src/content`, with title, URL, slug, date and file. The tab marks files with frontmatter errors.
 
 ### Lint
 
@@ -71,7 +77,7 @@ Checks grouped by rule, each with a fix:
 - API method suffixes, duplicate API routes, and routes outside the API prefix.
 - Prerender entries that match nothing.
 - Frontmatter errors, duplicate slugs, and content that shadows a page.
-- From the live page: `load()` fetched twice, hydration errors, API routes not found, and new pages that need a restart.
+- From the live page: `load()` fetched twice, hydration errors, API routes not found, and added pages that need a restart.
 
 ## Where the data comes from
 
@@ -109,14 +115,14 @@ A page is **Client only** when `routeRules` or the `ssr` option turns SSR off fo
   </ngmd-step>
 </ngmd-workflow>
 
-### Fix a load() that runs twice
+### Fix a `load()` that runs twice
 
 <ngmd-workflow>
   <ngmd-step title="Open Server">
     A warning at the top names the route.
   </ngmd-step>
   <ngmd-step title="Check TransferState">
-    Open the SSR & HTTP tab and look for the Analog entry in the payload.
+    Open the <a href="/inspectors/ssr-http">SSR & HTTP tab</a> and look for the Analog entry in the payload.
   </ngmd-step>
   <ngmd-step title="Reload and compare">
     After the fix, the browser should not fetch the route's <code>load()</code> again.
@@ -156,27 +162,30 @@ A page is **Client only** when `routeRules` or the `ssr` option turns SSR off fo
 
 ## Limits and gotchas
 
-<ngmd-callout type="warning" title="analog-call-api changes real data">
-  It sends a real request to your dev server. Methods other than GET, HEAD and OPTIONS need <code>confirm: true</code>. It works only through the Vite plugin.
-</ngmd-callout>
+### `analog-call-api` changes real data
 
-<ngmd-callout type="info" title="New pages need a restart">
-  The running router does not know page files added after the dev server started. The lint flags them. Restart the dev server.
-</ngmd-callout>
+It sends a real request to your dev server. Methods other than GET, HEAD and OPTIONS need `confirm: true`. It works only through the Vite plugin.
 
-<ngmd-callout type="tip" title="Redaction">
-  Response previews and <code>load()</code> data redact secret-looking keys, tokens, <code>Bearer</code> values and secret query parameters. See <a href="/security">Security</a>.
-</ngmd-callout>
+### Redaction
 
-<ngmd-alert severity="helpful">
-  The server keeps the last 200 calls. Previews are cut to 1000 characters, and page renders have no preview.
-</ngmd-alert>
+Response previews and `load()` data redact secret-looking keys, tokens, `Bearer` values and secret query parameters. See [what the devtools redact](/security).
 
-## Try the demo
+### Call history size
 
-The demo lives in `examples/analog`. It uses Analog 2.7 on Angular 22. Run it with `pnpm analog:dev`.
+The server keeps the last 200 calls. It cuts previews to 1000 characters, and page renders have no preview.
 
-## Related pages
+## FAQ
+
+<ngmd-accordion>
+  <ngmd-accordion-item title="Why doesn't the router know a page I added?">
+    The running router does not know page files added after the dev server started. The lint flags them. Restart the dev server.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Why is there no Analog tab?">
+    Without the hub, the Analog tab appears only in Analog apps. The app counts as Analog when its <code>package.json</code> depends on <code>&#64;analogjs/platform</code> or <code>&#64;analogjs/router</code>.
+  </ngmd-accordion-item>
+</ngmd-accordion>
+
+## Where to next
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="wrench" title="Set up Analog" link="/guides/analog" cta="Guide">

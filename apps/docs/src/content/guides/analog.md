@@ -11,7 +11,7 @@ description: Add the devtools to an Analog app, step by step.
 
 This guide adds the devtools to an *Analog app. Everything runs on the *Vite dev server, so there is no separate server to start.
 
-## What you'll get
+## What you get
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="layers" title="Angular inspectors">
@@ -53,6 +53,14 @@ pnpm add @santoshyadavdev/ng-devtools devframe
 
 ```bash group="install" name="npm" image="https://cdn.simpleicons.org/npm/CB3837"
 npm install @santoshyadavdev/ng-devtools devframe
+```
+
+```bash group="install" name="yarn" image="https://cdn.simpleicons.org/yarn/2C8EBB"
+yarn add @santoshyadavdev/ng-devtools devframe
+```
+
+```bash group="install" name="bun" image="https://bun.sh/logo.svg"
+bun add @santoshyadavdev/ng-devtools devframe
 ```
 
 ## Step 2: Add the Vite plugin
@@ -119,10 +127,13 @@ Open the **Analog** dock to see file routes, server calls, render modes, content
 
 ## Optional: record HttpClient calls
 
-Analog's own `load()` fetches and API calls show in the Analog dock without extra setup. To also record `HttpClient` calls in the SSR & HTTP tab, add the devtools providers to your app config:
+Analog's own `load()` fetches and API calls show in the Analog dock without extra setup. To also record `HttpClient` calls in the **SSR & HTTP** tab, add the devtools providers to your app config:
 
-```ts {2,7-8}
+```ts {5,10-11}
 // src/app/app.config.ts
+import {provideHttpClient, withFetch} from '@angular/common/http';
+import {ApplicationConfig} from '@angular/core';
+import {provideFileRouter} from '@analogjs/router';
 import {provideNgDevtoolsHttp, withNgDevtools} from '@santoshyadavdev/ng-devtools/http';
 
 export const appConfig: ApplicationConfig = {
