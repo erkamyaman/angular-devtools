@@ -61,7 +61,7 @@ export function pageMetaPlugin(opts: {repoUrl: string; branch?: string; dir?: st
           };
         }
       } catch {
-        // src/app/pages missing — skip
+        // src/app/pages missing, skip
       }
 
       // src/content/**/*.md → route (mirrors the [...slug] catch-all)

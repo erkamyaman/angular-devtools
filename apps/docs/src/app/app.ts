@@ -90,26 +90,29 @@ import {VersionSwitcher} from './components/version-switcher';
           {{ siteName }}
         </a>
 
-        <nav class="hidden sm:flex items-center gap-1 text-sm">
-          <a
-            routerLink="/getting-started/introduction"
-            class="rounded px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-          >
-            Docs
-          </a>
-          <a
-            routerLink="/inspectors/dashboard"
-            class="rounded px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-          >
-            Inspectors
-          </a>
-          <a
-            routerLink="/agents/mcp-server"
-            class="rounded px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-          >
-            Agents
-          </a>
-        </nav>
+        @if (headerNav.length > 0) {
+          <nav class="hidden sm:flex items-center gap-1 text-sm">
+            @for (item of headerNav; track item.href) {
+              @if (isExternal(item.href)) {
+                <a
+                  [href]="item.href"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="rounded px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                >
+                  {{ item.label }}
+                </a>
+              } @else {
+                <a
+                  [routerLink]="item.href"
+                  class="rounded px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                >
+                  {{ item.label }}
+                </a>
+              }
+            }
+          </nav>
+        }
 
         <div class="ml-auto flex items-center gap-2">
           <app-version-switcher></app-version-switcher>
@@ -286,6 +289,7 @@ export class App implements OnInit {
   readonly siteName = siteConfig.site.name;
   readonly githubUrl = siteConfig.site.githubUrl;
   readonly discordUrl = siteConfig.site.links?.discord;
+  readonly headerNav = siteConfig.headerNav ?? [];
 
   readonly drawerOpen = signal(false);
 
@@ -297,6 +301,10 @@ export class App implements OnInit {
   readonly showBreadcrumb = this.isDocsRoute;
   readonly showToc = this.isDocsRoute;
   readonly showFooter = this.isDocsRoute;
+
+  isExternal(href: string): boolean {
+    return /^https?:\/\//.test(href);
+  }
 
   toggleDrawer(): void {
     if (this.drawerOpen()) {

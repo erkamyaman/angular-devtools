@@ -507,6 +507,13 @@
     border-width: 1px;
   }
 
+  :is(analog-markdown, analog-markdown-route, .ngmd-prose)
+    :is(ngmd-card, ngmd-callout)
+    code:not(pre code) {
+    background: color-mix(in srgb, var(--fg) 7%, transparent);
+    border-color: transparent;
+  }
+
   analog-markdown pre,
   analog-markdown-route pre {
     margin: 1.5rem 0;

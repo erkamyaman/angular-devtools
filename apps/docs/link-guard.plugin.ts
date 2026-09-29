@@ -1,9 +1,11 @@
 import {readFileSync, statSync} from 'node:fs';
 import {join, relative} from 'node:path';
-import type {Plugin} from 'vite';
+import type {Plugin, ViteDevServer} from 'vite';
 import {
+  createSlugger,
   fenceTracker,
   routeFromPagePath,
+  headingText,
   slugify,
   walkContentFiles,
   walkPageFiles,
@@ -29,10 +31,13 @@ import {
 function extractHeadings(markdown: string): Set<string> {
   const slugs = new Set<string>();
   const inFence = fenceTracker();
+  const slug = createSlugger();
   for (const line of markdown.split(/\r?\n/)) {
     if (inFence(line)) continue;
-    const m = /^#{1,6}\s+(.+?)\s*$/.exec(line);
-    if (m) slugs.add(slugify(m[1]));
+    const m = /^(#{1,6})\s+(.+?)\s*$/.exec(line);
+    if (!m) continue;
+    const text = headingText(m[2]);
+    slugs.add(m[1].length === 1 ? slugify(text) : slug(text));
   }
   return slugs;
 }
@@ -44,6 +49,7 @@ export function internalLinkGuard(): Plugin {
   // route → source file (relative path)
   const routes = new Map<string, string>();
   let primed = false;
+  let server: ViteDevServer | undefined;
 
   function prime(): void {
     if (primed) return;
@@ -81,6 +87,15 @@ export function internalLinkGuard(): Plugin {
     enforce: 'pre',
     configResolved(cfg) {
       root = cfg.root;
+    },
+    configureServer(devServer) {
+      server = devServer;
+    },
+    watchChange(id) {
+      if (!id.endsWith('.md') && !id.endsWith('.page.ts')) return;
+      primed = false;
+      routes.clear();
+      headingsByRoute.clear();
     },
     transform(_code, id) {
       // Vite may append `?import` / `?raw` query suffixes
@@ -133,10 +148,12 @@ export function internalLinkGuard(): Plugin {
       }
 
       if (issues.length > 0) {
-        this.error(
+        const message =
           `[ngmd] Broken internal links in ${relative(root, file)}:\n${issues.join('\n')}\n` +
-            `Fix the link target, or update the heading slug it points to.`,
-        );
+          `Fix the link target, or update the heading slug it points to.`;
+        if (!server) this.error(message);
+        this.warn(message);
+        server.ws.send({type: 'error', err: {message, stack: ''}});
       }
 
       return null;
