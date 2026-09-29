@@ -117,18 +117,18 @@ Add an entry to `nav` in `apps/docs/src/ngmd.config.ts`. Pages that aren't liste
 
 The site uses NgMd's authoring components. Write them as raw HTML inside the markdown. The full reference is the components page of the [NgMd documentation](https://ngmd.netlify.app/concepts/components).
 
-| Component                                    | Use it for                                                        | Attributes                                                                  |
-| -------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `<ngmd-hero>`                                | The page opener. Once per page, before the `#` heading.           | `title`, `gradient`, `logo` (only on pages about one external tool, such as NgRx, Analog, Vite, Express, Chrome, MCP or Nx)            |
-| `<ngmd-callout>`                             | A short aside with context the reader may need.                   | `type` (`info`, `tip`, `success`, `warning`, `danger`), `title`             |
-| `<ngmd-alert>`                               | One short point the reader must not miss.                         | `severity` (`info`, `helpful`, `important`, `warning`, `critical`), `label` |
-| `<ngmd-card-grid>` + `<ngmd-card>`           | Links to related pages, requirements, feature overviews.          | grid: `columns`. card: `title`, `link`, `cta`, `icon`, `image`, `avatar`    |
-| `<ngmd-workflow>` + `<ngmd-step>`            | Ordered steps.                                                    | step: `title`                                                               |
-| `<ngmd-accordion>` + `<ngmd-accordion-item>` | FAQ sections.                                                     | item: `title`, `open`                                                       |
-| `<ngmd-pill-row>` + `<ngmd-pill>`            | A row of related links at the end of a page.                      | pill: `href`, `title`                                                       |
-| `<ngmd-badge>`                               | A status chip next to a heading.                                  | `variant` (`new`, `updated`, `alpha`, `beta`, `stable`, `deprecated`)       |
-| `<ngmd-tabs>` + `<ngmd-tab>`                 | The same content in several forms, when a code group doesn't fit. | tab: `title`, `icon`, `image`                                               |
-| `<ngmd-image>`, `<ngmd-video>`               | Screenshots and YouTube or Vimeo videos.                          | image: `src`, `alt`, `caption`, `width`. video: `src`, `title`              |
+| Component                                    | Use it for                                                        | Attributes                                                                                                                  |
+| -------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `<ngmd-hero>`                                | The page opener. Once per page, before the `#` heading.           | `title`, `gradient`, `logo` (only on pages about one external tool, such as NgRx, Analog, Vite, Express, Chrome, MCP or Nx) |
+| `<ngmd-callout>`                             | A short aside with context the reader may need.                   | `type` (`info`, `tip`, `success`, `warning`, `danger`), `title`                                                             |
+| `<ngmd-alert>`                               | One short point the reader must not miss.                         | `severity` (`info`, `helpful`, `important`, `warning`, `critical`), `label`                                                 |
+| `<ngmd-card-grid>` + `<ngmd-card>`           | Links to related pages, requirements, feature overviews.          | grid: `columns`. card: `title`, `link`, `cta`, `icon`, `image`, `avatar`                                                    |
+| `<ngmd-workflow>` + `<ngmd-step>`            | Ordered steps.                                                    | step: `title`                                                                                                               |
+| `<ngmd-accordion>` + `<ngmd-accordion-item>` | FAQ sections.                                                     | item: `title`, `open`                                                                                                       |
+| `<ngmd-pill-row>` + `<ngmd-pill>`            | A row of related links at the end of a page.                      | pill: `href`, `title`                                                                                                       |
+| `<ngmd-badge>`                               | A status chip next to a heading.                                  | `variant` (`new`, `updated`, `alpha`, `beta`, `stable`, `deprecated`)                                                       |
+| `<ngmd-tabs>` + `<ngmd-tab>`                 | The same content in several forms, when a code group doesn't fit. | tab: `title`, `icon`, `image`                                                                                               |
+| `<ngmd-image>`, `<ngmd-video>`               | Screenshots and YouTube or Vimeo videos.                          | image: `src`, `alt`, `caption`, `width`. video: `src`, `title`                                                              |
 
 Card icons come from a fixed set: `book`, `box`, `code`, `compass`, `file`, `layers`, `lightbulb`, `palette`, `rocket`, `search`, `settings`, `shield`, `sparkles`, `terminal`, `wrench`, `zap`.
 

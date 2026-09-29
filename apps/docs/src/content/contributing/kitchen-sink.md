@@ -30,10 +30,10 @@ Plain text, **bold**, _italic_, `inline code`, ~~strikethrough~~ and a **UI labe
 
 ### Tables
 
-| Column   | Type      | Notes                                   |
-| -------- | --------- | --------------------------------------- |
-| `name`   | `string`  | Short text.                             |
-| `count`  | `number`  | Right after the name.                   |
+| Column   | Type      | Notes                                                               |
+| -------- | --------- | ------------------------------------------------------------------- |
+| `name`   | `string`  | Short text.                                                         |
+| `count`  | `number`  | Right after the name.                                               |
 | `active` | `boolean` | A longer note that wraps on small screens to check the cell layout. |
 
 ### Blockquote
@@ -102,6 +102,7 @@ bun add @santoshyadavdev/ng-devtools devframe
 ### File import
 
 ```ts file="src/ngmd.config.ts#L1-L12"
+
 ```
 
 ### Other languages

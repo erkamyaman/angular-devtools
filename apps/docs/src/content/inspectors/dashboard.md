@@ -28,14 +28,14 @@ The top block shows the project name and a chip for each of these:
 
 Each card counts what one inspector found. Click a card to open its tab. When the hub is mounted, the NgRx card opens the **NgRx** dock.
 
-| Card                                          | Counts                                                                                                       |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| [Components](/inspectors/components)          | Components in source, plus the number of directives.                                                         |
-| [Routes](/inspectors/router)                  | Navigable page paths in source, plus the number of redirects.                                                |
-| [Signals](/inspectors/signals)                | Nodes in the live signal graph, plus the declarations in source. Without a page, the declarations in source. |
-| [Injectors](/inspectors/injectors)            | Live injectors on the page, plus their providers. Without a page, the provider declarations in source.       |
-| [NgRx declarations](/inspectors/ngrx-store)   | NgRx declarations in source, broken down by kind.                                                            |
-| [Pipes](/inspectors/pipes)                    | Custom pipes in source, plus the built-in pipes in use.                                                      |
+| Card                                        | Counts                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [Components](/inspectors/components)        | Components in source, plus the number of directives.                                                         |
+| [Routes](/inspectors/router)                | Navigable page paths in source, plus the number of redirects.                                                |
+| [Signals](/inspectors/signals)              | Nodes in the live signal graph, plus the declarations in source. Without a page, the declarations in source. |
+| [Injectors](/inspectors/injectors)          | Live injectors on the page, plus their providers. Without a page, the provider declarations in source.       |
+| [NgRx declarations](/inspectors/ngrx-store) | NgRx declarations in source, broken down by kind.                                                            |
+| [Pipes](/inspectors/pipes)                  | Custom pipes in source, plus the built-in pipes in use.                                                      |
 
 ### Card states
 
