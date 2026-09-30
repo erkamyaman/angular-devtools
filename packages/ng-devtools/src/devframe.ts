@@ -1,4 +1,4 @@
-import type { RemoteAssets } from 'devframe';
+import type { DevframeSetupInfo, RemoteAssets } from 'devframe';
 import { defineDevframe } from 'devframe';
 import { getRoutes } from './rpc/get-routes.ts';
 import { getComponents } from './rpc/get-components.ts';
@@ -107,6 +107,19 @@ import type { HttpPage, HttpState } from './types.ts';
 
 import { registerAnalog } from './rpc/analog-register.ts';
 import { registerHubDocks } from './hub-docks.ts';
+import {
+  FORM_WRITE_ACTIONS,
+  NG_DEVTOOLS_CONFIG_KEY,
+  ROUTER_WRITE_ACTIONS,
+  actionBlockedMessage,
+  agentAllowed,
+  resolveNgDevtoolsConfig,
+  rpcAllowed,
+  type NgDevtoolsConfig,
+  type ResolvedNgDevtoolsConfig,
+} from './config.ts';
+
+export * from './config.ts';
 
 import pkg from '../package.json' with { type: 'json' };
 
@@ -118,6 +131,8 @@ const clientAssets: RemoteAssets = {
   path: 'dist/public',
   resolveFrom: import.meta.url,
 };
+
+type SetupInfo = DevframeSetupInfo & { config?: ResolvedNgDevtoolsConfig };
 
 const ngDevtools = defineDevframe({
   id: 'ng-devtools',
@@ -131,16 +146,32 @@ const ngDevtools = defineDevframe({
   clientAssets,
   dock: { visibility: 'false' },
 
-  async setup(ctx) {
+  async setup(ctx, info?: SetupInfo) {
+    const config = info?.config ?? resolveNgDevtoolsConfig();
+    const on = config.inspectors;
     const my = ctx.scope('ng-devtools');
+    (ctx.staticConfig as Record<string, unknown>)[NG_DEVTOOLS_CONFIG_KEY] = config;
+    const register: typeof my.rpc.register = (definition) => {
+      if (!rpcAllowed(definition.name, config)) return;
+      const exposed = !definition.agent || agentAllowed({ id: definition.name }, config);
+      my.rpc.register(exposed ? definition : { ...definition, agent: undefined });
+    };
+    const agent = {
+      registerTool: (tool: Parameters<typeof ctx.agent.registerTool>[0]) => {
+        if (agentAllowed(tool, config)) ctx.agent.registerTool(tool);
+      },
+      registerResource: (resource: Parameters<typeof ctx.agent.registerResource>[0]) => {
+        if (agentAllowed(resource, config)) ctx.agent.registerResource(resource);
+      },
+    };
 
-    my.rpc.register(getRoutes);
-    my.rpc.register(getComponents);
-    my.rpc.register(getPipes);
-    my.rpc.register(getSignals);
-    my.rpc.register(getProviders);
-    my.rpc.register(getNgrxStore);
-    my.rpc.register(getBuildMeta);
+    register(getRoutes);
+    register(getComponents);
+    register(getPipes);
+    register(getSignals);
+    register(getProviders);
+    register(getNgrxStore);
+    register(getBuildMeta);
 
     const componentTree = await my.rpc.sharedState('component-tree', {
       initialValue: {
@@ -228,7 +259,7 @@ const ngDevtools = defineDevframe({
         draft.instrumented = next.instrumented ?? [];
       });
 
-    my.rpc.register({
+    register({
       name: 'push-forms',
       type: 'action',
       jsonSerializable: true,
@@ -259,7 +290,7 @@ const ngDevtools = defineDevframe({
       if (removed) applyPipes(currentPipes(pipePages));
     });
 
-    my.rpc.register({
+    register({
       name: 'push-pipes',
       type: 'action',
       jsonSerializable: true,
@@ -270,7 +301,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'forget-pipes-page',
       type: 'action',
       jsonSerializable: true,
@@ -282,7 +313,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'request-instrument-pipes',
       type: 'action',
       jsonSerializable: true,
@@ -295,7 +326,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'pipe-lint',
       type: 'query',
       jsonSerializable: true,
@@ -312,7 +343,7 @@ const ngDevtools = defineDevframe({
         draft.pages = next.pages;
       });
 
-    my.rpc.register({
+    register({
       name: 'push-router',
       type: 'action',
       jsonSerializable: true,
@@ -327,7 +358,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'ping-router',
       type: 'action',
       jsonSerializable: true,
@@ -371,7 +402,7 @@ const ngDevtools = defineDevframe({
         });
       });
 
-    my.rpc.register({
+    register({
       name: 'router-action-result',
       type: 'action',
       jsonSerializable: true,
@@ -381,15 +412,20 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'request-router-action',
       type: 'action',
       jsonSerializable: true,
-      handler: (message: { pageId?: string; request?: unknown }) =>
-        requestRouterAction(
+      handler: (message: { pageId?: string; request?: unknown }) => {
+        const action = (message?.request as { action?: unknown } | undefined)?.action;
+        if (!config.actions.router && ROUTER_WRITE_ACTIONS.includes(action as string)) {
+          return { error: actionBlockedMessage('router') };
+        }
+        return requestRouterAction(
           typeof message?.pageId === 'string' ? message.pageId : undefined,
           message?.request,
-        ),
+        );
+      },
     });
 
     const pageFor = (pageId: unknown) => {
@@ -399,7 +435,7 @@ const ngDevtools = defineDevframe({
         : (state.pages.find((p) => p.snapshot) ?? state.pages[0]);
     };
 
-    my.rpc.register({
+    register({
       name: 'router-lint',
       type: 'query',
       jsonSerializable: true,
@@ -409,7 +445,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'router-match',
       type: 'query',
       jsonSerializable: true,
@@ -420,7 +456,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'router-export',
       type: 'query',
       jsonSerializable: true,
@@ -431,7 +467,7 @@ const ngDevtools = defineDevframe({
         }),
     });
 
-    my.rpc.register({
+    register({
       name: 'forget-router-page',
       type: 'action',
       jsonSerializable: true,
@@ -462,11 +498,13 @@ const ngDevtools = defineDevframe({
         }
       });
     };
-    registry.record = (call) => {
-      pendingServerCalls.push(call);
-      if (pendingServerCalls.length > MAX_CALLS) pendingServerCalls.shift();
-      flushTimer ??= setTimeout(flushServerCalls, 100);
-    };
+    registry.record = on.http
+      ? (call) => {
+          pendingServerCalls.push(call);
+          if (pendingServerCalls.length > MAX_CALLS) pendingServerCalls.shift();
+          flushTimer ??= setTimeout(flushServerCalls, 100);
+        }
+      : () => {};
     const applyHttpPages = () =>
       httpState.mutate((draft) => {
         draft.pages = [...httpPages.values()].sort((a, b) => a.firstSeenAt - b.firstSeenAt);
@@ -480,7 +518,7 @@ const ngDevtools = defineDevframe({
       return rules;
     };
 
-    my.rpc.register({
+    register({
       name: 'push-http',
       type: 'action',
       jsonSerializable: true,
@@ -507,7 +545,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'forget-http-page',
       type: 'action',
       jsonSerializable: true,
@@ -516,21 +554,21 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'get-http-rules',
       type: 'query',
       jsonSerializable: true,
       handler: () => registry.rules ?? [],
     });
 
-    my.rpc.register({
+    register({
       name: 'set-http-rules',
       type: 'action',
       jsonSerializable: true,
       handler: (rules: unknown) => setHttpRules(sanitizeRules(rules)),
     });
 
-    my.rpc.register({
+    register({
       name: 'clear-http-calls',
       type: 'action',
       jsonSerializable: true,
@@ -584,7 +622,7 @@ const ngDevtools = defineDevframe({
       registry.record = undefined;
     };
 
-    my.rpc.register({
+    register({
       name: 'forget-forms-page',
       type: 'action',
       jsonSerializable: true,
@@ -595,7 +633,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'request-form-highlight',
       type: 'action',
       jsonSerializable: true,
@@ -608,7 +646,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'request-page-highlight',
       type: 'action',
       jsonSerializable: true,
@@ -660,7 +698,7 @@ const ngDevtools = defineDevframe({
         });
       });
 
-    my.rpc.register({
+    register({
       name: 'form-action-result',
       type: 'action',
       jsonSerializable: true,
@@ -670,17 +708,21 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'request-form-action',
       type: 'action',
       jsonSerializable: true,
-      handler: (request: unknown) =>
-        request && typeof request === 'object'
-          ? requestFormAction(request as Record<string, unknown>)
-          : { ok: false, error: 'Bad request.' },
+      handler: (request: unknown) => {
+        if (!request || typeof request !== 'object') return { ok: false, error: 'Bad request.' };
+        const action = (request as { action?: unknown }).action;
+        if (!config.actions.forms && FORM_WRITE_ACTIONS.includes(action as string)) {
+          return { ok: false, error: actionBlockedMessage('forms') };
+        }
+        return requestFormAction(request as Record<string, unknown>);
+      },
     });
 
-    my.rpc.register({
+    register({
       name: 'forms-lint',
       type: 'query',
       jsonSerializable: true,
@@ -691,7 +733,7 @@ const ngDevtools = defineDevframe({
         }),
     });
 
-    my.rpc.register({
+    register({
       name: 'forms-owners',
       type: 'query',
       jsonSerializable: true,
@@ -703,7 +745,7 @@ const ngDevtools = defineDevframe({
         })),
     });
 
-    my.rpc.register({
+    register({
       name: 'forms-explain',
       type: 'query',
       jsonSerializable: true,
@@ -726,7 +768,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'push-component-tree',
       type: 'action',
       jsonSerializable: true,
@@ -737,7 +779,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'forget-component-page',
       type: 'action',
       jsonSerializable: true,
@@ -746,7 +788,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'select-component',
       type: 'action',
       jsonSerializable: true,
@@ -772,7 +814,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'select-signal-target',
       type: 'action',
       jsonSerializable: true,
@@ -787,7 +829,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'push-signal-graph',
       type: 'action',
       jsonSerializable: true,
@@ -817,7 +859,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'push-injector-tree',
       type: 'action',
       jsonSerializable: true,
@@ -836,7 +878,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'forget-injector-page',
       type: 'action',
       jsonSerializable: true,
@@ -845,7 +887,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'push-ngrx-state',
       type: 'action',
       jsonSerializable: true,
@@ -857,7 +899,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'forget-ngrx-page',
       type: 'action',
       jsonSerializable: true,
@@ -869,7 +911,7 @@ const ngDevtools = defineDevframe({
     const pendingNgrx = new Map<string, (result: unknown) => void>();
     let ngrxSeq = 0;
 
-    my.rpc.register({
+    register({
       name: 'ngrx-action-result',
       type: 'action',
       jsonSerializable: true,
@@ -879,12 +921,13 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    my.rpc.register({
+    register({
       name: 'request-ngrx-action',
       type: 'action',
       jsonSerializable: true,
       handler: (message: { pageId?: unknown; request?: unknown }) =>
         new Promise<unknown>((resolve) => {
+          if (!config.actions.ngrx) return resolve({ error: actionBlockedMessage('ngrx') });
           const pageId =
             typeof message?.pageId === 'string'
               ? message.pageId
@@ -909,7 +952,7 @@ const ngDevtools = defineDevframe({
     });
 
     // Agent resources
-    ctx.agent.registerResource({
+    agent.registerResource({
       id: 'ng-devtools:component-tree',
       name: 'Angular Component Tree',
       description:
@@ -918,7 +961,7 @@ const ngDevtools = defineDevframe({
       read: () => ({ text: JSON.stringify(componentTree.value(), null, 2) }),
     });
 
-    ctx.agent.registerResource({
+    agent.registerResource({
       id: 'ng-devtools:signal-graph',
       name: 'Angular Signal Graph',
       description:
@@ -927,7 +970,7 @@ const ngDevtools = defineDevframe({
       read: () => ({ text: JSON.stringify(signalGraphState.value(), null, 2) }),
     });
 
-    ctx.agent.registerResource({
+    agent.registerResource({
       id: 'ng-devtools:injector-tree',
       name: 'Angular Injector Tree',
       description:
@@ -936,7 +979,7 @@ const ngDevtools = defineDevframe({
       read: () => ({ text: JSON.stringify(injectorTreeState.value(), null, 2) }),
     });
 
-    ctx.agent.registerResource({
+    agent.registerResource({
       id: 'ng-devtools:ngrx-store',
       name: 'NgRx Store State',
       description:
@@ -945,7 +988,7 @@ const ngDevtools = defineDevframe({
       read: () => ({ text: JSON.stringify(ngrxStoreState.value(), null, 2) }),
     });
 
-    ctx.agent.registerResource({
+    agent.registerResource({
       id: 'ng-devtools:forms',
       name: 'Angular Forms',
       description:
@@ -954,7 +997,7 @@ const ngDevtools = defineDevframe({
       read: () => ({ text: formsResourceText(formsState.value() as FormsState) }),
     });
 
-    ctx.agent.registerResource({
+    agent.registerResource({
       id: 'ng-devtools:router',
       name: 'Angular Router',
       description:
@@ -964,7 +1007,7 @@ const ngDevtools = defineDevframe({
     });
 
     // Agent tools
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:highlight',
       description:
         'Highlight a component in the running Angular app and make it the target of ng-devtools:inspect-signals. Pass an instance id from the ng-devtools:component-tree resource (targets that exact instance, e.g. the second card of a list), a class name, a host tag, or any CSS selector.',
@@ -1003,7 +1046,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:inspect-signals',
       description:
         'Get the signal graph the running page last reported: signal nodes (signal, computed, linkedSignal, effect), their dependency edges, `component` (instance id, class name, host tag and host path), and `history` (recent value changes per node id; `write` entries are exact, `sample` entries come from polling and `missed` counts values that went unseen). Only signals a template or an effect has read appear. The page reports one graph: the component picked on the Signals page (or via ng-devtools:highlight), otherwise the component the primary router outlet renders deepest, otherwise the first component with a graph. A selector that does not match it returns what is available instead; call ng-devtools:highlight with it first to switch the graph to it.',
@@ -1042,7 +1085,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:inspect-providers',
       description:
         'Get the DI injector hierarchy a running page reported, with the providers at each level. Each open tab reports its own tree; `pageId` picks one and defaults to the most recent. The page reports the whole tree rather than one component, so the selector only labels the answer.',
@@ -1083,7 +1126,7 @@ const ngDevtools = defineDevframe({
       description: 'Page id, when more than one tab reports. Defaults to the most recent.',
     };
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:inspect-route',
       description:
         'The route the running page is on right now: URL (and the browser URL when it differs), query params, fragment, document title, any navigation in flight, the active route tree (component, params and data with where each value comes from, own or inherited title, guards, resolvers) and the outlet tree with router-bound inputs. Pass `selector` (a component class, element tag or link text) to see the route a component was rendered for, or whether a link counts as active. Secret-looking values are redacted.',
@@ -1106,7 +1149,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:explain-navigation',
       description:
         'Recent navigations on the running page, newest first, each as a full story: from and to, who started it (link, code, back/forward), extras, redirect chain and loops, per-phase timing, guards and resolvers (with each verdict when instrumentation is on), lazy loads, reused components, HTTP requests, scroll, title, and the cancel or error reason with a plain-language meaning and the NG0 error explained. Use it for "why did this navigation not work", "why was I redirected" or, with perf, "why is navigation slow".',
@@ -1145,7 +1188,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:list-routes',
       description:
         "The router's live route config (not just the active route): every route with its full path, component or redirect, lazy state, outlet, guards, resolvers, title, the source file it is declared in and an example URL, with the active routes marked. Pass `match` to predict which route a URL matches (or the nearest routes when it matches none), `audit` for the guards protecting each page, or `filter` to narrow by path or component.",
@@ -1183,7 +1226,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:lint-routes',
       description:
         "Checks the live route config for mistakes: routes after '**', a :param route shadowing a literal one, duplicate paths, empty-path redirects without pathMatch 'full', redirect cycles, deprecated class guards and canLoad, lazy chunks downloaded before canActivate rejects, missing or duplicate titles, param/input name typos, RouterLinkActive without aria-current, emails in URLs and return URLs taken from query params. Each finding says whether Angular throws, warns or stays silent, and how to fix it.",
@@ -1196,7 +1239,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:router-config',
       description:
         'How the router is set up on the running page: provideRouter or forRoot, Angular version, effective options with which are set and which are defaults (onSameUrlNavigation, paramsInheritanceStrategy, urlUpdateStrategy, canceledNavigationResolution, scrolling, initial navigation), enabled features (input binding, view transitions, error handler, preloading strategy, scroller, resources), strategies (location, title, reuse, URL handling), base href, hydration and whether per-guard instrumentation is on.',
@@ -1209,7 +1252,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:export-navigation',
       description:
         'A markdown repro for one navigation (default: the latest that did not succeed): Angular version, router options and features, how it started, the full redirect chain with every detail from explain-navigation, and the relevant slice of the route config. Secret-looking values stay redacted.',
@@ -1225,7 +1268,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:explain-render-mode',
       description:
         "Which ServerRoute (from the workspace's *.routes.server.ts) and render mode (Server, Client, Prerender) a URL gets, plus server entries that match no client route and the render mode of every client route.",
@@ -1249,7 +1292,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:navigate',
       description:
         'Acts on the running app\'s router (development only). action "navigate" goes to `url` (same-origin, starting with "/") or to `pattern` with `params` (e.g. /users/:id with {"id":"7"}), optionally with replaceUrl or skipLocationChange, and waits for the outcome; "abort" stops the navigation in flight; "replay" re-runs navigation `id` and compares the outcome; "probe" runs the real matcher for `url` without navigating (it runs canMatch and may load lazy chunks); "instrument" turns per-guard and per-resolver recording on or off; "resolve-lazy" reads the routes of an unloaded lazy route (`routeId` from list-routes) without registering them.',
@@ -1330,7 +1373,7 @@ const ngDevtools = defineDevframe({
         'Form id (Checkout.form@ab12, or Checkout.form without the page) or part of its label (Component.property).',
     };
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:inspect-forms',
       description:
         'Inspect the forms on the running page (Signal Forms, reactive and template-driven). Without arguments it lists each form with its status and error count. Pass `form` for its field tree (value, status, touched, dirty, errors per field). Password and other secret-looking values are redacted. For "why is this form invalid", call explain-form-invalid first.',
@@ -1366,7 +1409,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:explain-form-invalid',
       description:
         'Explain why forms on the running page are invalid: each failing field with its current value, the validator that failed, its message and whether it was touched, plus fields waiting on async validators and disabled reasons. Without `form` it covers every form that is invalid or waiting on async validation.',
@@ -1406,7 +1449,7 @@ const ngDevtools = defineDevframe({
       };
     const str = (value: unknown) => (typeof value === 'string' ? value : undefined);
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:explain-field',
       description:
         'Explain one form field: value, flags, every error with where it comes from (validator, template attribute, cross-field rule and which ancestor, async, parse, server/submission, setErrors), why validation is skipped (hidden, disabled, readonly), inherited disabled reasons, uncommitted or debounced input, stale validity, rules and validator names, the binding (accessor or [formField]) and DOM facts (label, visible error text, drift). Pass `selector` instead of form/path to start from a CSS selector.',
@@ -1444,7 +1487,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:explain-submit',
       description:
         'Explain what submitting a form will do and why it might do nothing: Signal Forms submit() dry-run (action present, ignoreValidators, already submitting), ngSubmit semantics for reactive and template forms, DOM reasons (no submit button, type="button", disabled button, directive not on a <form>, native validation), blocking and pending fields, and recent submits with their outcome (ran, blocked, threw).',
@@ -1453,7 +1496,7 @@ const ngDevtools = defineDevframe({
       handler: withForms(explainSubmitText),
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:form-payload',
       description:
         'Show what a form would send: form.value vs getRawValue() with the disabled fields form.value drops (reactive), or the hidden/disabled/readonly fields Signal Forms keeps in the value without validating them, plus which fields the user changed.',
@@ -1462,7 +1505,7 @@ const ngDevtools = defineDevframe({
       handler: withForms(formPayloadText),
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:form-history',
       description:
         'Timeline of form changes: value (with previous value and repeat count), status, submit (ran, blocked, threw), added and removed fields, each tagged with its origin (user, code, devtools). Filter by form, path, type, origin or `since` (a marker from an earlier call). Returns the current marker.',
@@ -1496,7 +1539,7 @@ const ngDevtools = defineDevframe({
       handler: withForms(formHistoryText),
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:form-diff',
       description:
         'Net change of a form since a marker: each field whose value or status ended different, with from → to and how many changes happened in between. Get a marker from form-history, inspect-forms or a form-action result, act, then call this.',
@@ -1515,7 +1558,7 @@ const ngDevtools = defineDevframe({
       handler: withForms(formDiffText),
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:lint-forms',
       description:
         'Deterministic checks on live forms: stale validity after validator changes, stuck PENDING, unreachable submit, missing submission action, hidden fields still rendered, view out of sync with the model, [disabled] on reactive controls, required-but-unbound fields, NG01xxx setup errors, and model-aware accessibility (missing label, aria-invalid desync, required not exposed, error text not shown or not linked, no focus after invalid submit).',
@@ -1528,7 +1571,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:lint-pipes',
       description:
         'Deterministic checks on pipes found in source: an impure pipe used inside an @for block (runs every check, potentially once per row), `| json` left in a template (a debugging aid), and a pure pipe whose transform() reads a signal directly (its memoization only tracks its own arguments, not signals it reads).',
@@ -1537,7 +1580,7 @@ const ngDevtools = defineDevframe({
       handler: async () => ({ markdown: lintPipesText(ctx.cwd) }),
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:explain-pipe',
       description:
         'Explain one pipe by name: where it is declared or used, whether it is pure, live instance/call counts and last input/output when instrumentation is on, an experimental stale-value warning, and any lint findings. Use this to answer "why is this pipe slow or stale?"',
@@ -1555,7 +1598,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:explain-custom-control',
       description:
         'Explain how a field is bound to its element (built-in accessor, custom ControlValueAccessor, custom control, [formField]) and what is wrong with it: value drift, missing setDisabledState, touched never set, captured NG01xxx setup errors.',
@@ -1567,7 +1610,7 @@ const ngDevtools = defineDevframe({
       handler: withForms(explainCustomControlText),
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:export-form',
       description:
         'Export a form as a JSON snapshot (tree, status, raw value) or as a test fixture (setValue / signal model plus the expected status) with a repro header. Secret values stay [redacted].',
@@ -1583,7 +1626,7 @@ const ngDevtools = defineDevframe({
       handler: withForms(exportFormText),
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:wait-for-form',
       description:
         'Wait until a form is settled (no pending async validation, debounce or submit in flight), valid, not pending, or submitted after a marker. Resolves as soon as the condition holds, or reports the state on timeout.',
@@ -1648,7 +1691,7 @@ const ngDevtools = defineDevframe({
       return lines.join('\n');
     };
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:form-action',
       description:
         'Act on a live form (dev mode). Actions: set-value (mode code or user; user goes through the input like typing), mark-touched, mark-untouched, mark-dirty, mark-pristine, touch-all, revalidate (Signal Forms: reloads async/HTTP validation), reset, enable, disable (reactive only), submit, focus, focus-first-invalid, store-as-global ($form in the page console), snapshot, restore, instrument (value true or false: record the calling code of form changes, validator changes and template updates per keystroke, shown by form-history). reset, submit and restore need confirm: true. Secret, hidden and readonly fields are never written; disabled reactive fields need force.',
@@ -1699,7 +1742,7 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    ctx.agent.registerTool({
+    agent.registerTool({
       id: 'ng-devtools:fill-form',
       description:
         'Fill several fields at once, by dotted path, through the inputs like a user would (so parsing, dirty and touched run for real). Reports written and skipped fields (secret, hidden, readonly, disabled, missing) and the resulting status. Optionally submits afterwards (needs confirm: true).',
@@ -1732,9 +1775,20 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    await registerAnalog(my as never, ctx as never);
-    registerHubDocks(ctx, 'ng-devtools');
+    if (on.analog) await registerAnalog(my as never, { cwd: ctx.cwd, agent } as never);
+    registerHubDocks(ctx, 'ng-devtools', config);
   },
 });
+
+export function createNgDevtools(options: NgDevtoolsConfig = {}) {
+  const config = resolveNgDevtoolsConfig(options);
+  return defineDevframe({
+    ...ngDevtools,
+    setup: (ctx, info) => {
+      const withConfig: SetupInfo = { ...info, config };
+      return ngDevtools.setup(ctx, withConfig);
+    },
+  });
+}
 
 export default ngDevtools;
