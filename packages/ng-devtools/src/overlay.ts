@@ -4,11 +4,13 @@ import { attachAnalog } from './analog-runtime.ts';
 import { attachForms } from './forms-collector.ts';
 import { attachPipes } from './pipes-collector.ts';
 import { attachHttp } from './http-overlay.ts';
+import { httpRegistry } from './http-rules.ts';
 import { attachNgrx } from './ngrx-overlay.ts';
 import { collectInjectorTree } from './injector-tree.ts';
 import {
   findRouters,
   setGeneration,
+  setNavigationLimit,
   snapshotRouter,
   watchRouter,
   type NavigationRecord,
@@ -101,7 +103,10 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   const my = rpc.scope('ng-devtools');
   const devtoolsConfig = configFromConnection(rpc.connectionMeta);
   const on = devtoolsConfig.inspectors;
+  const limits = devtoolsConfig.limits;
   setRedaction(devtoolsConfig.redaction);
+  setNavigationLimit(limits.navigations);
+  if (on.http) httpRegistry().maxCalls = limits.httpCalls;
 
   let componentTarget: string | null = null;
   let lastTreeJson = '';
@@ -159,13 +164,19 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   }
 
   const { id: pageId, release: releasePageId } = await claimPageId();
-  const stopAnalog = on.analog ? attachAnalog(my, pageId, getNg) : () => {};
+  const stopAnalog = on.analog ? attachAnalog(my, pageId, getNg, limits.refreshMs) : () => {};
   const forms = on.forms
-    ? attachForms(my, pageId, getNg, { show: showHighlight, clear: clearHighlight })
+    ? attachForms(
+        my,
+        pageId,
+        getNg,
+        { show: showHighlight, clear: clearHighlight },
+        limits.formTimeline,
+      )
     : null;
   const pipes = on.pipes ? attachPipes(my, pageId, getNg) : null;
   const http = on.http ? attachHttp(my, pageId) : null;
-  const ngrx = on.ngrx ? attachNgrx(my, pageId, getNg) : null;
+  const ngrx = on.ngrx ? attachNgrx(my, pageId, getNg, limits.changeLog) : null;
 
   const navigations: NavigationRecord[] = [];
   const preloads: PreloadRecord[] = [];
@@ -312,7 +323,7 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   const collect = () => collectors.forEach((run) => run());
   collect();
 
-  const interval = setInterval(collect, 3000);
+  const interval = setInterval(collect, limits.refreshMs);
 
   my.rpc.register({
     name: 'highlight-in-page',

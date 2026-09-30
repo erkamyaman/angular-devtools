@@ -2,6 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NgDevtoolsConfig } from '../config.ts';
 import { isSecretKey, setRedaction } from '../forms-privacy.ts';
+import { httpRegistry } from '../http-rules.ts';
+import { noteFailedCall, setNavigationLimit, type NavigationRecord } from '../router.ts';
 
 const calls: string[] = [];
 let configs: Record<string, unknown> | undefined;
@@ -36,6 +38,9 @@ afterEach(() => {
   stops.splice(0).forEach((stop) => stop());
   sessionStorage.clear();
   setRedaction();
+  setNavigationLimit(50);
+  delete httpRegistry().maxCalls;
+  vi.restoreAllMocks();
 });
 
 describe('overlay collectors', () => {
@@ -69,6 +74,24 @@ describe('overlay collectors', () => {
     dispatchEvent(new Event('pagehide'));
     expect(calls).not.toContain('forget-forms-page');
     expect(calls).toContain('forget-router-page');
+  });
+
+  it('refresh on the default interval without a config', async () => {
+    const interval = vi.spyOn(globalThis, 'setInterval');
+    await start();
+    expect(interval).toHaveBeenCalledWith(expect.any(Function), 3000);
+    expect(httpRegistry().maxCalls).toBe(200);
+  });
+
+  it('use the configured limits', async () => {
+    const interval = vi.spyOn(globalThis, 'setInterval');
+    await start({ limits: { refreshMs: 1000, navigations: 10, httpCalls: 20 } });
+    expect(interval).toHaveBeenCalledWith(expect.any(Function), 1000);
+    expect(interval).not.toHaveBeenCalledWith(expect.any(Function), 3000);
+    expect(httpRegistry().maxCalls).toBe(20);
+    const list: NavigationRecord[] = [];
+    for (let i = 0; i < 15; i++) noteFailedCall(list, `/x/${i}`, new Error('nope'), i);
+    expect(list).toHaveLength(10);
   });
 
   it('apply the redaction config from the server before collecting', async () => {

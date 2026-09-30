@@ -123,7 +123,36 @@ describe('resolveNgDevtoolsConfig', () => {
       agent: { readOnly: true },
       actions: undefined,
       redaction: undefined,
+      limits: undefined,
     });
+  });
+
+  it('fills in and clamps the limits', () => {
+    expect(resolveNgDevtoolsConfig().limits).toEqual({
+      refreshMs: 3000,
+      navigations: 50,
+      formTimeline: 200,
+      httpCalls: 200,
+      changeLog: 200,
+    });
+    expect(
+      resolveNgDevtoolsConfig({
+        limits: {
+          refreshMs: 100,
+          navigations: 10_000,
+          formTimeline: 99.6,
+          httpCalls: Number.NaN,
+          changeLog: '500',
+        },
+      }).limits,
+    ).toEqual({
+      refreshMs: 500,
+      navigations: 500,
+      formTimeline: 100,
+      httpCalls: 200,
+      changeLog: 200,
+    });
+    expect(resolveNgDevtoolsConfig({ limits: { refreshMs: 60_000 } }).limits.refreshMs).toBe(8000);
   });
 
   it('keeps redaction names as trimmed, unique strings', () => {

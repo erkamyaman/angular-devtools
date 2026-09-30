@@ -16,6 +16,17 @@ export const NG_DEVTOOLS_ACTIONS = ['forms', 'router', 'ngrx', 'http', 'analog']
 
 export type NgDevtoolsAction = (typeof NG_DEVTOOLS_ACTIONS)[number];
 
+/** Default, minimum and maximum of each `limits` option. Values outside are clamped. */
+export const NG_DEVTOOLS_LIMITS = {
+  refreshMs: { default: 3000, min: 500, max: 8000 },
+  navigations: { default: 50, min: 5, max: 500 },
+  formTimeline: { default: 200, min: 10, max: 2000 },
+  httpCalls: { default: 200, min: 10, max: 2000 },
+  changeLog: { default: 200, min: 10, max: 2000 },
+} as const;
+
+export type NgDevtoolsLimit = keyof typeof NG_DEVTOOLS_LIMITS;
+
 /**
  * Options shared by `initNgDevtoolsHub()`, the Vite plugin and
  * `createNgDevtools()`. Everything is on when left out.
@@ -40,6 +51,18 @@ export interface NgDevtoolsConfig {
     /** Field names to show even when they look secret, like `window.__NG_DEVTOOLS_FORMS__.unmask`. */
     unmask?: string[];
   };
+  limits?: {
+    /** How often the page reports what changed, in ms. Default 3000, from 500 to 8000. */
+    refreshMs?: number;
+    /** Navigations kept per page. Default 50. */
+    navigations?: number;
+    /** Form timeline events kept. Default 200. */
+    formTimeline?: number;
+    /** HTTP calls kept per page and on the server. Default 200. */
+    httpCalls?: number;
+    /** NgRx change log entries kept per page. Default 200. */
+    changeLog?: number;
+  };
 }
 
 export interface ResolvedNgDevtoolsConfig {
@@ -47,6 +70,7 @@ export interface ResolvedNgDevtoolsConfig {
   agent: { readOnly: boolean; tools: Record<NgDevtoolsInspector, boolean> };
   actions: Record<NgDevtoolsAction, boolean>;
   redaction: { secretNames: string[]; unmask: string[] };
+  limits: Record<NgDevtoolsLimit, number>;
 }
 
 export const NG_DEVTOOLS_CONFIG_KEY = 'ng-devtools';
@@ -73,6 +97,12 @@ function names(value: unknown): string[] {
   return [...new Set(trimmed)].slice(0, MAX_NAMES);
 }
 
+function limit(value: unknown, key: NgDevtoolsLimit): number {
+  const { default: fallback, min, max } = NG_DEVTOOLS_LIMITS[key];
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
 function flags<K extends string>(
   keys: readonly K[],
   value: (key: K) => boolean,
@@ -89,6 +119,7 @@ export function resolveNgDevtoolsConfig(config?: unknown): ResolvedNgDevtoolsCon
   const actionInput = record(input['actions']);
   const allActions = flag(input['actions'], true);
   const redaction = record(input['redaction']);
+  const limits = record(input['limits']);
   const inspectors = flags(NG_DEVTOOLS_INSPECTORS, (key) => flag(inspectorInput[key], true));
   return {
     inspectors,
@@ -104,6 +135,12 @@ export function resolveNgDevtoolsConfig(config?: unknown): ResolvedNgDevtoolsCon
       secretNames: names(redaction['secretNames']),
       unmask: names(redaction['unmask']),
     },
+    limits: Object.fromEntries(
+      (Object.keys(NG_DEVTOOLS_LIMITS) as NgDevtoolsLimit[]).map((key) => [
+        key,
+        limit(limits[key], key),
+      ]),
+    ) as Record<NgDevtoolsLimit, number>,
   };
 }
 
@@ -119,8 +156,8 @@ export function configFromConnection(
 export function pickNgDevtoolsConfig<T extends NgDevtoolsConfig>(
   options: T,
 ): { config: NgDevtoolsConfig; rest: Omit<T, keyof NgDevtoolsConfig> } {
-  const { inspectors, agent, actions, redaction, ...rest } = options;
-  return { config: { inspectors, agent, actions, redaction }, rest };
+  const { inspectors, agent, actions, redaction, limits, ...rest } = options;
+  return { config: { inspectors, agent, actions, redaction, limits }, rest };
 }
 
 /** Form actions that change the form or its validity, as opposed to reading or focusing it. */

@@ -95,7 +95,6 @@ import {
 import { extractRoutes } from './rpc/get-routes.ts';
 import { scanServerRoutes } from './rpc/server-routes.ts';
 import {
-  MAX_CALLS,
   httpRegistry,
   sanitizeCalls,
   sanitizeRules,
@@ -151,6 +150,7 @@ const ngDevtools = defineDevframe({
     const config = info?.config ?? resolveNgDevtoolsConfig();
     setRedaction(config.redaction);
     const on = config.inspectors;
+    const limits = config.limits;
     const my = ctx.scope('ng-devtools');
     (ctx.staticConfig as Record<string, unknown>)[NG_DEVTOOLS_CONFIG_KEY] = config;
     const register: typeof my.rpc.register = (definition) => {
@@ -267,7 +267,7 @@ const ngDevtools = defineDevframe({
       jsonSerializable: true,
       handler: (report: unknown) => {
         if (!isPageReport(report)) return;
-        applyForms(mergePageReport(formPages, report));
+        applyForms(mergePageReport(formPages, report, Date.now(), limits.formTimeline));
       },
     });
 
@@ -350,7 +350,7 @@ const ngDevtools = defineDevframe({
       type: 'action',
       jsonSerializable: true,
       handler: (report: unknown) => {
-        if (!isRouterReport(report)) return { hasConfig: false };
+        if (!isRouterReport(report, limits.navigations)) return { hasConfig: false };
         try {
           applyRouter(mergeRouterReport(routerPages, report));
         } catch {
@@ -497,15 +497,15 @@ const ngDevtools = defineDevframe({
       pendingServerCalls = [];
       httpState.mutate((draft) => {
         draft.serverCalls.push(...batch);
-        if (draft.serverCalls.length > MAX_CALLS) {
-          draft.serverCalls.splice(0, draft.serverCalls.length - MAX_CALLS);
+        if (draft.serverCalls.length > limits.httpCalls) {
+          draft.serverCalls.splice(0, draft.serverCalls.length - limits.httpCalls);
         }
       });
     };
     registry.record = on.http
       ? (call) => {
           pendingServerCalls.push(call);
-          if (pendingServerCalls.length > MAX_CALLS) pendingServerCalls.shift();
+          if (pendingServerCalls.length > limits.httpCalls) pendingServerCalls.shift();
           flushTimer ??= setTimeout(flushServerCalls, 100);
         }
       : () => {};
@@ -540,7 +540,7 @@ const ngDevtools = defineDevframe({
           title: typeof page.title === 'string' ? page.title.slice(0, 200) : '',
           payload: hasPayload ? sanitizePayload(page.payload) : known!.payload,
           hydration: sanitizeHydration(page.hydration),
-          calls: sanitizeCalls(page.calls),
+          calls: sanitizeCalls(page.calls, limits.httpCalls),
           firstSeenAt: known?.firstSeenAt ?? Date.now(),
           reportedAt: Date.now(),
         });
@@ -615,7 +615,7 @@ const ngDevtools = defineDevframe({
         for (const [id] of staleInjectors) injectorPages.delete(id);
         applyInjectorPages();
       }
-      const next = expirePages(formPages);
+      const next = expirePages(formPages, Date.now(), limits.formTimeline);
       if (next) applyForms(next);
       const nextRouter = expireRouterPages(routerPages);
       if (nextRouter) applyRouter(nextRouter);
@@ -636,7 +636,7 @@ const ngDevtools = defineDevframe({
       jsonSerializable: true,
       handler: (pageId: string) => {
         if (typeof pageId === 'string' && formPages.delete(pageId)) {
-          applyForms(currentForms(formPages));
+          applyForms(currentForms(formPages, limits.formTimeline));
         }
       },
     });
@@ -905,7 +905,7 @@ const ngDevtools = defineDevframe({
       jsonSerializable: true,
       handler: (report: unknown) => {
         if (!isNgrxReport(report)) return { seq: 0 };
-        const seq = mergeNgrxReport(ngrxPages, report, ngrxNames());
+        const seq = mergeNgrxReport(ngrxPages, report, ngrxNames(), Date.now(), limits.changeLog);
         applyNgrx();
         return { seq };
       },

@@ -235,7 +235,12 @@ interface Rpc {
   rpc: { call(name: string, ...args: unknown[]): Promise<unknown> };
 }
 
-export function attachAnalog(my: Rpc, pageId: string, getNg: () => AnyRecord | undefined) {
+export function attachAnalog(
+  my: Rpc,
+  pageId: string,
+  getNg: () => AnyRecord | undefined,
+  refreshMs = 3000,
+) {
   const hydrationErrors: string[] = [];
   const scanner = createHydrationScanner();
   let last = '';
@@ -286,7 +291,7 @@ export function attachAnalog(my: Rpc, pageId: string, getNg: () => AnyRecord | u
     push();
   };
   tick();
-  const interval = setInterval(tick, 3000);
+  const interval = setInterval(tick, refreshMs);
   return () => {
     clearInterval(interval);
     subscription?.unsubscribe();

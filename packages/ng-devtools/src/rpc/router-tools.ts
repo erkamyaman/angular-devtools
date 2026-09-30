@@ -279,7 +279,10 @@ function isNode(value: unknown, budget: { n: number }, depth = 0): boolean {
   );
 }
 
-export function isRouterReport(value: unknown): value is RouterReport {
+export function isRouterReport(
+  value: unknown,
+  maxNavigations = MAX_NAVIGATIONS,
+): value is RouterReport {
   if (!isRecord(value)) return false;
   const report: Partial<RouterReport> = value;
   const nodes = { n: 0 };
@@ -287,7 +290,7 @@ export function isRouterReport(value: unknown): value is RouterReport {
     isText(report.pageId, 50) &&
     isSnapshot(report.snapshot) &&
     Array.isArray(report.navigations) &&
-    report.navigations.length <= MAX_NAVIGATIONS &&
+    report.navigations.length <= maxNavigations &&
     report.navigations.every(isNavigation) &&
     optional(report.generation, isNumber) &&
     optional(
