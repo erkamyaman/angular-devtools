@@ -247,12 +247,16 @@ function firstLoop(sequence: NavigationRecord[], config?: RouteNode[]): Navigati
       seen.set(key, j);
       continue;
     }
-    if (j - i < 2 && steps[j].hop?.via === 'navigate') {
+    const cycle = steps.slice(i, j + 1);
+    const hops = cycle.slice(1).map((step) => step.hop!);
+    const onePath = cycle.every((step) => pathOf(step.url) === pathOf(cycle[0].url));
+    if (
+      (j - i < 2 && steps[j].hop?.via === 'navigate') ||
+      (onePath && hops.every((hop) => hop.via === 'navigate'))
+    ) {
       seen.set(key, j);
       continue;
     }
-    const cycle = steps.slice(i, j + 1);
-    const hops = cycle.slice(1).map((step) => step.hop!);
     const first = sequence.indexOf(steps[i].nav);
     const navs = sequence.slice(first);
     const cycleEnd = sequence.indexOf(steps[j].nav);
@@ -305,7 +309,9 @@ function configLoop(nav: NavigationRecord, config?: RouteNode[]): NavigationLoop
  * canMatch or error handler redirects, followed through redirectedFrom, plus
  * the config redirectTo inside each navigation) or a burst of navigations
  * that code started right after each other, that visits the same URL twice;
- * and navigations Angular stopped with NG04016 (a redirectTo loop).
+ * and navigations Angular stopped with NG04016 (a redirectTo loop). A cycle
+ * made only of navigate calls that stays on one path (a search box or filter
+ * updating the query or fragment) is not a loop.
  */
 export function detectLoops(
   navigations: NavigationRecord[],

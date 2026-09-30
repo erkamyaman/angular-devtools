@@ -3,10 +3,10 @@ import '@angular/compiler';
 import { Component, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { Router, provideRouter, type Routes } from '@angular/router';
+import { Router, provideRouter, type ActivatedRouteSnapshot, type Routes } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { watchRouter, type NavigationRecord } from '../router.ts';
-import { instrument } from '../router-actions.ts';
+import { captureCallers, instrument } from '../router-actions.ts';
 import type { RouteNode } from '../router-config.ts';
 import { lintRoutes } from '../rpc/router-config-tools.ts';
 import { detectLoops, redirectCycles } from '../rpc/router-loops.ts';
@@ -186,6 +186,80 @@ describe('detectLoops', () => {
     expect(detectLoops(slow)).toEqual([]);
   });
 
+  it('ignores search-as-you-type query updates on the same path', () => {
+    const typed = (id: number, q: string, extras?: string[]) =>
+      nav(id, {
+        url: `/list?q=${q}`,
+        startedAt: id * 200,
+        endedAt: id * 200 + 5,
+        caller: 'navigate() from SearchPage.onQuery',
+        extras,
+      });
+    const navigations = [
+      typed(1, 'a'),
+      typed(2, 'ab', ['replaceUrl']),
+      typed(3, 'a', ['replaceUrl']),
+      typed(4, 'ab', ['skipLocationChange']),
+      typed(5, 'a', ['skipLocationChange']),
+    ];
+    expect(detectLoops(navigations)).toEqual([]);
+    expect(lintRoutes(page(navigations)).map((f) => f.rule)).not.toContain('redirect-loop');
+  });
+
+  it('ignores a filter toggled back and forth', () => {
+    const navigations = [1, 2, 3, 4, 5, 6].map((id) =>
+      nav(id, {
+        url: id % 2 ? '/products?inStock=true#grid' : '/products#grid',
+        caller: 'navigate() from ProductsPage.toggleStock',
+      }),
+    );
+    expect(detectLoops(navigations)).toEqual([]);
+  });
+
+  it('still finds code-started navigations bouncing between two paths through query updates', () => {
+    const navigations = [
+      nav(1, { url: '/a?x=1', caller: 'navigate() from BPage.ngOnInit' }),
+      nav(2, { url: '/a?x=2', caller: 'navigate() from APage.ngOnInit' }),
+      nav(3, { url: '/b', caller: 'navigate() from APage.ngOnInit' }),
+      nav(4, { url: '/a?x=1', caller: 'navigate() from BPage.ngOnInit' }),
+    ];
+    const [loop] = detectLoops(navigations);
+    expect(loop).toMatchObject({ kind: 'burst', cycle: ['/a?x=1', '/a?x=2', '/b', '/a?x=1'] });
+  });
+
+  it('finds a guard redirect loop that only changes a guard-added query', () => {
+    const navigations = [
+      redirect(1, '/list', '/list?page=1', 'pageGuard'),
+      redirect(2, '/list?page=1', '/list', 'pageGuard', 1),
+      redirect(3, '/list', '/list?page=1', 'pageGuard', 2),
+      nav(4, { url: '/list?page=1', redirectedFrom: 3 }),
+    ];
+    const [loop] = detectLoops(navigations);
+    expect(loop).toMatchObject({
+      kind: 'redirect',
+      cycle: ['/list', '/list?page=1', '/list'],
+      guards: ['pageGuard'],
+    });
+  });
+
+  it('finds a loop on one path when a guard redirect is one of the hops', () => {
+    const navigations = [
+      nav(1, { url: '/list?page=0', caller: 'navigate() from ListPage.ngOnInit' }),
+      redirect(2, '/list?page=0', '/list?page=1', 'pageGuard'),
+      nav(3, {
+        url: '/list?page=1',
+        redirectedFrom: 2,
+        caller: 'navigate() from ListPage.ngOnInit',
+      }),
+      nav(4, { url: '/list?page=0', caller: 'navigate() from ListPage.ngOnInit' }),
+    ];
+    const [loop] = detectLoops(navigations);
+    expect(loop).toMatchObject({
+      kind: 'burst',
+      cycle: ['/list?page=0', '/list?page=1', '/list?page=0'],
+    });
+  });
+
   it('reports each loop as a redirect-loop lint finding with the guards involved', () => {
     const navigations = [
       redirect(1, '/account', '/login', 'authGuard'),
@@ -212,6 +286,11 @@ const guestGuard = () => {
   return inject(Router).parseUrl('/account');
 };
 const toStep = (n: number) => () => inject(Router).parseUrl(`/step/${n + 1}`);
+let pageBounces = 0;
+const pageGuard = (route: ActivatedRouteSnapshot) => {
+  if (!route.queryParamMap.has('page')) return inject(Router).parseUrl('/list?page=1');
+  return ++pageBounces >= 3 || inject(Router).parseUrl('/list');
+};
 
 const routes: Routes = [
   { path: '', component: Page },
@@ -223,6 +302,7 @@ const routes: Routes = [
   { path: 'step/2', component: Page, canActivate: [toStep(2)] },
   { path: 'step/3', component: Page, canActivate: [toStep(3)] },
   { path: 'step/4', component: Page },
+  { path: 'list', component: Page, canActivate: [pageGuard] },
 ];
 
 describe('detectLoops on a real Router', () => {
@@ -242,6 +322,7 @@ describe('detectLoops on a real Router', () => {
     await router.navigateByUrl('/');
     signedIn = false;
     bounces = 0;
+    pageBounces = 0;
   });
 
   afterEach(() => {
@@ -277,6 +358,30 @@ describe('detectLoops on a real Router', () => {
     expect(detectLoops(navigations, config)).toEqual([
       expect.objectContaining({ kind: 'config', ids: [failed.id], cycle: ['/x', '/y', '/x'] }),
     ]);
+  });
+
+  it('flags a guard that keeps adding and removing a query param on one path', async () => {
+    await router.navigateByUrl('/list');
+    expect(router.url).toBe('/list?page=1');
+    const [loop, ...rest] = detectLoops(navigations);
+    expect(rest).toEqual([]);
+    expect(loop).toMatchObject({
+      kind: 'redirect',
+      cycle: ['/list', '/list?page=1', '/list'],
+      guards: ['pageGuard'],
+    });
+  });
+
+  it('does not flag search-as-you-type navigations on a real Router', async () => {
+    await router.navigateByUrl('/list?page=1');
+    cleanup.push(captureCallers(router as never, navigations));
+    navigations.length = 0;
+    for (const q of ['a', 'ab', 'a', 'ab', 'a']) {
+      await router.navigate(['/list'], { queryParams: { page: 1, q }, replaceUrl: true });
+    }
+    expect(navigations).toHaveLength(5);
+    expect(navigations.every((n) => n.caller?.startsWith('navigate()'))).toBe(true);
+    expect(detectLoops(navigations)).toEqual([]);
   });
 
   it('does not flag a chain of guard redirects that ends somewhere new', async () => {
