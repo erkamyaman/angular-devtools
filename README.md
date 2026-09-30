@@ -322,6 +322,94 @@ createDevtoolsPopup();
 
 This adds a floating button (bottom-right) that opens the full devtools UI in an iframe. Supports three dock modes (float, bottom, right), dragging, resizing, and persists position via localStorage. The popup is automatically loaded in development when using the demo app.
 
+### Configuration
+
+`initNgDevtoolsHub()`, the Vite plugin and `createNgDevtools()` (from `@santoshyadavdev/ng-devtools/devframe`) take the same options. Everything is on when you leave them out. The server enforces them, and the page and the panel read them from the connection info, so you set them in one place. The Dashboard lists the options that differ from the defaults under **Configuration**.
+
+```ts
+// @santoshyadavdev/ng-devtools/config
+type Inspector =
+  | 'components'
+  | 'injectors'
+  | 'signals'
+  | 'ngrx'
+  | 'forms'
+  | 'router'
+  | 'pipes'
+  | 'http'
+  | 'analog';
+type Action = 'forms' | 'router' | 'ngrx' | 'http' | 'analog';
+
+interface NgDevtoolsConfig {
+  inspectors?: Partial<Record<Inspector, boolean>>;
+  agent?: { readOnly?: boolean; tools?: Partial<Record<Inspector, boolean>> };
+  actions?: boolean | Partial<Record<Action, boolean>>;
+  redaction?: { secretNames?: string[]; unmask?: string[] };
+  limits?: {
+    refreshMs?: number;
+    navigations?: number;
+    formTimeline?: number;
+    httpCalls?: number;
+    changeLog?: number;
+  };
+}
+```
+
+| Option                  | Default | Effect                                                                                                                                                                                |
+| ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `inspectors.<name>`     | `true`  | `false` removes the inspector: no tab or dock, no page collector, no RPC functions and no agent tools or resources.                                                                   |
+| `agent.readOnly`        | `false` | `true` drops every agent tool that acts on the page or the server (`highlight`, `form-action`, `fill-form`, `navigate`, `analog-call-api`).                                           |
+| `agent.tools.<name>`    | `true`  | `false` hides one inspector's agent tools and resources and keeps its tab.                                                                                                            |
+| `actions.forms`         | `true`  | `false` blocks form writes (set value, touch, reset, submit, restore and similar) and drops the `form-action` and `fill-form` agent tools.                                            |
+| `actions.router`        | `true`  | `false` blocks navigate, abort and replay and drops the `navigate` agent tool.                                                                                                        |
+| `actions.ngrx`          | `true`  | `false` blocks restoring NgRx state from the change log.                                                                                                                              |
+| `actions.http`          | `true`  | `false` blocks editing fault injection rules and clearing the HTTP timeline.                                                                                                          |
+| `actions.analog`        | `true`  | `false` blocks the Analog request playground and drops the `analog-call-api` agent tool.                                                                                              |
+| `actions`               | `true`  | `false` blocks all of the above.                                                                                                                                                      |
+| `redaction.secretNames` | `[]`    | Extra field names treated as secret, matched by words like the built-in list (`passport` also covers `passportNumber`). Used by forms, the router, signals, NgRx and Analog previews. |
+| `redaction.unmask`      | `[]`    | Field names shown even when they look secret. Joins `window.__NG_DEVTOOLS_FORMS__.unmask`.                                                                                            |
+| `limits.refreshMs`      | `3000`  | How often the page reports changes, in ms. Clamped to 500 to 8000.                                                                                                                    |
+| `limits.navigations`    | `50`    | Navigations kept per page. Clamped to 5 to 500.                                                                                                                                       |
+| `limits.formTimeline`   | `200`   | Form timeline events kept. Clamped to 10 to 2000.                                                                                                                                     |
+| `limits.httpCalls`      | `200`   | HTTP calls kept per page and on the server. Clamped to 10 to 2000.                                                                                                                    |
+| `limits.changeLog`      | `200`   | NgRx change log entries kept per page. Clamped to 10 to 2000.                                                                                                                         |
+
+A blocked action is refused by the server, and the panel disables its controls with a note that names the option.
+
+With the Express hub:
+
+```ts
+// server.ts
+import { initNgDevtoolsHub } from '@santoshyadavdev/ng-devtools/hub';
+
+const devtools = initNgDevtoolsHub({
+  ws: false,
+  inspectors: { pipes: false },
+  agent: { readOnly: true },
+  redaction: { secretNames: ['passport', 'taxId'] },
+});
+app.use(devtools.nodeMiddleware);
+```
+
+With Vite (Analog):
+
+```ts
+// vite.config.ts
+import analog from '@analogjs/platform';
+import ngDevtools from '@santoshyadavdev/ng-devtools/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [
+    analog(),
+    ngDevtools({
+      actions: { http: false, analog: false },
+      limits: { refreshMs: 1000, navigations: 100 },
+    }),
+  ],
+});
+```
+
 ## Demo App
 
 The repository includes a demo app, **Angular Travel** (`src/`), that looks and behaves like a real booking site so every inspector has something to show:
@@ -383,7 +471,7 @@ pnpm extension:build
 
 - **Connection.** The panel looks for the devframe connection on the inspected page's origin, under `/__ng-devtools/`, `/__devframes/ng-devtools/`, `/__devframe/` and `/`, and connects to the first one that answers. When none answers, it lists the URLs it tried.
 - **Inspected tab.** With several tabs open on the same app, the panel shows the page it inspects, not the one that reported last. It reconnects after each navigation.
-- **Elements panel.** While the Components tab is open, selecting an element in Chrome's Elements panel selects its component there. Other tabs stay where they are.
+- **Elements panel.** While the Components tab is open, selecting an element in Chrome's Elements panel selects its component there. Other tabs stay where they are, and nothing is followed when `inspectors.components` is `false`.
 - **Hosts.** `localhost`, `*.localhost`, `127.0.0.1` and `[::1]` work out of the box. For any other host (a LAN IP, a tunnel), the panel shows an **Allow access** button that grants the extension that host only. The devtools server still only answers requests from your machine.
 
 ## Community
