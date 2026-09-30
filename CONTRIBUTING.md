@@ -2,6 +2,8 @@
 
 Thanks for your interest in contributing. This guide covers the rules a change follows and how to get it merged. For setup, the project structure, the commands and what CI runs, see [Development setup](./apps/docs/src/content/contributing/development.md) on the docs site.
 
+By taking part you agree to the [Code of Conduct](./CODE_OF_CONDUCT.md). Report security issues privately, as [SECURITY.md](./SECURITY.md) describes.
+
 ## Guidelines
 
 | Guide                                                                       | What it covers                                                    |
