@@ -23,7 +23,7 @@ These three functions take the same options:
 
 ### Express hub
 
-Pass the options next to the hub options:
+Pass the options next to the [access options](/security#express-hub) `auth`, `allowedOrigins` and `mcp`:
 
 ```ts {8-10}
 // src/server.ts
@@ -42,7 +42,7 @@ app.use(devtools.nodeMiddleware);
 
 ### Vite plugin
 
-Pass them to `ngDevtools()`:
+Pass them to `ngDevtools()`, next to the [access options](/security#vite-plugin) `auth` and `allowedOrigins`:
 
 ```ts {9-12}
 // vite.config.ts
@@ -156,13 +156,15 @@ Forms, the router, component inputs, signals, NgRx and Analog previews use the e
 
 Values outside the bounds are clamped to the nearest one.
 
-| Option                | Default | Bounds      | What it sets                                |
-| --------------------- | ------- | ----------- | ------------------------------------------- |
-| `limits.refreshMs`    | `3000`  | 500 to 8000 | How often the page reports changes, in ms.  |
-| `limits.navigations`  | `50`    | 5 to 500    | Navigations kept per page.                  |
-| `limits.formTimeline` | `200`   | 10 to 2000  | Form timeline events kept.                  |
-| `limits.httpCalls`    | `200`   | 10 to 2000  | HTTP calls kept per page and on the server. |
-| `limits.changeLog`    | `200`   | 10 to 2000  | NgRx change log entries kept per page.      |
+| Option                | Default | Bounds      | What it sets                                              |
+| --------------------- | ------- | ----------- | --------------------------------------------------------- |
+| `limits.refreshMs`    | `3000`  | 500 to 8000 | Fallback poll interval, in ms, used on Angular before 20. |
+| `limits.navigations`  | `50`    | 5 to 500    | Navigations kept per page.                                |
+| `limits.formTimeline` | `200`   | 10 to 2000  | Form timeline events kept.                                |
+| `limits.httpCalls`    | `200`   | 10 to 2000  | HTTP calls kept per page and on the server.               |
+| `limits.changeLog`    | `200`   | 10 to 2000  | NgRx change log entries kept per page.                    |
+
+On Angular 20 and later, the page reports about 250 ms after Angular runs change detection, plus a heartbeat every 4 seconds. `refreshMs` doesn't change that. The page polls every `refreshMs` instead when it can't follow change detection: on Angular before 20, and until the app bootstraps. The Analog inspector also reads the page every `refreshMs`.
 
 ## Check the active configuration
 

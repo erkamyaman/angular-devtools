@@ -76,14 +76,14 @@ describe('overlay collectors', () => {
     expect(calls).toContain('forget-router-page');
   });
 
-  it('refresh on the default interval without a config', async () => {
+  it('poll on the default fallback interval without a config', async () => {
     const interval = vi.spyOn(globalThis, 'setInterval');
     await start();
     expect(interval).toHaveBeenCalledWith(expect.any(Function), 3000);
     expect(httpRegistry().maxCalls).toBe(200);
   });
 
-  it('use the configured limits', async () => {
+  it('use the configured limits, with refreshMs as the fallback poll interval', async () => {
     const interval = vi.spyOn(globalThis, 'setInterval');
     await start({ limits: { refreshMs: 1000, navigations: 10, httpCalls: 20 } });
     expect(interval).toHaveBeenCalledWith(expect.any(Function), 1000);

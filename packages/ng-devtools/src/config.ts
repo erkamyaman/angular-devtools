@@ -52,7 +52,11 @@ export interface NgDevtoolsConfig {
     unmask?: string[];
   };
   limits?: {
-    /** How often the page reports what changed, in ms. Default 3000, from 500 to 8000. */
+    /**
+     * How often the page polls for changes, in ms, when it can't follow change
+     * detection: before Angular 20, or before the app bootstraps. Also sets the
+     * Analog runtime refresh. Default 3000, from 500 to 8000.
+     */
     refreshMs?: number;
     /** Navigations kept per page. Default 50. */
     navigations?: number;
@@ -341,7 +345,7 @@ const ACTION_LABEL: Record<NgDevtoolsAction, string> = {
 };
 
 const LIMIT_LABEL: Record<NgDevtoolsLimit, (value: number) => string> = {
-  refreshMs: (value) => `refresh every ${value} ms`,
+  refreshMs: (value) => `poll every ${value} ms`,
   navigations: (value) => `${value} navigations`,
   formTimeline: (value) => `${value} form events`,
   httpCalls: (value) => `${value} HTTP calls`,

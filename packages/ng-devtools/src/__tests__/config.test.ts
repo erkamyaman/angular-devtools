@@ -196,7 +196,7 @@ describe('summarizeNgDevtoolsConfig', () => {
       { label: 'Blocked actions', value: 'Form writes, HTTP mocking' },
       { label: 'Extra secret names', value: 'passport' },
       { label: 'Unmasked names', value: 'pin' },
-      { label: 'Limits', value: 'refresh every 1000 ms, 50 HTTP calls' },
+      { label: 'Limits', value: 'poll every 1000 ms, 50 HTTP calls' },
     ]);
   });
 });
