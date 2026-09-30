@@ -12,7 +12,7 @@ export const NG_DEVTOOLS_INSPECTORS = [
 
 export type NgDevtoolsInspector = (typeof NG_DEVTOOLS_INSPECTORS)[number];
 
-export const NG_DEVTOOLS_ACTIONS = ['forms', 'router', 'ngrx'] as const;
+export const NG_DEVTOOLS_ACTIONS = ['forms', 'router', 'ngrx', 'http', 'analog'] as const;
 
 export type NgDevtoolsAction = (typeof NG_DEVTOOLS_ACTIONS)[number];
 
@@ -121,6 +121,8 @@ export const ACTION_TOOLS: Record<NgDevtoolsAction, readonly string[]> = {
   forms: ['form-action', 'fill-form'],
   router: ['navigate'],
   ngrx: [],
+  http: [],
+  analog: ['analog-call-api'],
 };
 
 export function actionBlockedMessage(action: NgDevtoolsAction): string {
@@ -128,6 +130,8 @@ export function actionBlockedMessage(action: NgDevtoolsAction): string {
     forms: 'Writing to forms',
     router: 'Navigating',
     ngrx: 'Restoring NgRx state',
+    http: 'Changing HTTP mock rules and clearing HTTP calls',
+    analog: 'Calling API routes',
   }[action];
   return `${what} is turned off in the devtools config (actions.${action}).`;
 }

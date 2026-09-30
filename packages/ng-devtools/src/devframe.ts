@@ -567,7 +567,10 @@ const ngDevtools = defineDevframe({
       name: 'set-http-rules',
       type: 'action',
       jsonSerializable: true,
-      handler: (rules: unknown) => setHttpRules(sanitizeRules(rules)),
+      handler: (rules: unknown) => {
+        if (!config.actions.http) throw new Error(actionBlockedMessage('http'));
+        return setHttpRules(sanitizeRules(rules));
+      },
     });
 
     register({
@@ -575,6 +578,7 @@ const ngDevtools = defineDevframe({
       type: 'action',
       jsonSerializable: true,
       handler: () => {
+        if (!config.actions.http) throw new Error(actionBlockedMessage('http'));
         pendingServerCalls = [];
         httpState.mutate((draft) => {
           draft.serverCalls = [];
@@ -1781,7 +1785,11 @@ const ngDevtools = defineDevframe({
       },
     });
 
-    if (on.analog) await registerAnalog(my as never, { cwd: ctx.cwd, agent } as never);
+    if (on.analog) {
+      await registerAnalog(my as never, { cwd: ctx.cwd, agent } as never, {
+        blockCalls: config.actions.analog ? undefined : actionBlockedMessage('analog'),
+      });
+    }
     registerHubDocks(ctx, 'ng-devtools', config);
   },
 });

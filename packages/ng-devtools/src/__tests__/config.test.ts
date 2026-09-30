@@ -47,7 +47,13 @@ describe('resolveNgDevtoolsConfig', () => {
     expect(Object.keys(config.inspectors)).toEqual([...NG_DEVTOOLS_INSPECTORS]);
     expect(Object.values(config.agent.tools).every(Boolean)).toBe(true);
     expect(config.agent.readOnly).toBe(false);
-    expect(config.actions).toEqual({ forms: true, router: true, ngrx: true });
+    expect(config.actions).toEqual({
+      forms: true,
+      router: true,
+      ngrx: true,
+      http: true,
+      analog: true,
+    });
   });
 
   it('carries a disabled inspector into its agent tools and panel actions', () => {
@@ -59,7 +65,13 @@ describe('resolveNgDevtoolsConfig', () => {
     expect(config.inspectors.pipes).toBe(true);
     expect(config.agent.tools).toMatchObject({ forms: false, ngrx: false, pipes: false });
     expect(config.agent.tools.router).toBe(true);
-    expect(config.actions).toEqual({ forms: false, router: true, ngrx: false });
+    expect(config.actions).toEqual({
+      forms: false,
+      router: true,
+      ngrx: false,
+      http: true,
+      analog: true,
+    });
   });
 
   it('reads actions as a switch or per action', () => {
@@ -67,11 +79,15 @@ describe('resolveNgDevtoolsConfig', () => {
       forms: false,
       router: false,
       ngrx: false,
+      http: false,
+      analog: false,
     });
     expect(resolveNgDevtoolsConfig({ actions: { router: false } }).actions).toEqual({
       forms: true,
       router: false,
       ngrx: true,
+      http: true,
+      analog: true,
     });
   });
 
@@ -146,6 +162,9 @@ describe('agent tool and RPC registration', () => {
     expect(router.actionTools).not.toContain('navigate');
     expect(router.actionTools).toEqual(expect.arrayContaining(['form-action', 'fill-form']));
     expect(router.tools).toContain('list-routes');
+    const analog = await boot({ actions: { analog: false } });
+    expect(analog.actionTools).not.toContain('analog-call-api');
+    expect(analog.tools).toContain('analog-lint');
   });
 
   it('leaves out the RPC functions, tools and resources of a disabled inspector', async () => {
@@ -190,6 +209,20 @@ describe('panel actions', () => {
     expect(await invoke('request-form-action', null)).toEqual({
       ok: false,
       error: 'Bad request.',
+    });
+    await expect(invoke('set-http-rules', [])).rejects.toThrow('actions.http');
+    await expect(invoke('clear-http-calls', undefined)).rejects.toThrow('actions.http');
+    expect(await invoke('analog-call-api', { path: '/api/x' })).toEqual({
+      error: expect.stringContaining('actions.analog'),
+    });
+    expect(await invoke('get-http-rules', undefined)).toEqual([]);
+  });
+
+  it('lets HTTP and Analog writes through when only other actions are blocked', async () => {
+    const { invoke } = await boot({ actions: { forms: false } });
+    expect(await invoke('set-http-rules', [])).toEqual([]);
+    expect(await invoke('analog-call-api', { path: 'nope' })).not.toEqual({
+      error: expect.stringContaining('actions.analog'),
     });
   });
 });
