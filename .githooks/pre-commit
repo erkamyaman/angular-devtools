@@ -22,5 +22,5 @@ git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR |
 
 tr '\n' '\0' <"$list" | xargs -0 pnpm --silent exec prettier --write --ignore-unknown >/dev/null 2>&1 ||
   echo "WARNING: failed to format staged files." >&2
-tr '\n' '\0' <"$list" | xargs -0 git add --
+tr '\n' '\0' <"$list" | xargs -0 git --literal-pathspecs add --
 exit 0

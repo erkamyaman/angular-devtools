@@ -47,7 +47,7 @@ const MIN_BODY = 20;
 const HEADER = /^(\w+)(?:\(([^)]+)\))?(!)?: (.+)$/;
 const GUIDE = 'docs/contributing/commit-message-guidelines.md';
 
-export function validate(message, { requireBody = true } = {}) {
+export function validate(message, { requireBody = true, allowGitPrefixes = true } = {}) {
   const lines = message
     .split('\n')
     .filter((line) => !line.startsWith('#'))
@@ -57,7 +57,7 @@ export function validate(message, { requireBody = true } = {}) {
   const header = lines[0] ?? '';
   const errors = [];
 
-  if (/^(Merge |fixup! |squash! |amend! )/.test(header)) return errors;
+  if (allowGitPrefixes && /^(Merge |fixup! |squash! |amend! )/.test(header)) return errors;
 
   if (!header) return ['The commit message is empty.'];
   if (header.length > MAX_HEADER) {
@@ -121,7 +121,7 @@ function main(args) {
   if (mode === '--title') {
     const ok = report(
       'Pull request title check failed:',
-      validate(value ?? '', { requireBody: false }),
+      validate(value ?? '', { requireBody: false, allowGitPrefixes: false }),
     );
     if (!ok) console.error(`\nThe title becomes the squash commit on main. See ${GUIDE}.\n`);
     return ok;
