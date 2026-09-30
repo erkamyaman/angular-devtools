@@ -1,6 +1,7 @@
 type PanelLocation = Pick<Location, 'href' | 'origin' | 'protocol' | 'pathname' | 'search'>;
 
-// Chrome extension passes ?baseURL=...; embedded uses /__ng-devtools/; standalone uses default
+// Chrome extension passes ?baseURL=...; embedded uses /__ng-devtools/; the CLI and a
+// static report serve the panel next to their own __connection.json
 function sameOrigin(value: string, loc: PanelLocation): boolean {
   try {
     return new URL(value, loc.href).origin === loc.origin;
@@ -20,7 +21,7 @@ function fromExtension(value: string, loc: PanelLocation): boolean {
   }
 }
 
-export function detectBaseURL(loc: PanelLocation = location): string | undefined {
+export function detectBaseURL(loc: PanelLocation = location): string | string[] | undefined {
   const params = new URLSearchParams(loc.search);
   const fromQuery = params.get('baseURL');
   // Same origin only: any page can open this URL, and this value decides where
@@ -34,5 +35,5 @@ export function detectBaseURL(loc: PanelLocation = location): string | undefined
   if (loc.pathname.includes('__ng-devtools') || loc.pathname.includes('__devframes/')) {
     return undefined;
   }
-  return '/__ng-devtools/';
+  return ['/__ng-devtools/', './'];
 }

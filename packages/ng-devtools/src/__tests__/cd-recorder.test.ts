@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { setFlagsFromString } from 'node:v8';
+import { runInNewContext } from 'node:vm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PROFILER_EVENT as E, createCdRecorder } from '../cd-recorder.ts';
 import { attachChangeDetection } from '../cd-overlay.ts';
@@ -89,6 +91,34 @@ describe('change detection recorder', () => {
       undefined,
       undefined,
     ]);
+  });
+
+  it('lets components it counted be collected once they are gone', async () => {
+    setFlagsFromString('--expose-gc');
+    const gc = runInNewContext('gc') as () => void;
+    const recorder = createCdRecorder({ maxCycles: 100 });
+    recorder.start();
+    const refs: WeakRef<object>[] = [];
+    (() => {
+      for (let i = 0; i < 20; i++) {
+        const cart = new Cart();
+        refs.push(new WeakRef(cart));
+        recorder.onEvent(E.OutputStart, cart, () => {});
+        recorder.onEvent(E.ChangeDetectionStart);
+        recorder.onEvent(E.ComponentStart);
+        recorder.onEvent(E.ComponentEnd, cart);
+        recorder.onEvent(E.ChangeDetectionEnd);
+      }
+    })();
+    recorder.stop();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    gc();
+    gc();
+    expect(refs.filter((ref) => ref.deref())).toHaveLength(0);
+    const snap = recorder.snapshot(() => 'c1');
+    expect(snap.cycles).toHaveLength(20);
+    expect(snap.cycles[0].trigger).toBe('Cart');
+    expect(snap.hosts).toEqual({});
   });
 });
 

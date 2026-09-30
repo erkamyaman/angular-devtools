@@ -1,4 +1,5 @@
 import type { ComponentPage, DeferBlockInfo, LiveComponentNode } from '../types.ts';
+import { redactMessage, redactUrl } from '../router.ts';
 import { PAGE_TTL_MS, fixedTtl, type PageTtl } from './page-ttl.ts';
 
 export const COMPONENT_PAGE_TTL = PAGE_TTL_MS;
@@ -34,8 +35,8 @@ export function toComponentPage(report: Omit<ComponentPage, 'reportedAt'>, now =
       ...(depth ? { depth } : {}),
     };
   }
-  if (typeof report.url === 'string') page.url = report.url.slice(0, 2000);
-  if (typeof report.title === 'string') page.title = report.title.slice(0, 200);
+  if (typeof report.url === 'string') page.url = redactUrl(report.url.slice(0, 2000));
+  if (typeof report.title === 'string') page.title = redactMessage(report.title.slice(0, 200));
   if (Array.isArray(report.deferBlocks)) page.deferBlocks = report.deferBlocks.slice(0, 500);
   return page;
 }

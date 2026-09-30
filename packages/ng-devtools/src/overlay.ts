@@ -10,6 +10,8 @@ import { collectInjectorTree } from './injector-tree.ts';
 import {
   droppedNavigations,
   findRouters,
+  redactMessage,
+  redactUrl,
   setGeneration,
   setNavigationLimit,
   snapshotRouter,
@@ -214,8 +216,8 @@ async function startOverlay(options: OverlayOptions, own: (cleanup: () => void) 
     const deferBlocks = deferTracker.collect(ng);
     const tree = {
       ...collectComponentTree(ng, { selectedId: componentTarget }),
-      url: location.href,
-      title: document.title,
+      url: redactUrl(location.href),
+      title: redactMessage(document.title),
       ...(deferBlocks ? { deferBlocks } : {}),
     };
     const json = JSON.stringify(tree);
@@ -472,7 +474,9 @@ async function startOverlay(options: OverlayOptions, own: (cleanup: () => void) 
   const reportVisibility = (hidden: boolean) =>
     void my.rpc.call('report-page-visibility', { pageId, hidden }).catch(() => {});
   let stillHidden: ReturnType<typeof setInterval> | undefined;
+  let left = false;
   const onVisibility = () => {
+    if (left) return;
     if (document.visibilityState === 'hidden') {
       if (!refresher) return;
       refresher.stop();
@@ -611,6 +615,10 @@ async function startOverlay(options: OverlayOptions, own: (cleanup: () => void) 
     if (on[inspector]) void my.rpc.call(name, pageId).catch(() => {});
   };
   const leave = () => {
+    left = true;
+    refresher?.stop();
+    refresher = undefined;
+    clearInterval(stillHidden);
     reportVisibility(false);
     pipes?.pause();
     forget('forms', 'forget-forms-page');
@@ -631,6 +639,8 @@ async function startOverlay(options: OverlayOptions, own: (cleanup: () => void) 
   const resendConfig = () => {
     sentGeneration = -1;
     pipes?.resume();
+    left = false;
+    onVisibility();
   };
   addEventListener('pageshow', resendConfig);
 

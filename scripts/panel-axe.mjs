@@ -24,19 +24,24 @@ const TYPES = {
 
 const PREFIX = '/__ng-devtools/';
 
-const server = createServer((req, res) => {
-  const path = normalize(decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname));
-  let file = join(dir, path.slice(PREFIX.length - 1));
-  if (!path.startsWith(PREFIX) || !file.startsWith(dir) || !existsSync(file)) {
-    res.writeHead(404).end();
-    return;
-  }
-  if (statSync(file).isDirectory()) file = join(file, 'index.html');
-  res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
-  createReadStream(file).pipe(res);
-});
-await new Promise((done) => server.listen(0, '127.0.0.1', done));
-const base = `http://127.0.0.1:${server.address().port}${PREFIX}`;
+async function serve(prefix) {
+  const server = createServer((req, res) => {
+    const path = normalize(decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname));
+    let file = join(dir, path.slice(prefix.length - 1));
+    if (!path.startsWith(prefix) || !file.startsWith(dir) || !existsSync(file)) {
+      res.writeHead(404).end();
+      return;
+    }
+    if (statSync(file).isDirectory()) file = join(file, 'index.html');
+    res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
+    createReadStream(file).pipe(res);
+  });
+  await new Promise((done) => server.listen(0, '127.0.0.1', done));
+  return { server, base: `http://127.0.0.1:${server.address().port}${prefix}` };
+}
+
+const { server, base } = await serve(PREFIX);
+const atRoot = await serve('/');
 
 const VIEWS = ['ngrx', 'analog', 'nativescript', 'capacitor'];
 const failures = [];
@@ -53,6 +58,16 @@ async function check(page, name) {
 }
 
 try {
+  const rootPage = await browser.newPage();
+  await rootPage.goto(atRoot.base);
+  try {
+    await rootPage.locator('.status.connected').waitFor({ timeout: 15_000 });
+    console.log('ok   report served at /');
+  } catch {
+    failures.push('report served at /: the panel did not connect');
+  }
+  await rootPage.close();
+
   for (const colorScheme of ['light', 'dark']) {
     const context = await browser.newContext({
       colorScheme,
@@ -84,6 +99,7 @@ try {
 } finally {
   await browser.close();
   server.close();
+  atRoot.server.close();
 }
 
 if (failures.length) {

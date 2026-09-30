@@ -6,6 +6,7 @@ import { RULES_STORAGE_KEY, clientRules, httpRegistry, storeRules } from '../htt
 import { noteFailedCall, setNavigationLimit, type NavigationRecord } from '../router.ts';
 
 const calls: string[] = [];
+const sentArgs = new Map<string, unknown>();
 let configs: Record<string, unknown> | undefined;
 
 vi.mock('devframe/client', () => ({
@@ -13,8 +14,9 @@ vi.mock('devframe/client', () => ({
     connectionMeta: { backend: 'websocket', configs },
     scope: () => ({
       rpc: {
-        call: async (name: string) => {
+        call: async (name: string, arg?: unknown) => {
           calls.push(name);
+          sentArgs.set(name, arg);
           return undefined;
         },
         register: () => {},
@@ -110,8 +112,8 @@ describe('overlay collectors', () => {
       calls.length = 0;
       dispatchEvent(new Event('pagehide'));
       expect(calls).toContain('forget-signal-page');
-      dispatchEvent(new Event('pageshow'));
       calls.length = 0;
+      dispatchEvent(new Event('pageshow'));
       await new Promise((resolve) => setTimeout(resolve, 700));
       expect(calls).toContain('push-signal-graph');
       expect(calls).not.toContain('ping-signal-graph');
@@ -150,5 +152,22 @@ describe('overlay collectors', () => {
   it('apply the redaction config from the server before collecting', async () => {
     await start({ redaction: { secretNames: ['voucher'] } });
     expect(isSecretKey('voucherCode')).toBe(true);
+  });
+
+  it('redact the page URL and title in the component tree report', async () => {
+    const before = location.href;
+    const title = document.title;
+    history.replaceState(null, '', '/reset?token=s3cr3tvalue123&x=1#access_token=abcdefabcdef');
+    document.title = 'Reset Bearer abcdefghijklmnop';
+    try {
+      await start();
+    } finally {
+      history.replaceState(null, '', before);
+      document.title = title;
+    }
+    const report = sentArgs.get('push-component-tree') as { url: string; title: string };
+    expect(report.url).toContain('?token=[redacted]&x=1#access_token=[redacted]');
+    expect(report.url).not.toContain('s3cr3tvalue123');
+    expect(report.title).toBe('Reset Bearer [redacted]');
   });
 });

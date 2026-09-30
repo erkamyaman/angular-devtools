@@ -4,7 +4,7 @@ description: Every agent tool the devtools expose, grouped by inspector, with wh
 ---
 
 <ngmd-hero title="Tools" logo="https://cdn.simpleicons.org/modelcontextprotocol/71717A" gradient>
-  Forty-four tools, grouped by inspector. Each one answers a question you would otherwise answer by clicking through the panel.
+  Forty-eight tools, grouped by inspector. Each one answers a question you would otherwise answer by clicking through the panel.
 </ngmd-hero>
 
 # Tools
@@ -35,7 +35,7 @@ Each tool reads from one of three places. The stdio server registers only the to
 
 ### The page argument
 
-Every page tool takes an optional `page` argument to pick a browser tab. It defaults to the most recent one. `highlight` and `inspect-component` search every tab without it, newest first, and `defer-blocks` lists every tab. `inspect-providers`, `highlight`, `inspect-component` and `defer-blocks` also accept `pageId`. The tables below leave `page` out.
+Most page tools take an optional `page` argument to pick a browser tab. It defaults to the most recent one. `form-action` and `fill-form` take the tab from the form id instead (the part after `@`, as in `Checkout.form@ab12`). `highlight` and `inspect-component` search every tab without it, newest first, and `defer-blocks` lists every tab. `inspect-providers`, `highlight`, `inspect-component` and `defer-blocks` also accept `pageId`. The tables below leave `page` out.
 
 If `page` names a tab that doesn't report that data, the tool answers `No page <id> is reporting ...` and lists the tabs that do, newest first. It never falls back to another tab. Without `page`, a class name or tag resolves on the most recent tab that has it, and `highlight` names the other tabs where it also matches.
 

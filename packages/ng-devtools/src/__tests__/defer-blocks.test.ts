@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createDeferTracker, type DeferDebugNg } from '../defer-blocks.ts';
 import { elementById } from '../element-id.ts';
-import { deferBlocksText } from '../rpc/component-tools.ts';
+import { deferBlocksText, toComponentPage } from '../rpc/component-tools.ts';
 import type { ComponentPage, DeferBlockInfo } from '../types.ts';
 
 class _TripReviews {}
@@ -171,5 +171,22 @@ describe('deferBlocksText', () => {
     expect(deferBlocksText([])).toMatch(/no component tree has been reported/i);
     expect(deferBlocksText([report()])).toMatch(/exposes no defer block util/);
     expect(deferBlocksText([report([])])).toMatch(/no `@defer` blocks are rendered/);
+  });
+
+  it('prints the page URL and title redacted even when the page sent them raw', () => {
+    const page = toComponentPage({
+      pageId: 'p1',
+      roots: [],
+      count: 0,
+      detail: null,
+      url: 'http://localhost/reset?token=s3cr3tvalue123&x=1#access_token=abcdefabcdef',
+      title: 'Reset Bearer abcdefghijklmnop',
+      deferBlocks: [info({})],
+    });
+    expect(page.url).toBe('http://localhost/reset?token=[redacted]&x=1#access_token=[redacted]');
+    expect(page.title).toBe('Reset Bearer [redacted]');
+    const text = deferBlocksText([page]);
+    expect(text).not.toContain('s3cr3tvalue123');
+    expect(text).not.toContain('abcdefabcdef');
   });
 });
