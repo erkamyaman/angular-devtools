@@ -15,31 +15,27 @@ The Chrome extension lives in `extension/`. It detects Angular pages, creates th
 
 ```text
 extension/
-  manifest.json          # Manifest V3, host permissions for localhost and 127.0.0.1
+  manifest.json          # Manifest V3, loopback host permissions, optional access to other hosts
   background.js          # Tracks which tabs run Angular
   content-script.js      # Relays the detection result to the background worker
   detect-angular.js      # Runs in the page, looks for ng-version or window.ng
   devtools.html
   devtools.js            # Creates the panel on Angular pages
-  panel.html
-  panel-bridge.js        # Finds the dev server and connects the UI to it
+  panel.html             # The panel page and its status view
+  panel-bridge.js        # Asks for host access, finds the dev server, connects the UI to it
   icons/
   ui/                    # The built devtools UI (committed)
 ```
 
 ### What the manifest asks for
 
-<ngmd-card-grid columns="3">
-  <ngmd-card icon="shield" title="No permissions">
-    <code>permissions</code> is empty.
-  </ngmd-card>
-  <ngmd-card icon="compass" title="Loopback host permissions">
-    Host permissions for <code>localhost</code> and <code>127.0.0.1</code>, over HTTP and HTTPS. The content scripts still run on every page.
-  </ngmd-card>
-  <ngmd-card icon="settings" title="Chrome 111 or later">
-    Set by <code>minimum_chrome_version</code>.
-  </ngmd-card>
-</ngmd-card-grid>
+| Key                         | Value                                                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `permissions`               | Empty.                                                                                                       |
+| `host_permissions`          | `*.localhost`, `127.0.0.1` and `[::1]`, over HTTP and HTTPS. `*.localhost` also matches `localhost`.         |
+| `optional_host_permissions` | `http://*/*` and `https://*/*`. The panel requests one host at a time, only when you click **Allow access**. |
+| `content_scripts`           | `content-script.js` and `detect-angular.js`, on every page.                                                  |
+| `minimum_chrome_version`    | `111`.                                                                                                       |
 
 ## Build
 
@@ -93,20 +89,43 @@ This runs `extension:build`, then writes `dist/ng-devtools-extension.zip`. The z
 
 ## How the panel connects
 
+### Host access
+
+`panel-bridge.js` reads the origin of the inspected page. If the page is not served over `http` or `https`, it stops and says so.
+
+It then calls `chrome.permissions.contains()` for `<scheme>://<hostname>/*` of the page. Loopback hosts pass, since the manifest grants them. For any other host it shows the **Allow access** button. The button calls `chrome.permissions.request()` for that one pattern and, if Chrome grants it, starts over.
+
 ### Finding the server
 
-`panel-bridge.js` reads the origin of the inspected page. On `localhost` and `127.0.0.1`, it looks for the devtools server at these paths, in order:
+With access granted, it looks for the devtools server under these paths, in order:
 
 1. `/__ng-devtools/`
 2. `/__devframes/ng-devtools/`
 3. `/__devframe/`
 4. `/`
 
-It passes the first path that serves a devframe connection file to the UI. It runs the search again after each navigation.
+Under each path it fetches `__devframe/__connection.json`, then `__connection.json`, with no credentials, no cache, no redirects and a 1.5 second timeout. The first response that is OK and parses as JSON wins.
 
-### Other hosts
+If none answers, the status view lists every URL it tried and links to the setup section of the README.
 
-The UI accepts a loopback address only when it runs inside the extension. On other hosts, the panel shows the UI without a connection.
+### Loading the UI
+
+The panel loads `ui/index.html` with two query parameters:
+
+| Parameter | Value                                                                                  |
+| --------- | -------------------------------------------------------------------------------------- |
+| `baseURL` | The path that served the connection file, on the origin of the page.                   |
+| `pageId`  | The `ng-devtools-page-id` value the overlay keeps in `sessionStorage`, when it is set. |
+
+Outside the extension, the UI accepts a `baseURL` only on its own origin. Inside the extension, it accepts any `http` or `https` URL. The panel only passes hosts the extension can reach.
+
+On each navigation of the inspected page, the panel shows its status view again and repeats the whole search.
+
+### Elements panel selection
+
+The overlay defines `window.__ngDevtoolsComponentOf` on the page. It takes an element and returns the id of the nearest component host, through shadow roots, or `null`.
+
+When the Elements panel selection changes, `panel-bridge.js` evaluates it with `$0`. If it gets an id, it posts an `ng-devtools:inspect-component` message to the UI frame. The UI accepts the message only from its parent window and its own origin, and only while the **Components** tab is open. The tab then expands the parent rows, clears the filter if needed, selects the row and scrolls it into view.
 
 ## Where to next
 

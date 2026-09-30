@@ -28,7 +28,7 @@ The devtools read your running app and send what they find to a server on your m
     Binds to <code>localhost</code> and asks for a one-time code by default.
   </ngmd-card>
   <ngmd-card icon="compass" title="Chrome extension">
-    Connects only to pages served from <code>localhost</code> or <code>127.0.0.1</code>.
+    Reaches loopback hosts out of the box. Any other host needs a click on <strong>Allow access</strong>, for that host only.
   </ngmd-card>
 </ngmd-card-grid>
 
@@ -101,7 +101,11 @@ The HTTP MCP endpoint answers only requests from a loopback address that carry a
 
 ### Chrome extension
 
-The extension connects only to pages served from `localhost` or `127.0.0.1`. On other hosts the panel shows the UI without data.
+The extension has host permissions for loopback hosts only: `localhost` and its subdomains, `127.0.0.1` and `[::1]`, over HTTP and HTTPS. On those hosts, the panel looks for the devtools server as soon as it opens.
+
+On any other host, the panel doesn't send a request until you click **Allow access**. Chrome then asks you to grant the extension that one host, on the scheme of the page and any port. The extension never asks for all hosts at once.
+
+Granting the extension a host doesn't change what the devtools server accepts. The server still applies the checks on this page. See [Chrome extension](/getting-started/chrome-extension#host-access).
 
 ## What is redacted
 

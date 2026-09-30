@@ -101,6 +101,10 @@ The page reads the tree every 3 seconds, and at once when you select an instance
   </ngmd-step>
 </ngmd-workflow>
 
+### Start from the Elements panel
+
+If you use the [Chrome extension](/getting-started/chrome-extension), open the **Components** tab in its panel. Then select an element in the Chrome **Elements** panel. The tab selects the component that hosts that element and scrolls its row into view.
+
 ### Check why an output does nothing
 
 <ngmd-workflow>

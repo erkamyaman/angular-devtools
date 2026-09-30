@@ -70,7 +70,7 @@ A content script checks each page for Angular: an `ng-version` attribute or a `w
 
 ### Finding the server
 
-On pages served from `localhost` or `127.0.0.1`, the panel looks for the devtools server on the same origin. It tries these paths in order:
+The panel looks for the devtools server on the origin of the inspected page. It tries these paths in order:
 
 | Path                        | Mounted by                            |
 | --------------------------- | ------------------------------------- |
@@ -79,25 +79,49 @@ On pages served from `localhost` or `127.0.0.1`, the panel looks for the devtool
 | `/__devframe/`              | A bare devframe mount                 |
 | `/`                         | A devframe served at the root         |
 
-When it finds a connection file on one of them, it connects the UI to it.
+Under each path it asks for `__devframe/__connection.json`, then `__connection.json`. It connects the UI to the first path that answers with a connection file. Each request times out after 1.5 seconds.
+
+If no path answers, the panel says "No devtools server answered", lists every URL it tried and links to the setup instructions.
+
+The panel only connects to pages served over `http` or `https`. On other pages it says so and stops.
 
 ### Other hosts
 
-On other hosts, the panel shows the UI without a connection. It does not probe them.
+The extension can reach loopback hosts from the start. For any other host, such as a LAN IP or a tunnel, the panel shows an **Allow access** button instead of looking for the server. Click it and confirm the Chrome prompt. The panel then looks for the server again. See [Host access](#host-access) for what the button grants.
+
+### The inspected tab
+
+The overlay gives each page an id. The panel passes the id of the page it inspects to the UI. If several tabs run the same app, the panel shows the tab you inspect, not the one that reported last.
 
 ### Navigation
 
-When the inspected page navigates, the panel looks for the server again.
+When the inspected page navigates, the panel shows "Detecting Angular app…", looks for the server again and reconnects.
+
+### Elements panel
+
+While the **Components** tab is open, select an element in the Chrome **Elements** panel. The Components tab selects the component that hosts that element (the element itself, or the nearest ancestor that is a component host). It expands the parent rows, clears the filter if it hides the row, and scrolls the row into view. On other tabs, the Elements selection does nothing.
+
+This needs the overlay on the page, since the overlay answers which component hosts the element.
 
 ## Permissions
 
 ### Host access
 
-The manifest asks for no `permissions`. Its host permissions cover only `localhost` and `127.0.0.1`, over HTTP and HTTPS.
+The manifest asks for no `permissions`. Its host permissions cover loopback hosts only, over HTTP and HTTPS:
+
+| Host          | Covers                                                   |
+| ------------- | -------------------------------------------------------- |
+| `*.localhost` | `localhost` and every subdomain, such as `app.localhost` |
+| `127.0.0.1`   | The IPv4 loopback address                                |
+| `[::1]`       | The IPv6 loopback address                                |
+
+Other hosts are optional host permissions. **Allow access** asks Chrome for the host of the inspected page only, on the scheme of that page (`http` or `https`) and on any port. The extension never asks for all hosts at once.
+
+Granting the extension a host doesn't change what the devtools server accepts. The server still applies its own checks. The Vite plugin, for example, only answers requests from a loopback address. See [Access and redaction](/security).
 
 ### Content scripts
 
-The content scripts are wider. Two of them run on every page. They check for an `ng-version` attribute or `window.ng`, and pass the Angular version to the extension. The panel only connects to local dev servers. The Vite plugin accepts requests from Chrome extension origins. See [Access and redaction](/security).
+The content scripts are wider. Two of them run on every page. They check for an `ng-version` attribute or `window.ng`, and pass the Angular version to the extension. They don't read or change anything else.
 
 ## FAQ
 
@@ -105,8 +129,14 @@ The content scripts are wider. Two of them run on every page. They check for an 
   <ngmd-accordion-item title="The panel does not appear" open>
     The page did not look like an Angular app. Check that it renders an <code>ng-version</code> attribute or exposes <code>window.ng</code>, which development builds do. Then close and reopen DevTools.
   </ngmd-accordion-item>
-  <ngmd-accordion-item title="The panel shows no data">
-    Check that the page is served from <code>localhost</code> or <code>127.0.0.1</code>, that its server mounts the devtools, and that the overlay is loaded.
+  <ngmd-accordion-item title="The panel asks me to allow access">
+    The page is not on a loopback host. Click <strong>Allow access</strong> to let the extension reach that host. Chrome asks you to confirm.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="The panel lists the URLs it tried">
+    None of them served a connection file. Check that the server of the page mounts the devtools and that the server accepts the request. See <a href="/security">Access and redaction</a>.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Selecting an element does not select a component">
+    Open the <strong>Components</strong> tab first, and check that the overlay is loaded. Elements outside any component select nothing.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Does the floating button go away?">
     No. The overlay still adds the button to the page. Use the button or the panel, whichever you prefer.
