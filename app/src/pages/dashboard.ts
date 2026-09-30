@@ -9,7 +9,9 @@ import {
   signal,
 } from '@angular/core';
 import type { DevframeRpcClient } from 'devframe/client';
+import type { ResolvedNgDevtoolsConfig } from '@santoshyadavdev/ng-devtools/config';
 import { hostPageId } from '../page-id';
+import { panelConfig, tabEnabled } from '../devtools-config';
 import { TabIcon } from './tab-icon';
 
 type LoadState = 'loading' | 'ready' | 'error';
@@ -160,7 +162,7 @@ export function storeCard(rows: Row[]): Card {
     </section>
 
     <div class="grid">
-      @for (stat of stats; track stat.tab; let i = $index) {
+      @for (stat of stats(); track stat.tab; let i = $index) {
         @let state = stateOf(stat.tab);
         <button
           type="button"
@@ -424,7 +426,10 @@ export class Dashboard {
   navigate = output<StatTab>();
 
   meta = signal<BuildMeta | null>(null);
-  protected readonly stats = STATS;
+  protected readonly stats = computed(() => {
+    const config = panelConfig(this.rpc());
+    return STATS.filter((stat) => tabEnabled(stat.tab, config));
+  });
   protected readonly metaState = signal<LoadState>('loading');
   protected readonly states = signal<Partial<Record<StatTab, LoadState>>>({});
   private readonly rows = signal<Partial<Record<StatTab, Row[]>>>({});
@@ -510,13 +515,15 @@ export class Dashboard {
           this.metaState.set('ready');
         })
         .catch(() => this.metaState.set('error'));
-      this.load(my.rpc.call('get-components'), 'components');
-      this.load(my.rpc.call('get-routes'), 'routes');
-      this.load(my.rpc.call('get-signals'), 'signals');
-      this.load(my.rpc.call('get-providers'), 'injectors');
-      this.load(my.rpc.call('get-ngrx-store'), 'store');
-      this.load(my.rpc.call('get-pipes'), 'pipes');
-      void this.watchLive(client);
+      const config = panelConfig(client);
+      const on = (tab: StatTab) => tabEnabled(tab, config);
+      if (on('components')) this.load(my.rpc.call('get-components'), 'components');
+      if (on('routes')) this.load(my.rpc.call('get-routes'), 'routes');
+      if (on('signals')) this.load(my.rpc.call('get-signals'), 'signals');
+      if (on('injectors')) this.load(my.rpc.call('get-providers'), 'injectors');
+      if (on('store')) this.load(my.rpc.call('get-ngrx-store'), 'store');
+      if (on('pipes')) this.load(my.rpc.call('get-pipes'), 'pipes');
+      void this.watchLive(client, config);
     });
     this.destroyRef.onDestroy(() => this.unwatch());
   }
@@ -537,7 +544,7 @@ export class Dashboard {
       .catch(() => mark('error'));
   }
 
-  private async watchLive(client: DevframeRpcClient) {
+  private async watchLive(client: DevframeRpcClient, config: ResolvedNgDevtoolsConfig) {
     this.unwatch();
     const rpc = client.scope('ng-devtools').rpc;
     const follow = async <T>(
@@ -554,8 +561,10 @@ export class Dashboard {
       }
     };
     await Promise.all([
-      follow<InjectorSnapshot | null>('injector-tree', (value) => this.injectorTree.set(value)),
-      follow<GraphSnapshot | null>('signal-graph', (value) => this.signalGraph.set(value)),
+      config.inspectors.injectors &&
+        follow<InjectorSnapshot | null>('injector-tree', (value) => this.injectorTree.set(value)),
+      config.inspectors.signals &&
+        follow<GraphSnapshot | null>('signal-graph', (value) => this.signalGraph.set(value)),
     ]);
   }
 

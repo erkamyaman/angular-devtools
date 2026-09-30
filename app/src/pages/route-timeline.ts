@@ -1,5 +1,6 @@
 import { Component, computed, input, signal } from '@angular/core';
 import type { DevframeRpcClient } from 'devframe/client';
+import { actionAllowed, actionBlockedMessage } from '../devtools-config';
 import { time } from '../format';
 import {
   SHARED_STYLES,
@@ -51,6 +52,9 @@ const PHASE_COLORS: Record<string, string> = {
     </div>
     @if (message()) {
       <p class="message" role="status">{{ message() }}</p>
+    }
+    @if (!navigationAllowed()) {
+      <p id="route-timeline-writes-off" class="message">{{ navigationOff }}</p>
     }
     @if (items().length) {
       <div class="meta-row">
@@ -208,6 +212,8 @@ const PHASE_COLORS: Record<string, string> = {
               <button
                 type="button"
                 class="small"
+                [disabled]="!navigationAllowed()"
+                [attr.aria-describedby]="navigationAllowed() ? null : 'route-timeline-writes-off'"
                 (click)="replay(nav)"
                 [attr.aria-label]="'Replay navigation ' + nav.id"
               >
@@ -449,6 +455,8 @@ const PHASE_COLORS: Record<string, string> = {
 export class RouteTimeline {
   page = input.required<RouterPage>();
   rpc = input<DevframeRpcClient | null>(null);
+  readonly navigationAllowed = computed(() => actionAllowed(this.rpc(), 'router'));
+  protected readonly navigationOff = actionBlockedMessage('router');
 
   readonly phases = PHASES;
   readonly filter = signal('');
