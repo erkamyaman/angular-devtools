@@ -50,7 +50,7 @@ These seven tools take no arguments. They all read your source.
 | Tool             | What it answers                                                                                                                                                                           |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `get-routes`     | Angular routes from your route files, with full URL path (parents and `loadChildren` prefixes included), kind (page, group, redirect or wildcard), guards, resolvers, and file and line.  |
-| `get-components` | Components and directives from `@Component` and `@Directive` classes, with class name, selector, kind, inputs, outputs, and file and line.                                                |
+| `get-components` | Components and directives from `@Component` and `@Directive` classes, with class name, selector, kind, inputs, outputs, change detection (components only), and file and line.            |
 | `get-signals`    | `signal()`, `computed()`, `linkedSignal()`, `effect()`, `toSignal()` and resource declarations (`resource`, `httpResource`, `rxResource`), plus signal inputs, models and queries.        |
 | `get-providers`  | DI providers: `@Injectable` services, `inject()` calls and `providers` arrays, with token, file and where each one is provided.                                                           |
 | `get-ngrx-store` | NgRx declarations: `@ngrx/store` actions, reducers, effects, selectors, features and store setup, and `@ngrx/signals` `signalStore` (with its members), `signalState` and `signalMethod`. |

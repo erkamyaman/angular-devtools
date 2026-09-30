@@ -32,7 +32,7 @@ When a form exists in the same source file, a **Show … in Forms** button opens
 
 ### Facts
 
-- **Change detection**: `OnPush` or `Default`.
+- **Change detection**: `OnPush` or `Eager`.
 - **Encapsulation**: `Emulated`, `None`, `ShadowDom` or `IsolatedShadowDom`.
 - **Host path**: where the host element sits in the page.
 - **Routed**: for routed components, the route and the outlet that rendered it.
@@ -52,7 +52,9 @@ A fact shows **Unknown** when Angular does not report it.
 
 ### Source mode
 
-Without live data, the tab lists the `@Component` and `@Directive` classes in your source. Expand a row to see its class, file, standalone flag, inputs and outputs. Click **Refresh** to scan again.
+Without live data, the tab lists the `@Component` and `@Directive` classes in your source. Expand a row to see its class, file, standalone flag, change detection, inputs and outputs. Click **Refresh** to scan again.
+
+For change detection, the scan reads the `changeDetection` key in the decorator. Without one, it uses the project's Angular version: `OnPush` from Angular 22, `Eager` before. It shows `unknown` when the value is an expression it can't read, or when the version can't be found.
 
 A notice at the top says why you see the source list: no page is connected, or the page reported no instances.
 
@@ -132,7 +134,7 @@ Use the arrow keys, Home and End to move through the tree. The right arrow expan
 
 | Tool or resource             | Kind     | What it does                                                                                                                      |
 | ---------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `ng-devtools:get-components` | tool     | Lists components and directives from source, with selector, kind, inputs, outputs, file and line.                                 |
+| `ng-devtools:get-components` | tool     | Lists components and directives from source, with selector, kind, inputs, outputs, change detection, file and line.               |
 | `ng-devtools:highlight`      | tool     | Highlights a component in the page. Takes an instance id, class name, host tag or CSS selector. Also retargets the Signals graph. |
 | `ng-devtools:component-tree` | resource | The live tree per page, with the detail of the selected instance.                                                                 |
 
