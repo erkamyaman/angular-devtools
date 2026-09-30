@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NgDevtoolsConfig } from '../config.ts';
+import { isSecretKey, setRedaction } from '../forms-privacy.ts';
 
 const calls: string[] = [];
 let configs: Record<string, unknown> | undefined;
@@ -34,6 +35,7 @@ async function start(config?: NgDevtoolsConfig) {
 afterEach(() => {
   stops.splice(0).forEach((stop) => stop());
   sessionStorage.clear();
+  setRedaction();
 });
 
 describe('overlay collectors', () => {
@@ -67,5 +69,10 @@ describe('overlay collectors', () => {
     dispatchEvent(new Event('pagehide'));
     expect(calls).not.toContain('forget-forms-page');
     expect(calls).toContain('forget-router-page');
+  });
+
+  it('apply the redaction config from the server before collecting', async () => {
+    await start({ redaction: { secretNames: ['voucher'] } });
+    expect(isSecretKey('voucherCode')).toBe(true);
   });
 });

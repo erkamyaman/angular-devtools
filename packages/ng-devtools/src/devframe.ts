@@ -107,6 +107,7 @@ import type { HttpPage, HttpState } from './types.ts';
 
 import { registerAnalog } from './rpc/analog-register.ts';
 import { registerHubDocks } from './hub-docks.ts';
+import { setRedaction } from './forms-privacy.ts';
 import {
   FORM_WRITE_ACTIONS,
   NG_DEVTOOLS_CONFIG_KEY,
@@ -148,6 +149,7 @@ const ngDevtools = defineDevframe({
 
   async setup(ctx, info?: SetupInfo) {
     const config = info?.config ?? resolveNgDevtoolsConfig();
+    setRedaction(config.redaction);
     const on = config.inspectors;
     const my = ctx.scope('ng-devtools');
     (ctx.staticConfig as Record<string, unknown>)[NG_DEVTOOLS_CONFIG_KEY] = config;

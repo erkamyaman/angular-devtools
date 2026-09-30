@@ -29,14 +29,24 @@ export interface NgDevtoolsConfig {
     /** Hide one inspector's agent tools and resources while keeping its tab. */
     tools?: Partial<Record<NgDevtoolsInspector, boolean>>;
   };
-  /** Allow or block writes from the panel. `false` blocks them all. */
+  /** Allow or block writes from the panel and the agent. `false` blocks them all. */
   actions?: boolean | Partial<Record<NgDevtoolsAction, boolean>>;
+  redaction?: {
+    /**
+     * Field names to treat as secret on top of the built-in list, matched by
+     * words like it: `passport` also covers `passportNumber`.
+     */
+    secretNames?: string[];
+    /** Field names to show even when they look secret, like `window.__NG_DEVTOOLS_FORMS__.unmask`. */
+    unmask?: string[];
+  };
 }
 
 export interface ResolvedNgDevtoolsConfig {
   inspectors: Record<NgDevtoolsInspector, boolean>;
   agent: { readOnly: boolean; tools: Record<NgDevtoolsInspector, boolean> };
   actions: Record<NgDevtoolsAction, boolean>;
+  redaction: { secretNames: string[]; unmask: string[] };
 }
 
 export const NG_DEVTOOLS_CONFIG_KEY = 'ng-devtools';
@@ -49,6 +59,18 @@ function record(value: unknown): Record<string, unknown> {
 
 function flag(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback;
+}
+
+const MAX_NAMES = 100;
+const MAX_NAME_LENGTH = 100;
+
+function names(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const trimmed = value
+    .filter((name): name is string => typeof name === 'string')
+    .map((name) => name.trim())
+    .filter((name) => name && name.length <= MAX_NAME_LENGTH);
+  return [...new Set(trimmed)].slice(0, MAX_NAMES);
 }
 
 function flags<K extends string>(
@@ -66,6 +88,7 @@ export function resolveNgDevtoolsConfig(config?: unknown): ResolvedNgDevtoolsCon
   const toolInput = record(agent['tools']);
   const actionInput = record(input['actions']);
   const allActions = flag(input['actions'], true);
+  const redaction = record(input['redaction']);
   const inspectors = flags(NG_DEVTOOLS_INSPECTORS, (key) => flag(inspectorInput[key], true));
   return {
     inspectors,
@@ -77,6 +100,10 @@ export function resolveNgDevtoolsConfig(config?: unknown): ResolvedNgDevtoolsCon
       NG_DEVTOOLS_ACTIONS,
       (key) => inspectors[key] && flag(actionInput[key], allActions),
     ),
+    redaction: {
+      secretNames: names(redaction['secretNames']),
+      unmask: names(redaction['unmask']),
+    },
   };
 }
 
@@ -92,8 +119,8 @@ export function configFromConnection(
 export function pickNgDevtoolsConfig<T extends NgDevtoolsConfig>(
   options: T,
 ): { config: NgDevtoolsConfig; rest: Omit<T, keyof NgDevtoolsConfig> } {
-  const { inspectors, agent, actions, ...rest } = options;
-  return { config: { inspectors, agent, actions }, rest };
+  const { inspectors, agent, actions, redaction, ...rest } = options;
+  return { config: { inspectors, agent, actions, redaction }, rest };
 }
 
 /** Form actions that change the form or its validity, as opposed to reading or focusing it. */

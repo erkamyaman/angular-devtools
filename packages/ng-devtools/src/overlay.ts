@@ -35,6 +35,7 @@ import { elementById, elementId } from './element-id.ts';
 import { collectSignalGraph, graphKey, toSignalTarget, type SignalTarget } from './signal-graph.ts';
 import { serializeNamed } from './serialize.ts';
 import { configFromConnection } from './config.ts';
+import { setRedaction } from './forms-privacy.ts';
 
 declare global {
   interface Window {
@@ -98,7 +99,9 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     baseURL: options.baseURL ?? ['./', '/__ng-devtools/', '/__devframes/ng-devtools/'],
   });
   const my = rpc.scope('ng-devtools');
-  const on = configFromConnection(rpc.connectionMeta).inspectors;
+  const devtoolsConfig = configFromConnection(rpc.connectionMeta);
+  const on = devtoolsConfig.inspectors;
+  setRedaction(devtoolsConfig.redaction);
 
   let componentTarget: string | null = null;
   let lastTreeJson = '';

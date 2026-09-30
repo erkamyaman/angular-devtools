@@ -12,6 +12,7 @@ import {
 import { createNgDevtools } from '../devframe.ts';
 import { initNgDevtoolsHub } from '../hub.ts';
 import { makeProject } from './analog-fixture.ts';
+import { isSecretKey, setRedaction } from '../forms-privacy.ts';
 
 const SHARED_RPC = ['build-meta'];
 
@@ -121,7 +122,16 @@ describe('resolveNgDevtoolsConfig', () => {
       inspectors: { http: false },
       agent: { readOnly: true },
       actions: undefined,
+      redaction: undefined,
     });
+  });
+
+  it('keeps redaction names as trimmed, unique strings', () => {
+    expect(resolveNgDevtoolsConfig().redaction).toEqual({ secretNames: [], unmask: [] });
+    const config = resolveNgDevtoolsConfig({
+      redaction: { secretNames: [' passport ', 'passport', '', 7, 'x'.repeat(101)], unmask: 'pin' },
+    });
+    expect(config.redaction).toEqual({ secretNames: ['passport'], unmask: [] });
   });
 });
 
@@ -186,6 +196,17 @@ describe('agent tool and RPC registration', () => {
     expect(rpc).toContain('get-routes');
     expect(resources).not.toContain('router');
     expect(rpc).toContain('push-router');
+  });
+});
+
+describe('redaction', () => {
+  afterEach(() => setRedaction());
+
+  it('applies the configured secret names on the server', async () => {
+    await boot({ redaction: { secretNames: ['voucher'] } });
+    expect(isSecretKey('voucherCode')).toBe(true);
+    await boot();
+    expect(isSecretKey('voucherCode')).toBe(false);
   });
 });
 
