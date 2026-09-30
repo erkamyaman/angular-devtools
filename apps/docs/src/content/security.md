@@ -121,7 +121,7 @@ On any other host, the panel doesn't send a request until you click **Allow acce
 
 Granting the extension a host doesn't change what the devtools server accepts. The server still applies the checks on this page. Both the Vite plugin and the Express hub accept the extension's `chrome-extension://` origin by default. An Express hub with its own `allowedOrigins` list needs the extension origin in that list. See [Chrome extension](/getting-started/chrome-extension#host-access).
 
-When the server asks for the [one-time code](#one-time-code), the panel shows a form for it and reads no data until you enter the code. The panel keeps the token it gets in the extension's own storage, one per server origin, so it doesn't ask again while the server trusts that token. See [One-time code](/getting-started/chrome-extension#one-time-code) on the Chrome extension page.
+When the server asks for the [one-time code](#one-time-code), the panel shows a form for it. Until you enter the code, the server answers only the calls that request or check the code, so the panel gets no inspector data and can't call the inspector RPC. Discovery comes first, so requests such as `__connection.json` still happen before the code. The panel keeps the token it gets in the extension's own storage, one per server origin, so it doesn't ask again while the server trusts that token. See [One-time code](/getting-started/chrome-extension#one-time-code) on the Chrome extension page.
 
 ## What is redacted
 
