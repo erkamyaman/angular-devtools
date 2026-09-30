@@ -4,11 +4,12 @@
 #   │       │             └─> Imperative, present tense. No period at the end.
 #   │       │
 #   │       └─> hub|ui|popup|overlay|components|signals|injectors|router|forms|store|
-#   │           pipes|http|analog|mcp|extension|vite|demo|deps (or leave it out)
+#   │           pipes|http|analog|mcp|extension|vite|demo|docs|release|deps
+#   │           (or leave it out)
 #   │
-#   └─> feat|fix|perf|refactor|test|docs|build|ci|revert
+#   └─> feat|fix|perf|refactor|test|docs|style|build|ci|chore|revert
 #
-# Body (required except for docs, 20+ characters): why the change is needed,
+# Body (required for feat, fix, perf and refactor, 20+ characters): why the change is needed,
 # and how the old behavior compares with the new one.
 #
 # Footer (optional): Fixes #123, BREAKING CHANGE: ..., DEPRECATED: ...

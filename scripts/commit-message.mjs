@@ -1,8 +1,23 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-export const TYPES = ['feat', 'fix', 'perf', 'refactor', 'test', 'docs', 'build', 'ci', 'revert'];
+export const TYPES = [
+  'feat',
+  'fix',
+  'perf',
+  'refactor',
+  'test',
+  'docs',
+  'style',
+  'build',
+  'ci',
+  'chore',
+  'revert',
+];
+
+export const BODY_REQUIRED = ['feat', 'fix', 'perf', 'refactor'];
 
 export const SCOPES = [
   'hub',
@@ -22,6 +37,8 @@ export const SCOPES = [
   'extension',
   'vite',
   'demo',
+  'docs',
+  'release',
   'deps',
 ];
 
@@ -69,7 +86,7 @@ export function validate(message, { requireBody = true } = {}) {
   if (type === 'revert' && !/This reverts commit [0-9a-f]{7,}/.test(body)) {
     errors.push('A revert must say "This reverts commit <sha>" in the body, and why.');
   }
-  if (requireBody && type !== 'docs' && body.length < MIN_BODY) {
+  if (requireBody && BODY_REQUIRED.includes(type) && body.length < MIN_BODY) {
     errors.push(
       `Add a body of at least ${MIN_BODY} characters that explains why the change is needed.`,
     );
@@ -77,8 +94,14 @@ export function validate(message, { requireBody = true } = {}) {
   return errors;
 }
 
+let warnOnly = false;
+
 function report(label, errors) {
   if (!errors.length) return true;
+  if (warnOnly && process.env.GITHUB_ACTIONS) {
+    const text = `${label} ${errors.join(' ')}`.replace(/%/g, '%25').replace(/\r?\n/g, '%0A');
+    console.log(`::warning title=Commit message::${text}`);
+  }
   console.error(`\n${label}`);
   for (const error of errors) console.error(`  - ${error}`);
   return false;
@@ -90,7 +113,7 @@ function main(args) {
   if (mode === '--file') {
     const ok = report('Commit message check failed:', validate(readFileSync(value, 'utf8')));
     if (!ok) {
-      console.error(`\nSee ${GUIDE}. CI will reject it; fix it with "git commit --amend".\n`);
+      console.error(`\nSee ${GUIDE}. CI flags it too; fix it with "git commit --amend".\n`);
     }
     return ok;
   }
@@ -135,11 +158,23 @@ function main(args) {
   }
 
   console.error(
-    'Usage: commit-message.mjs --file <path> | --title <title> | --range <a..b> | --branch',
+    'Usage: commit-message.mjs --file <path> | --title <title> | --range <a..b> | --branch [--warn]',
   );
   return false;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  process.exit(main(process.argv.slice(2)) ? 0 : 1);
+function isEntryPoint() {
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isEntryPoint()) {
+  const args = process.argv.slice(2);
+  warnOnly = args.includes('--warn');
+  const ok = main(args.filter((arg) => arg !== '--warn'));
+  if (!ok && warnOnly) console.error('Warn-only mode: not failing the check.');
+  process.exit(ok || warnOnly ? 0 : 1);
 }

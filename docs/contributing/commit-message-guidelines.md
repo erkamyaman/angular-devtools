@@ -5,7 +5,7 @@ Every commit follows one format, with scopes that match the areas of this reposi
 Every commit is checked twice:
 
 - **Locally**, by a `commit-msg` git hook that `pnpm install` turns on (it sets `core.hooksPath` to `.githooks` and `commit.template` to [`.gitmessage`](../../.gitmessage)). It warns and lets the commit through; fix the message with `git commit --amend` before you push.
-- **In CI**, on every pull request: each commit and the pull request title. Pull requests are squash merged, so **the title becomes the commit on `main`**.
+- **In CI**, on every pull request: each commit and the pull request title. Pull requests are squash merged, so **the title becomes the commit on `main`**. For now the CI check only warns: problems show up as annotations on the pull request, and the check stays green.
 
 Run `pnpm commit:check` to check the commits on your branch before you push. To fix an older commit, reword it with `git rebase -i` and force-push your branch. While a review is in progress, prefer [fixup commits](./using-fixup-commits.md). `fixup!` and `squash!` commits and merge commits are skipped.
 
@@ -19,7 +19,7 @@ Run `pnpm commit:check` to check the commits on your branch before you push. To 
 <footer>
 ```
 
-The header is required. The body is required for every type except `docs`. The footer is optional.
+The header is required. The body is required for `feat`, `fix`, `perf` and `refactor`, and optional for the other types. The footer is optional.
 
 ### Type
 
@@ -31,8 +31,10 @@ The header is required. The body is required for every type except `docs`. The f
 | `refactor` | A code change that neither fixes a bug nor adds a feature |
 | `test`     | Adding missing tests or correcting existing ones          |
 | `docs`     | Documentation only                                        |
+| `style`    | Formatting only, no change in behavior                    |
 | `build`    | Build system, packaging or dependencies                   |
 | `ci`       | CI configuration and scripts                              |
+| `chore`    | Releases and housekeeping that fit no other type          |
 | `revert`   | Reverting an earlier commit                               |
 
 ### Scope
@@ -58,6 +60,8 @@ Use the area of the devtools the change is about. Leave the scope out when a cha
 | `extension`  | The Chrome extension                                                                 |
 | `vite`       | The Vite plugin                                                                      |
 | `demo`       | The Angular Travel demo app (`src/`) and `examples/`                                 |
+| `docs`       | The documentation site (`apps/docs`)                                                 |
+| `release`    | Version bumps and publishing (with `chore`)                                          |
 | `deps`       | Dependency updates (with `build`)                                                    |
 
 ### Summary
@@ -71,7 +75,7 @@ Use the area of the devtools the change is about. Leave the scope out when a cha
 
 - Use the imperative, present tense.
 - Explain why the change is needed. Compare the old behavior with the new one when that helps.
-- At least 20 characters.
+- At least 20 characters when the body is required.
 
 ### Footer
 
@@ -97,6 +101,13 @@ Fixes #40
 
 ```
 fix(router): pass match options to isActive when paths is set
+
+The router inspector called isActive with the default options, so a
+route with query parameters never showed as active.
+```
+
+```
+chore(release): ng-devtools 0.0.5
 ```
 
 ```
