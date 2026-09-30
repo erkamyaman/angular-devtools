@@ -24,7 +24,7 @@ git status --porcelain -- extension/ui   # must be committed when app/ changed
 
 CI runs `pnpm exec nx affected -t test build` instead of the plain `pnpm test` and `pnpm build`; run it too when your change touches more than one project.
 
-When the change touches the docs site (apps/docs) or `README.md`, also run the build checks in the `devtools-docs` skill.
+When the change affects behaviour, an option, a UI label or an agent tool, update the matching page in `apps/docs` in the same change (use the `devtools-docs` skill). When the change touches the docs site (apps/docs) or `README.md`, also run the build checks in the `devtools-docs` skill.
 
 `pnpm typecheck` does not type-check panel templates. Also run:
 
