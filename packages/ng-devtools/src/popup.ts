@@ -235,11 +235,16 @@ export function createDevtoolsPopup(options: { src?: string } = {}) {
   iframe.classList.add('frame');
   iframe.title = 'Angular DevTools';
 
+  const missingStatus = document.createElement('span');
+  missingStatus.classList.add('sr-only');
+  missingStatus.setAttribute('role', 'status');
   const missing = document.createElement('div');
   missing.classList.add('missing');
-  missing.setAttribute('role', 'status');
+  missing.setAttribute('role', 'region');
+  missing.setAttribute('aria-labelledby', 'ng-devtools-missing-title');
   missing.hidden = true;
-  const missingTitle = document.createElement('p');
+  const missingTitle = document.createElement('h2');
+  missingTitle.id = 'ng-devtools-missing-title';
   missingTitle.classList.add('missing-title');
   missingTitle.textContent = 'No devtools server found';
   const missingHint = document.createElement('p');
@@ -251,9 +256,13 @@ export function createDevtoolsPopup(options: { src?: string } = {}) {
   setupLink.target = '_blank';
   setupLink.rel = 'noopener noreferrer';
   setupLink.textContent = 'How to set up ng-devtools';
+  const newTab = document.createElement('span');
+  newTab.classList.add('sr-only');
+  newTab.textContent = ' (opens in a new tab)';
+  setupLink.append(newTab);
   missing.append(missingTitle, missingHint, setupLink);
 
-  panel.append(toolbar, iframe, missing);
+  panel.append(toolbar, iframe, missing, missingStatus);
 
   // Styles
   const style = document.createElement('style');
@@ -326,6 +335,8 @@ export function createDevtoolsPopup(options: { src?: string } = {}) {
     }
     .panel.dock-float {
       border-radius: 10px;
+      max-width: calc(100vw - 16px);
+      max-height: calc(100vh - 16px);
     }
     .panel.dock-bottom {
       left: 0 !important;
@@ -393,13 +404,25 @@ export function createDevtoolsPopup(options: { src?: string } = {}) {
     .frame[hidden], .missing[hidden] { display: none; }
     .missing {
       flex: 1;
+      overflow: auto;
       padding: 24px;
       font-family: system-ui, sans-serif;
       font-size: 13px;
       line-height: 1.5;
       color: #d4d4d8;
     }
-    .missing p { margin: 0 0 12px; max-width: 60ch; }
+    .missing p, .missing h2 { margin: 0 0 12px; max-width: 60ch; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
     .missing .missing-title { font-size: 15px; font-weight: 600; color: #fafafa; }
     .missing a { color: var(--ng-devtools-title, #f5a524); }
     .missing a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
@@ -489,8 +512,10 @@ export function createDevtoolsPopup(options: { src?: string } = {}) {
   function applyDock() {
     panel.className = `panel${isOpen ? ' open' : ''} dock-${state.docked}`;
     if (state.docked === 'float') {
-      panel.style.left = state.x + 'px';
-      panel.style.top = state.y + 'px';
+      const width = Math.min(state.width, window.innerWidth - 16);
+      const height = Math.min(state.height, window.innerHeight - 16);
+      panel.style.left = Math.max(0, Math.min(state.x, window.innerWidth - width)) + 'px';
+      panel.style.top = Math.max(0, Math.min(state.y, window.innerHeight - height)) + 'px';
       panel.style.width = state.width + 'px';
       panel.style.height = state.height + 'px';
     } else {
@@ -522,6 +547,7 @@ export function createDevtoolsPopup(options: { src?: string } = {}) {
       if (run !== loads) return;
       iframe.hidden = src === null;
       missing.hidden = src !== null;
+      missingStatus.textContent = src === null ? 'No devtools server found' : '';
       if (src === null) loaded = false;
       else if (iframe.src !== src) iframe.src = src;
     });
@@ -656,6 +682,7 @@ export function createDevtoolsPopup(options: { src?: string } = {}) {
   applyLauncher();
   // Keep it reachable when the window changes size.
   window.addEventListener('resize', applyLauncher);
+  window.addEventListener('resize', applyDock);
   // Track resize for float mode. Not every environment that has a document
   // also has ResizeObserver, so the panel still works without it.
   const resizeObserver =
@@ -663,8 +690,8 @@ export function createDevtoolsPopup(options: { src?: string } = {}) {
       ? undefined
       : new ResizeObserver(() => {
           if (state.docked === 'float' && isOpen) {
-            state.width = panel.offsetWidth;
-            state.height = panel.offsetHeight;
+            if (panel.offsetWidth < window.innerWidth - 16) state.width = panel.offsetWidth;
+            if (panel.offsetHeight < window.innerHeight - 16) state.height = panel.offsetHeight;
             saveState(state);
           }
         });
@@ -678,6 +705,7 @@ export function createDevtoolsPopup(options: { src?: string } = {}) {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('resize', applyLauncher);
+      window.removeEventListener('resize', applyDock);
       resizeObserver?.disconnect();
       popupRoot?.remove();
       popupRoot = null;

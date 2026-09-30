@@ -183,7 +183,31 @@ describe.sequential('devtools popup', () => {
     await vi.waitFor(() => expect(missing.hidden).toBe(false));
     expect(missing.textContent).toContain('No devtools server found');
     expect(missing.querySelector('a')!.getAttribute('href')).toMatch(/^https:/);
+    expect(missing.querySelector('h2')!.id).toBe(missing.getAttribute('aria-labelledby'));
+    expect(missing.querySelector('a')!.textContent).toContain('opens in a new tab');
+    expect(shadow.querySelector('[role="status"]')!.textContent).toBe('No devtools server found');
     expect(frame().hidden).toBe(true);
     expect(frame().getAttribute('src')).toBeNull();
+  });
+
+  it('keeps the floating panel inside a narrow window', async () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    window.innerWidth = 360;
+    window.innerHeight = 640;
+    localStorage.setItem(
+      'ng-devtools-popup',
+      JSON.stringify({ x: 600, y: 500, width: 720, height: 480, docked: 'float' }),
+    );
+    try {
+      await loadPopup(true);
+      parts().fab.click();
+      const panel = parts().panel;
+      expect(parseInt(panel.style.left, 10)).toBe(16);
+      expect(parseInt(panel.style.top, 10)).toBe(160);
+    } finally {
+      window.innerWidth = width;
+      window.innerHeight = height;
+    }
   });
 });
