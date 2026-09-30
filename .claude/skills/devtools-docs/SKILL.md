@@ -139,5 +139,5 @@ From the repo root:
 
 1. `pnpm docs:dev` and open every changed page (TOC, links, dark mode).
 2. `pnpm docs:build` (link and anchor guards).
-3. `pnpm exec prettier --check "apps/docs/**/*.{ts,json,css,html}"`. Content markdown isn't formatted; check tables by eye.
+3. `pnpm format:check` from the repo root. It checks content markdown too, so run `pnpm exec prettier --write` on the pages you changed.
 4. Grep changed files for `—`, "will ", "we ", "new ", "recently", "simply", "just ".

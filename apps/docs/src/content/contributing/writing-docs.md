@@ -212,7 +212,7 @@ Check names exactly: labels, buttons, tool names, arguments, option names and de
     Run <code>pnpm docs:build</code>. The build fails on a broken internal link or anchor, and on an external raw HTML link without <code>target="_blank"</code>.
   </ngmd-step>
   <ngmd-step title="Format">
-    Run <code>pnpm exec prettier --check "apps/docs/**/*.{ts,json,css,html}"</code>. Markdown in <code>src/content</code> is not reformatted, so check tables and line breaks by eye.
+    Run <code>pnpm format:check</code> from the repo root. It checks content markdown too, so run <code>pnpm exec prettier --write</code> on the pages you changed.
   </ngmd-step>
   <ngmd-step title="Reread against the rules">
     Check the style rules above, and that every claim you added matches the code. Search your changes for em dashes, "will", "we", "new", "recently", "simply" and "just".
