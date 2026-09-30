@@ -1,0 +1,14 @@
+changelog:
+  exclude:
+    labels: [ignore-for-release]
+  categories:
+    - title: Package
+      labels: ['area: package']
+    - title: Panel
+      labels: ['area: panel']
+    - title: Chrome extension
+      labels: ['area: extension']
+    - title: Documentation
+      labels: [documentation]
+    - title: Other changes
+      labels: ['*']
