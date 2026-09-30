@@ -219,6 +219,36 @@ describe('Analog route rules', () => {
     );
   });
 
+  it('does not treat a plain Angular app as Analog because the workspace root installs Analog', () => {
+    const { 'package.json': pkg, ...app } = BASE_FILES;
+    const ws = makeProject(
+      {
+        'package.json': pkg,
+        'nx.json': '{}',
+        'apps/admin/project.json': '{}',
+        'apps/admin/src/main.ts': '',
+      },
+      Object.fromEntries(Object.entries(app).map(([file, text]) => [`apps/shop/${file}`, text])),
+    );
+    expect(scanAnalog(join(ws, 'apps/admin'))).toMatchObject({ analog: false, routes: [] });
+    expect(scanAnalog(join(ws, 'apps/shop'))).toMatchObject({ analog: true, version: '2.7.5' });
+  });
+
+  it('finds workspace build output when the app declares Analog in its own package.json', () => {
+    const { 'package.json': pkg, ...app } = BASE_FILES;
+    const ws = makeProject(
+      { 'package.json': '{"name":"workspace"}', 'nx.json': '{}', 'apps/shop/package.json': pkg },
+      Object.fromEntries(Object.entries(app).map(([file, text]) => [`apps/shop/${file}`, text])),
+    );
+    for (const page of ['', 'pricing']) {
+      mkdirSync(join(ws, 'dist/apps/shop/analog/public', page), { recursive: true });
+      writeFileSync(join(ws, 'dist/apps/shop/analog/public', page, 'index.html'), '<html></html>');
+    }
+    const project = scanAnalog(join(ws, 'apps/shop'));
+    expect(project).toMatchObject({ analog: true, version: '2.7.5' });
+    expect(project.prerendered.sort()).toEqual(['/', '/pricing']);
+  });
+
   it('reports a non-Analog project as such', () => {
     const project = scanAnalog(makeProject({ 'package.json': '{"dependencies":{}}' }));
     expect(project).toMatchObject({ analog: false, routes: [], api: [] });

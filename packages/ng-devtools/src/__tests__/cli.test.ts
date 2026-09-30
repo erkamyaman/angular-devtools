@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createCac } from 'devframe/adapters/cac';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -25,6 +25,24 @@ describe('ng-devtools build --outDir', () => {
         /working directory or one of its parents/,
       );
     }
+  });
+
+  it('sees through symlinks to the working directory and its parents, even with --force', () => {
+    const root = fixtureDir('ng-devtools-cli-link-');
+    const cwd = join(root, 'workspace');
+    mkdirSync(join(cwd, 'src'), { recursive: true });
+    symlinkSync(root, join(root, 'alias'), 'dir');
+    for (const outDir of [join(root, 'alias', 'workspace'), join(root, 'alias')]) {
+      expect(() => checkReportOutDir(outDir, { cwd, force: true })).toThrow(
+        /working directory or one of its parents/,
+      );
+    }
+    expect(() =>
+      checkReportOutDir(cwd, { cwd: join(root, 'alias', 'workspace'), force: true }),
+    ).toThrow(/working directory or one of its parents/);
+    expect(() =>
+      checkReportOutDir(join(root, 'alias', 'workspace', 'new', 'report'), { cwd }),
+    ).not.toThrow();
   });
 
   it('refuses a folder or file that is not a previous report unless forced', () => {

@@ -48,6 +48,28 @@ describe('build-meta', () => {
     expect(await scan(getBuildMeta, dir)).toMatchObject({ projectName: 'store', ssr: true });
   });
 
+  it('reads SSR from the app config when only the workspace root installs Analog', async () => {
+    const ws = fixtureDir('ng-devtools-meta-');
+    writeFileSync(
+      join(ws, 'package.json'),
+      JSON.stringify({ name: 'workspace', devDependencies: { '@analogjs/platform': '2.7.5' } }),
+    );
+    writeFileSync(join(ws, 'nx.json'), '{}');
+    const admin = join(ws, 'apps/admin');
+    mkdirSync(admin, { recursive: true });
+    writeFileSync(
+      join(admin, 'project.json'),
+      JSON.stringify({
+        name: 'admin',
+        projectType: 'application',
+        targets: { build: { options: { browser: 'src/main.ts' } } },
+      }),
+    );
+    const meta = await scan(getBuildMeta, admin);
+    expect(meta).toMatchObject({ projectName: 'admin', ssr: false });
+    expect(meta).not.toHaveProperty('analog');
+  });
+
   it('picks the application over a library listed first in angular.json', async () => {
     const dir = fixtureDir('ng-devtools-meta-');
     writeFileSync(

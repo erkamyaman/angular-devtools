@@ -438,6 +438,26 @@ describe('pipes collector', () => {
     expect(JSON.stringify(h.reports())).not.toContain(jwt);
   });
 
+  it('redacts a JWT that runs past the text limit before cutting it', async () => {
+    const jwt = `eyJhbGciOiJIUzI1NiJ9.eyJ${'a'.repeat(900)}.c2lnbmF0dXJlLXZhbHVl`;
+    class LongToken {
+      token$ = new BehaviorSubject(`token ${jwt}`);
+    }
+    Component({
+      selector: 'app-long-token',
+      imports: [AsyncPipe],
+      template: `<p>{{ token$ | async }}</p>`,
+    })(LongToken);
+    await mount(LongToken);
+    const h = harness();
+    h.collector.push();
+    await Promise.resolve();
+
+    const [usage] = h.reports().at(-1)!.async ?? [];
+    expect(usage.latestValue).toBe('token [redacted]');
+    expect(JSON.stringify(h.reports())).not.toContain('eyJhbGciOiJIUzI1NiJ9');
+  });
+
   it('redacts instrumented inputs and outputs, including configured secret names', async () => {
     setRedaction({ secretNames: ['voucher'] });
     class Checkout {

@@ -30,7 +30,7 @@ export const getBuildMeta = defineRpcFunction({
   setup: (ctx) => ({
     handler: async () => {
       const pkg = readJson(join(ctx.cwd, 'package.json'));
-      const deps = { ...pkg['dependencies'], ...pkg['devDependencies'] };
+      const deps = { ...record(pkg['dependencies']), ...record(pkg['devDependencies']) };
       const angularVersion =
         installedVersion(ctx.cwd, '@angular/core') ?? versionFromRange(deps['@angular/core']);
       const typescript =
@@ -41,7 +41,7 @@ export const getBuildMeta = defineRpcFunction({
       const analog = analogVersion(app);
       return {
         angularVersion,
-        projectName: project?.name ?? pkg['name'] ?? 'unknown',
+        projectName: project?.name ?? (typeof pkg['name'] === 'string' ? pkg['name'] : 'unknown'),
         typescript,
         ssr: analog ? analogConfig(app).ssr !== false : hasSsr(project?.config),
         ...(analog
@@ -58,18 +58,25 @@ export const getBuildMeta = defineRpcFunction({
   }),
 });
 
+type Json = Record<string, unknown>;
+
 interface WorkspaceProject {
   name?: string;
-  config: Record<string, any>;
+  config: Json;
+}
+
+function record(value: unknown): Json | undefined {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Json) : undefined;
 }
 
 export function mainProject(cwd: string): WorkspaceProject | undefined {
   const angularJson = readJson(join(cwd, 'angular.json'));
-  const projects = angularJson['projects'];
-  if (projects && typeof projects === 'object') {
-    const entries = Object.entries(projects as Record<string, Record<string, any>>).filter(
-      ([, config]) => config && typeof config === 'object',
-    );
+  const projects = record(angularJson['projects']);
+  if (projects) {
+    const entries = Object.entries(projects).flatMap(([name, value]) => {
+      const config = record(value);
+      return config ? [[name, config] as const] : [];
+    });
     const [name, config] =
       entries.find(([name]) => name === angularJson['defaultProject']) ??
       entries.find(([, config]) => !config['root'] || config['root'] === '.') ??
@@ -84,16 +91,16 @@ export function mainProject(cwd: string): WorkspaceProject | undefined {
   return { name: typeof name === 'string' ? name : undefined, config: projectJson };
 }
 
-export function hasSsr(config: Record<string, any> | undefined): boolean {
-  const targets = config?.['architect'] ?? config?.['targets'];
-  const build = targets?.['build']?.['options'];
+export function hasSsr(config: Json | undefined): boolean {
+  const targets = record(config?.['architect']) ?? record(config?.['targets']);
+  const build = record(record(targets?.['build'])?.['options']);
   return !!(build?.['ssr'] || build?.['server'] || targets?.['server']);
 }
 
-function readJson(path: string): Record<string, any> {
+function readJson(path: string): Json {
   try {
     if (!existsSync(path)) return {};
-    return JSON.parse(readFileSync(path, 'utf-8'));
+    return record(JSON.parse(readFileSync(path, 'utf-8'))) ?? {};
   } catch {
     return {};
   }

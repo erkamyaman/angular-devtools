@@ -282,6 +282,12 @@ describe('form actions on native selects', () => {
 
     expect(await set('plan', { id: 2, label: 'Large' })).toMatchObject({ ok: true });
     expect(form.controls.plan.value).toBe(SIZES[1]);
+    expect(await set('plan', { id: 1, label: 'Small' })).toMatchObject({ ok: true });
+    expect(form.controls.plan.value).toBe(SIZES[0]);
+    const unmatched = await set('plan', { id: 9, label: 'Huge' });
+    expect(unmatched.ok).toBe(false);
+    expect(unmatched.error).toContain('no option with the value');
+    expect(form.controls.plan.value).toBe(SIZES[0]);
 
     expect(await set('color', 'blue')).toMatchObject({ ok: true });
     expect(form.controls.color.value).toBe('blue');
@@ -305,6 +311,10 @@ describe('form actions on native selects', () => {
         mode: 'user',
       });
     expect(await set(['a', 'c'])).toMatchObject({ ok: true });
+    expect(form.controls.tags.value).toEqual(['a', 'c']);
+    expect(await set(['c', 'b'])).toMatchObject({ ok: true });
+    expect(form.controls.tags.value).toEqual(['b', 'c']);
+    expect(await set(['c', 'a'])).toMatchObject({ ok: true });
     expect(form.controls.tags.value).toEqual(['a', 'c']);
     expect((await set(['a', 'z'])).error).toContain('no option with the value "z"');
     expect((await set('a')).ok).toBe(false);

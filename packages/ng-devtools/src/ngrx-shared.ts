@@ -65,6 +65,7 @@ export interface NgrxRequestResult {
   ok?: boolean;
   message?: string;
   error?: string;
+  paused?: boolean;
 }
 
 export interface SerializeOptions {

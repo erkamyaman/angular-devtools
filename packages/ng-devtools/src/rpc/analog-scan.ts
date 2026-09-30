@@ -460,13 +460,25 @@ function packageVersion(dir: string): string | undefined {
   }
 }
 
+function isWorkspaceBoundary(dir: string): boolean {
+  return dirname(dir) === dir || existsSync(join(dir, '.git')) || existsSync(join(dir, 'nx.json'));
+}
+
 function analogPackage(root: string): { dir: string; version: string } | undefined {
-  for (let dir = root; ; dir = dirname(dir)) {
+  const own = packageVersion(root);
+  if (own) return { dir: root, version: own };
+  if (isWorkspaceBoundary(root) || !hasAnalogConfig(root)) return undefined;
+  for (let dir = dirname(root); ; dir = dirname(dir)) {
     const version = packageVersion(dir);
     if (version) return { dir, version };
-    if (dirname(dir) === dir || existsSync(join(dir, '.git')) || existsSync(join(dir, 'nx.json'))) {
-      return undefined;
-    }
+    if (isWorkspaceBoundary(dir)) return undefined;
+  }
+}
+
+function nxWorkspace(root: string): string | undefined {
+  for (let dir = root; ; dir = dirname(dir)) {
+    if (existsSync(join(dir, 'nx.json'))) return dir;
+    if (isWorkspaceBoundary(dir)) return undefined;
   }
 }
 
@@ -540,7 +552,7 @@ function scanProject(root: string): AnalogProject {
       : [],
     content: version ? contentFiles(root) : [],
     config: analogConfig(root),
-    prerendered: pkg ? prerenderedPages(root, pkg.dir) : [],
+    prerendered: pkg ? prerenderedPages(root, nxWorkspace(root) ?? pkg.dir) : [],
   };
 }
 

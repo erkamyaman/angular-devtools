@@ -148,6 +148,17 @@ describe('createSignalHistory', () => {
     ]);
   });
 
+  it('drops a binding when the bound track reaches the same epoch with another value', () => {
+    const h = createSignalHistory(identity, () => 1);
+    const rowB: RawSignalNode = { debugName: 'count', kind: 'signal', value: 'Alpha', version: 1 };
+    h.onWrite(rowB);
+    h.collect([graphNode('A', 'count', 1, 'Alpha')]);
+    write(h.onWrite, rowB, 'Beta');
+    const out = h.collect([graphNode('A', 'count', 2, 'Gamma')])['A'];
+    expect(out.map((c) => c.value)).not.toContain('Beta');
+    expect(out.at(-1)).toMatchObject({ epoch: 2, value: 'Gamma', source: 'sample' });
+  });
+
   it('never appends a write newer than the node epoch', () => {
     const h = createSignalHistory(identity);
     const raw: RawSignalNode = { debugName: 'n', kind: 'signal', value: 0, version: 0 };
