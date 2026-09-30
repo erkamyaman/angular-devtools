@@ -96,7 +96,7 @@ Checks grouped by rule, each with a fix:
 ### Supported layouts
 
 - **Single app**: `package.json`, `vite.config.ts` and `src/app/pages` in one folder. The build output is read from `dist/analog/public`.
-- **Nx workspace**: the app lives in `apps/<name>` and `package.json` sits at the workspace root. The scan uses the Vite root, or the first folder under `apps/` whose `vite.config` calls `analog()` when the tools run from the workspace root. `package.json` is looked up from the app folder upward, and the build output is read from `dist/apps/<name>/analog/public`.
+- **Nx workspace**: the app lives in `apps/<name>` and `package.json` sits at the workspace root. The scan uses the Vite root, or the first folder under `apps/` whose `vite.config` calls `analog()` when the tools run from the workspace root. The **Routes** tab, `get-routes` and the **SSR** and **Analog** fields on the **Dashboard** read the same app, so they match this tab. `package.json` is looked up from the app folder upward, and the build output is read from `dist/apps/<name>/analog/public`.
 
 ### Render mode rules
 

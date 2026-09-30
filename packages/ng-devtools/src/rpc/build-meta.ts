@@ -4,7 +4,7 @@ import { describable } from './agent-schema.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { analogConfig, analogRoot, analogVersion } from './analog-scan.ts';
+import { analogConfig, analogVersion, servedAnalogRoot } from './analog-scan.ts';
 
 const BuildMetaSchema = v.object({
   angularVersion: v.string(),
@@ -37,7 +37,7 @@ export const getBuildMeta = defineRpcFunction({
         installedVersion(ctx.cwd, 'typescript') ?? versionFromRange(deps['typescript']);
 
       const project = mainProject(ctx.cwd);
-      const app = analogRoot(ctx.cwd);
+      const app = servedAnalogRoot(ctx.cwd);
       const analog = analogVersion(app);
       return {
         angularVersion,

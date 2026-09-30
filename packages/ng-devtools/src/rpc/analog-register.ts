@@ -7,7 +7,7 @@ import {
   recentCalls,
   type AnalogCall,
 } from '../analog-server-log.ts';
-import { explainUrl, scanAnalog, type AnalogProject } from './analog-scan.ts';
+import { explainUrl, scanAnalog, servedAnalogRoot, type AnalogProject } from './analog-scan.ts';
 import {
   analogApiRoutesText,
   analogContentText,
@@ -36,7 +36,6 @@ const PAGE_TTL_MS = 15_000;
 
 let disposeAnalog: (() => void) | undefined;
 let analogOwner: unknown;
-let viteRoot: string | undefined;
 
 interface Scoped {
   rpc: {
@@ -105,10 +104,6 @@ export async function callApi(request: ApiRequest, origin = devOrigin()): Promis
   }
 }
 
-export function setAnalogRoot(root: string | undefined) {
-  viteRoot = root;
-}
-
 export function stopAnalog(owner?: unknown) {
   if (owner !== undefined && owner !== analogOwner) return;
   disposeAnalog?.();
@@ -165,7 +160,7 @@ export async function registerAnalog(
   let cache: { at: number; project: AnalogProject } | null = null;
   const project = () => {
     if (!cache || Date.now() - cache.at > SCAN_CACHE_MS) {
-      cache = { at: Date.now(), project: scanAnalog(viteRoot ?? ctx.cwd) };
+      cache = { at: Date.now(), project: scanAnalog(servedAnalogRoot(ctx.cwd)) };
     }
     return cache.project;
   };

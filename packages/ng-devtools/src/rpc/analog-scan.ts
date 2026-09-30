@@ -491,6 +491,16 @@ function hasAnalogConfig(dir: string): boolean {
   return !!file && /\banalog\s*\(/.test(stripComments(read(join(dir, file))));
 }
 
+let viteRoot: string | undefined;
+
+export function setAnalogRoot(root: string | undefined) {
+  viteRoot = root;
+}
+
+export function servedAnalogRoot(cwd: string): string {
+  return analogRoot(viteRoot ?? cwd);
+}
+
 export function analogRoot(cwd: string): string {
   if (existsSync(join(cwd, 'src/app/pages')) || hasAnalogConfig(cwd)) return cwd;
   let names: string[];

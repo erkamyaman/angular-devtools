@@ -9,10 +9,14 @@ import {
   frontmatter,
   lintAnalog,
   scanAnalog,
+  servedAnalogRoot,
+  setAnalogRoot,
   toRawPath,
   toSegment,
 } from '../rpc/analog-scan.ts';
+import { getBuildMeta } from '../rpc/build-meta.ts';
 import { extractRoutes } from '../rpc/get-routes.ts';
+import { scan } from '../rpc/__tests__/scan.ts';
 import { BASE_FILES, BROKEN_FILES, makeProject } from './analog-fixture.ts';
 
 describe('Analog route rules', () => {
@@ -217,6 +221,33 @@ describe('Analog route rules', () => {
     expect(extractRoutes(ws).map((r) => r.file)).toContain(
       'apps/shop/src/app/pages/(marketing)/pricing.page.ts',
     );
+  });
+
+  it('uses the Vite root for every surface when an Nx workspace has several Analog apps', async () => {
+    const { 'package.json': pkg, ...app } = BASE_FILES;
+    const inApp = (name: string) =>
+      Object.fromEntries(Object.entries(app).map(([file, text]) => [`apps/${name}/${file}`, text]));
+    const ws = makeProject(
+      {
+        'package.json': pkg,
+        'nx.json': '{}',
+        'apps/blog/src/app/pages/blog-only.page.ts': app['src/app/pages/index.page.ts']!,
+        'apps/blog/vite.config.ts': `import analog from '@analogjs/platform';\nexport default { plugins: [analog({ ssr: false })] };\n`,
+      },
+      inApp('shop'),
+    );
+    const shop = join(ws, 'apps/shop');
+    setAnalogRoot(shop);
+    try {
+      expect(servedAnalogRoot(ws)).toBe(shop);
+      const files = extractRoutes(ws).map((r) => r.file);
+      expect(files).toContain('apps/shop/src/app/pages/(marketing)/pricing.page.ts');
+      expect(files.some((file) => file.startsWith('apps/blog/'))).toBe(false);
+      expect(await scan(getBuildMeta, ws)).toMatchObject({ ssr: true, analog: '2.7.5' });
+    } finally {
+      setAnalogRoot(undefined);
+    }
+    expect(servedAnalogRoot(ws)).toBe(join(ws, 'apps/blog'));
   });
 
   it('does not treat a plain Angular app as Analog because the workspace root installs Analog', () => {
