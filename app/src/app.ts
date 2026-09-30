@@ -30,7 +30,7 @@ import { TabIcon } from './pages/tab-icon';
 import { styleHubRail } from './hub-rail-style';
 import { followHubDocks, selectHubDock } from './hub-dock-sync';
 import { panelConfig, tabEnabled } from './devtools-config';
-import { savedToken, serverOrigin, watchTrust, type TrustState } from './auth';
+import { connectToken, scopeTrustUpdates, serverOrigin, watchTrust, type TrustState } from './auth';
 import { CodeEntry } from './ui/code-entry';
 
 const HUB_VIEWS = ['angular', 'ngrx', 'analog', 'nativescript', 'capacitor'] as const;
@@ -749,10 +749,11 @@ export class App implements OnInit, OnDestroy {
     this.server.set(server);
     connectDevframe({
       ...(baseURL ? { baseURL } : {}),
-      authToken: savedToken(server, this.pageOrigin),
+      authToken: connectToken(server, this.pageOrigin),
       simpleAuth: false,
     }).then(
       (client) => {
+        scopeTrustUpdates(client, server, this.pageOrigin);
         this.client.set(client);
         this.connected.set(client.status === 'connected');
         client.events.on('connection:status', (status) => {

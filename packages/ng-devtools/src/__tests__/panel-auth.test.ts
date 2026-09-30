@@ -1,7 +1,10 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest';
 import {
+  NO_TOKEN,
+  connectToken,
   requestCode,
+  scopeTrustUpdates,
   saveToken,
   savedToken,
   serverOrigin,
@@ -132,6 +135,40 @@ describe('saved tokens', () => {
       },
     };
     expect(() => saveToken(SERVER, PANEL, 'a', blocked)).not.toThrow();
+  });
+});
+
+describe('connectToken', () => {
+  it('sends only the token saved for this server across origins', () => {
+    const storage = memoryStorage({
+      'ng-devtools:auth-tokens': JSON.stringify({ [SERVER]: 'a' }),
+      __DEVFRAME_CONNECTION_AUTH_TOKEN__: 'a',
+    });
+    expect(connectToken(SERVER, PANEL, storage)).toBe('a');
+    expect(connectToken('http://localhost:4200', PANEL, storage)).toBe(NO_TOKEN);
+    expect(connectToken(SERVER, SERVER, storage)).toBeUndefined();
+  });
+});
+
+describe('scopeTrustUpdates', () => {
+  it('ignores tokens for other servers across origins', async () => {
+    const storage = memoryStorage({
+      'ng-devtools:auth-tokens': JSON.stringify({ [SERVER]: 'a', 'http://localhost:4200': 'b' }),
+    });
+    const original = vi.fn(async (token: string) => token.length > 0);
+    const client = { requestTrustWithToken: original };
+    scopeTrustUpdates(client, SERVER, PANEL, storage);
+    expect(await client.requestTrustWithToken('b')).toBe(false);
+    expect(original).not.toHaveBeenCalled();
+    expect(await client.requestTrustWithToken('a')).toBe(true);
+    expect(original).toHaveBeenCalledWith('a');
+  });
+
+  it('leaves same origin pages to devframe', () => {
+    const original = vi.fn(async (token: string) => token.length > 0);
+    const client = { requestTrustWithToken: original };
+    scopeTrustUpdates(client, SERVER, SERVER, memoryStorage());
+    expect(client.requestTrustWithToken).toBe(original);
   });
 });
 

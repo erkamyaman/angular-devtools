@@ -13,6 +13,7 @@ export type CodeResult = 'trusted' | 'empty' | 'wrong' | 'unreachable';
 type TokenStorage = Pick<Storage, 'getItem' | 'setItem'>;
 
 const TOKENS_KEY = 'ng-devtools:auth-tokens';
+export const NO_TOKEN = 'ng-devtools:no-token';
 
 export function trustState(client: Pick<TrustClient, 'isTrusted' | 'status'>): TrustState {
   if (client.isTrusted) return 'trusted';
@@ -70,6 +71,27 @@ export function savedToken(
   if (server === pageOrigin) return undefined;
   const token = readTokens(storage)[server];
   return typeof token === 'string' && token ? token : undefined;
+}
+
+export function connectToken(
+  server: string,
+  pageOrigin: string,
+  storage = defaultStorage(),
+): string | undefined {
+  if (server === pageOrigin) return undefined;
+  return savedToken(server, pageOrigin, storage) ?? NO_TOKEN;
+}
+
+export function scopeTrustUpdates(
+  client: Pick<DevframeRpcClient, 'requestTrustWithToken'>,
+  server: string,
+  pageOrigin: string,
+  storage = defaultStorage(),
+): void {
+  if (server === pageOrigin) return;
+  const requestTrustWithToken = client.requestTrustWithToken;
+  client.requestTrustWithToken = async (token) =>
+    token === savedToken(server, pageOrigin, storage) ? requestTrustWithToken(token) : false;
 }
 
 export function saveToken(
