@@ -24,6 +24,21 @@ body:
         - Documentation site
     validations:
       required: true
+  - type: dropdown
+    id: setup
+    attributes:
+      label: Setup
+      description: How the devtools are mounted in your app.
+      options:
+        - Angular CLI with Express (initNgDevtoolsHub)
+        - Vite plugin
+        - Analog
+        - Standalone CLI (ng-devtools dev)
+        - Chrome extension
+        - MCP server (stdio or HTTP)
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: what
     attributes:

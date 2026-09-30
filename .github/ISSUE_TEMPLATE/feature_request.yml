@@ -21,6 +21,18 @@ body:
     attributes:
       label: Angular APIs involved
       description: Debug APIs or framework internals that could provide the data, if you know them.
+  - type: dropdown
+    id: docs
+    attributes:
+      label: Docs impact
+      description: Pages in the docs site that the change would need to update.
+      options:
+        - A new or changed inspector page
+        - Agent tools or resources
+        - Setup or options
+        - Security
+        - None
+        - Not sure
   - type: checkboxes
     id: help
     attributes:
