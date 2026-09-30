@@ -300,14 +300,24 @@ button below; with the hub mounted, the button opens the whole hub (every dock
 in a side rail).
 
 `initOverlay` is exported for a devtools mounted somewhere else. Importing the
-module has already started an overlay on the default URLs by then, so dispose of
-that one before starting another, or the page ends up with two connections and
-two polling intervals:
+module has already started an overlay on the default URLs by then; calling
+`initOverlay` stops that one and starts a new one, so only one runs at a time.
+It resolves with a function that stops the overlay it started:
 
 ```ts
 import { initOverlay } from '@santoshyadavdev/ng-devtools/overlay';
 
 const dispose = await initOverlay({ baseURL: '/__my-devtools/' });
+```
+
+To turn the overlay off entirely, call `disposeOverlay`. It stops whichever
+overlay is running (the auto-started one included), closes its connection,
+clears its timers, listeners and observers, and removes the floating button:
+
+```ts
+import { disposeOverlay } from '@santoshyadavdev/ng-devtools/overlay';
+
+await disposeOverlay();
 ```
 
 ### In-Page Popup
