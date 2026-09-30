@@ -1071,9 +1071,24 @@ describe('ngrx collector with @ngrx/store', () => {
     const { store, collector, add } = await realStore({ devtools: { maxAge: 3 } });
     collector.collect();
     for (let i = 0; i < 5; i++) store.dispatch(add({ by: 1 }));
-    expect(collector.run({ type: 'restore', seq: 1 }).error).toMatch(/dropped this action.*maxAge/);
+    expect(collector.run({ type: 'restore', seq: 1 }).error).toMatch(
+      /no longer holds this action.*maxAge/,
+    );
     expect(collector.logSince(0)[0]).toMatchObject({ restorable: false, unrestorable: 'dropped' });
     expect(collector.run({ type: 'restore', seq: 5 })).toMatchObject({ ok: true });
+  });
+
+  it('does not blame maxAge when the Store DevTools history was committed', async () => {
+    const { TestBed, store, collector, add } = await realStore({ devtools: { maxAge: 25 } });
+    const { StoreDevtools } = await import('@ngrx/store-devtools');
+    collector.collect();
+    store.dispatch(add({ by: 1 }));
+    TestBed.inject(StoreDevtools).commit();
+    collector.collect();
+    expect(collector.logSince(0)[0]).toMatchObject({ restorable: false, unrestorable: 'dropped' });
+    const error = collector.run({ type: 'restore', seq: 1 }).error;
+    expect(error).toMatch(/no longer holds this action/);
+    expect(error).toMatch(/committed, reset or imported/);
   });
 
   it('marks the actions Store DevTools dropped past maxAge as not restorable', async () => {
@@ -1096,7 +1111,7 @@ describe('ngrx collector with @ngrx/store', () => {
     expect(collector.unrestorableSince(first.last).updates).toEqual([
       { seq: 4, reason: 'dropped' },
     ]);
-    expect(collector.run({ type: 'restore', seq: 2 }).error).toMatch(/dropped this action/);
+    expect(collector.run({ type: 'restore', seq: 2 }).error).toMatch(/no longer holds this action/);
   });
 
   it('marks an action Store DevTools never recorded as not restorable', async () => {

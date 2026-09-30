@@ -171,12 +171,12 @@ describe('StoreInspector restore', () => {
     expect(button(fixture, 'Restore this state')).toBeDefined();
   });
 
-  it('explains an entry Store DevTools dropped past maxAge', async () => {
+  it('explains an entry Store DevTools no longer holds', async () => {
     const fixture = await select([entry(1, { restorable: false, unrestorable: 'dropped' })], 1);
     expect(button(fixture, 'Restore this state')).toBeUndefined();
-    expect(root(fixture).textContent).toMatch(
-      /dropped this action\. It keeps only the last\s+maxAge/,
-    );
+    expect(root(fixture).textContent).toMatch(/no longer holds this action/);
+    expect(root(fixture).textContent).toMatch(/dropped past\s+maxAge/);
+    expect(root(fixture).textContent).toMatch(/committed, reset or imported/);
     expect(button(fixture, 'Dispatch again')).toBeDefined();
   });
 

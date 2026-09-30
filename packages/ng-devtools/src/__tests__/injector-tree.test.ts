@@ -319,6 +319,29 @@ describe('collectInjectorTree', () => {
     expect(asked).toEqual([Api, Http]);
   });
 
+  it('lists a service dependency once when the service injects it several times', () => {
+    const { ng } = fakeNg();
+    class Zone {}
+    class Destroy {}
+    const rootEnv = ng.ɵgetInjectorResolutionPath({ kind: 'node' })[1];
+    rootEnv.records = new Map<unknown, unknown>([
+      [Zone, { factory: () => new Zone(), value: new Zone() }],
+    ]);
+    const lookup = ng.ɵgetDependenciesFromInjectable;
+    ng.ɵgetDependenciesFromInjectable = (inj: any, token: unknown) => {
+      if (inj.kind === 'node') return lookup(inj, token);
+      const dep = { token: Destroy, flags: { optional: true }, providedIn: rootEnv };
+      return token === Zone
+        ? { dependencies: [dep, dep, dep, { ...dep, flags: {} }, dep] }
+        : { dependencies: [] };
+    };
+    const root = collectInjectorTree(ng).environment[0].children[0];
+    expect(root.dependencies).toEqual([
+      { from: 'Zone', token: 'Destroy', flags: ['optional'], providedBy: root.injector.id },
+      { from: 'Zone', token: 'Destroy', flags: [], providedBy: root.injector.id },
+    ]);
+  });
+
   it('reports the change detection mode from the NgZone the root injector created', () => {
     class NgZone {
       _inner = {};

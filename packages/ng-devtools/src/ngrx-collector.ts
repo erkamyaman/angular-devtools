@@ -728,7 +728,7 @@ export function createNgrxCollector(
 
   const NOT_HELD: Record<NgrxUnrestorable, string> = {
     dropped:
-      'Store DevTools dropped this action. It keeps only the last maxAge actions, so older ones cannot be restored.',
+      'Store DevTools no longer holds this action, so it cannot be restored. It was dropped past maxAge, or the Store DevTools history was committed, reset or imported.',
     'not-recorded':
       'Store DevTools never recorded this action, so it cannot be restored. An actionsBlocklist, actionsSafelist or predicate option filtered it out, or recording was paused.',
   };

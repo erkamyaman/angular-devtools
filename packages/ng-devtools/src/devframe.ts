@@ -807,11 +807,17 @@ const ngDevtools = defineDevframe({
       },
     });
 
+    const highlightSessions = trackPageSessions(ctx.rpc, (kinds) => {
+      for (const method of kinds) void my.rpc.broadcast({ method, args: [null], optional: true });
+    });
+
     register({
       name: 'request-form-highlight',
       type: 'action',
       jsonSerializable: true,
       handler: (target: { formId: string; path: string } | null) => {
+        if (target) highlightSessions.bind('highlight-form-field');
+        else highlightSessions.unbind('highlight-form-field');
         void my.rpc.broadcast({
           method: 'highlight-form-field',
           args: [target],
@@ -835,6 +841,8 @@ const ngDevtools = defineDevframe({
             : typeof selector === 'string'
               ? selector
               : '';
+        if (target) highlightSessions.bind('highlight-in-page');
+        else highlightSessions.unbind('highlight-in-page');
         void my.rpc.broadcast({ method: 'highlight-in-page', args: [target], optional: true });
       },
     });
@@ -1340,7 +1348,7 @@ const ngDevtools = defineDevframe({
       id: 'ng-devtools:ngrx-store',
       name: 'NgRx Store State',
       description:
-        'Live NgRx state per connected page: each @ngrx/signals store (state, computed values, methods, the component fields that reference it) and the @ngrx/store state, plus a change log with a per-entry state diff (method calls, patchState writes, dispatched actions and restores). An @ngrx/store action entry has an `origin`: `dispatch` (Store.dispatch, usually a component or service), `effect` (sent by an NgRx effect through Store.next) or `reactive` (Store.dispatch with a function); it is missing for actions sent another way. `classic.paused` is true after a restore jumped Store DevTools to a past state: new actions are logged but do not change the state until the panel goes back to the latest state. An @ngrx/store entry with `unrestorable` cannot be restored: `dropped` means Store DevTools dropped the action past its `maxAge`, `not-recorded` means it never recorded it (filtered out, or recording paused). Empty when no page is connected.',
+        'Live NgRx state per connected page: each @ngrx/signals store (state, computed values, methods, the component fields that reference it) and the @ngrx/store state, plus a change log with a per-entry state diff (method calls, patchState writes, dispatched actions and restores). An @ngrx/store action entry has an `origin`: `dispatch` (Store.dispatch, usually a component or service), `effect` (sent by an NgRx effect through Store.next) or `reactive` (Store.dispatch with a function); it is missing for actions sent another way. `classic.paused` is true after a restore jumped Store DevTools to a past state: new actions are logged but do not change the state until the panel goes back to the latest state. An @ngrx/store entry with `unrestorable` cannot be restored: `dropped` means Store DevTools no longer holds the action (dropped past its `maxAge`, or its history was committed, reset or imported), `not-recorded` means it never recorded it (filtered out, or recording paused). Empty when no page is connected.',
       mimeType: 'application/json',
       read: () => ({ text: JSON.stringify(ngrxStoreState.value(), null, 2) }),
     });

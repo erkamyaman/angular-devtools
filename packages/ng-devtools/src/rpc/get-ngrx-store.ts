@@ -249,7 +249,30 @@ function stringAt(content: string, raw: string, at: number): string | undefined 
   const end = content.indexOf(quote, start + 1);
   if (end < 0) return undefined;
   const text = raw.slice(start + 1, end);
-  return quote === '`' && text.includes('${') ? undefined : text;
+  return quote === '`' && text.includes('${') ? undefined : unescapeLiteral(text);
+}
+
+const ESCAPES: Record<string, string> = {
+  n: '\n',
+  r: '\r',
+  t: '\t',
+  b: '\b',
+  f: '\f',
+  v: '\v',
+  0: '\0',
+};
+
+function unescapeLiteral(text: string): string {
+  return text.replace(
+    /\\(?:u\{([0-9a-fA-F]+)\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|(\r\n|[\s\S]))/g,
+    (_, braced: string, hex4: string, hex2: string, ch: string) => {
+      const code = braced ?? hex4 ?? hex2;
+      if (code) return String.fromCodePoint(parseInt(code, 16));
+      if (ch === '\n' || ch === '\r' || ch === '\r\n' || ch === '\u2028' || ch === '\u2029')
+        return '';
+      return ESCAPES[ch] ?? ch;
+    },
+  );
 }
 
 function actionGroupTypes(content: string, raw: string, open: number): string[] {

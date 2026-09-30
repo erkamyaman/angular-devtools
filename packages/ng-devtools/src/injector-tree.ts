@@ -302,6 +302,7 @@ function environmentDependencies(
     serviceDependencies.set(injector, known);
   }
   const out: DependencyInfo[] = [];
+  const seen = new Set<string>();
   for (const [token, record] of ownRecords(injector)) {
     if (out.length >= MAX_SERVICE_DEPENDENCIES) break;
     if (typeof token !== 'function' || typeof record.factory !== 'function') continue;
@@ -311,7 +312,12 @@ function environmentDependencies(
       deps = dependenciesOf(ng, injector, [token], false, records);
       known.set(token, deps);
     }
-    out.push(...deps);
+    for (const dep of deps) {
+      const key = `${dep.from}|${dep.token}|${dep.flags.join(',')}|${dep.providedBy}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(dep);
+    }
   }
   return out.slice(0, MAX_SERVICE_DEPENDENCIES);
 }

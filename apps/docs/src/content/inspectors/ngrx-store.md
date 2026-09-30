@@ -185,7 +185,7 @@ The log keeps the last 200 entries. Set the count with [`limits.changeLog`](../g
     Store DevTools is not set up, so entries cannot be restored. The store detail shows <strong>Store DevTools off</strong>. Add <code>provideStoreDevtools()</code> to the app config.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Why is there no Restore for an older action?">
-    Store DevTools dropped it. With <code>maxAge</code> set, Store DevTools keeps only the last <code>maxAge</code> actions, while the log keeps 200 entries. The entry says <strong>Store DevTools dropped this action</strong>. Raise <code>maxAge</code> in <code>provideStoreDevtools()</code> to restore further back.
+    Store DevTools no longer holds it. The entry says <strong>Store DevTools no longer holds this action</strong>. With <code>maxAge</code> set, Store DevTools keeps only the last <code>maxAge</code> actions, while the log keeps 200 entries. Raise <code>maxAge</code> in <code>provideStoreDevtools()</code> to restore further back. Committing, resetting or importing the history in the Redux DevTools extension also removes the older actions, and no setting brings them back.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Why is there no Restore for an action Store DevTools never recorded?">
     Store DevTools skipped it. An <code>actionsBlocklist</code>, <code>actionsSafelist</code> or <code>predicate</code> option filtered it out, or recording was paused in the Redux DevTools extension. The entry says <strong>Store DevTools never recorded this action</strong>. Change the filter so Store DevTools records the action next time.

@@ -33,6 +33,7 @@ import { panelConfig, tabEnabled } from './devtools-config';
 import { hostPageId } from './page-id';
 import { initialTab, storeTab, storedTab } from './tab-memory';
 import { detectBaseURL } from './base-url';
+import { clearHighlightsOnHide } from './rpc';
 
 const HUB_VIEWS = ['angular', 'ngrx', 'analog', 'nativescript', 'capacitor'] as const;
 
@@ -691,6 +692,7 @@ export class App implements OnInit, OnDestroy {
   private stopVisibility = () => {};
 
   private stopFollowing = () => {};
+  private stopHighlights = () => {};
   private readonly nav = viewChild<ElementRef<HTMLElement>>('nav');
   private readonly main = viewChild<ElementRef<HTMLElement>>('main');
   private readonly injector = inject(Injector);
@@ -751,6 +753,7 @@ export class App implements OnInit, OnDestroy {
     );
     if (restored) this.tab.set(restored);
 
+    this.stopHighlights = clearHighlightsOnHide(() => this.rpc());
     const baseURL = detectBaseURL();
     connectDevframe(baseURL ? { baseURL } : {}).then(
       (client) => {
@@ -786,6 +789,7 @@ export class App implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.stopFollowing();
     this.stopVisibility();
+    this.stopHighlights();
     this.navObserver?.disconnect();
   }
 

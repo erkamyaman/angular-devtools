@@ -80,6 +80,27 @@ describe('get-ngrx-store action types', () => {
       ],
     ]);
   });
+
+  it('unescapes the quotes and backslashes in an action type', async () => {
+    const entries = await storeFor(
+      [
+        'export const add = createAction("[Cart] Don\'t \\"Add\\"");',
+        "export const profile = createAction('[Auth] User\\'s Profile');",
+        'export const path = createAction(`[Files] C:\\\\tmp \\u0041`);',
+        'export const Group = createActionGroup({',
+        "  source: 'Team\\'s',",
+        "  events: { 'It\\'s Open': emptyProps() },",
+        '});',
+      ].join('\n'),
+    );
+    const actions = entries.filter((e) => e.kind === 'action');
+    expect(actions.map((e) => e.types)).toEqual([
+      ['[Cart] Don\'t "Add"'],
+      ["[Auth] User's Profile"],
+      ['[Files] C:\\tmp A'],
+      ["[Team's] It's Open"],
+    ]);
+  });
 });
 
 describe('get-ngrx-store members', () => {

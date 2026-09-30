@@ -454,8 +454,9 @@ const CLASSIC_KINDS = new Set([
                       @if (!selected.restorable && selected.source === 'store') {
                         <p class="hint small">
                           @if (selected.unrestorable === 'dropped') {
-                            Store DevTools dropped this action. It keeps only the last
-                            <code>maxAge</code> actions, so this state cannot be restored.
+                            Store DevTools no longer holds this action, so this state cannot be
+                            restored. It was dropped past <code>maxAge</code>, or the Store DevTools
+                            history was committed, reset or imported.
                           } @else if (selected.unrestorable === 'not-recorded') {
                             Store DevTools never recorded this action, so this state cannot be
                             restored. An <code>actionsBlocklist</code>,

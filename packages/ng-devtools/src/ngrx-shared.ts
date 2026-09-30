@@ -31,7 +31,7 @@ export interface NgrxDiffEntry {
 
 export type NgrxActionOrigin = 'dispatch' | 'effect' | 'reactive';
 
-/** Why Store DevTools cannot restore an @ngrx/store entry: it dropped the action past `maxAge`, or never recorded it. */
+/** Why Store DevTools cannot restore an @ngrx/store entry: it no longer holds the action (dropped past `maxAge`, or the history was committed, reset or imported), or never recorded it. */
 export type NgrxUnrestorable = 'dropped' | 'not-recorded';
 
 export interface NgrxLogEntry {
