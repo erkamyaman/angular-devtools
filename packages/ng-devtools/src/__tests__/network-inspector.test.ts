@@ -89,6 +89,22 @@ describe('NetworkInspector response preview', () => {
     fixture.detectChanges();
     expect(document.activeElement).toBe(button);
   });
+
+  it('points the URL buttons at the preview only while it is open', async () => {
+    const host = mount([call('s1'), call('s2')]);
+    const buttons = [...host.querySelectorAll<HTMLButtonElement>('button[data-call-id]')];
+    expect(host.querySelector('#call-preview')).toBeNull();
+    expect(buttons.map((b) => b.hasAttribute('aria-controls'))).toEqual([false, false]);
+
+    buttons[1].click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(host.querySelector('#call-preview')).not.toBeNull();
+    expect(buttons.map((b) => b.getAttribute('aria-controls'))).toEqual([
+      'call-preview',
+      'call-preview',
+    ]);
+  });
 });
 
 describe('NetworkInspector timeline notes', () => {
@@ -171,6 +187,7 @@ describe('NetworkInspector rule form', () => {
     typeInto(f.status, '500');
     inspector.setDraft('target', 'client');
     fixture.detectChanges();
+    f.submit.focus();
     f.submit.click();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -178,6 +195,7 @@ describe('NetworkInspector rule form', () => {
     expect(inspector.message()).toBe('Rule added.');
     expect(f.pattern.value).toBe('');
     expect(f.submit.disabled).toBe(true);
+    expect(document.activeElement).toBe(f.pattern);
 
     typeInto(f.pattern, '/api/cart');
     typeInto(f.status, '503');

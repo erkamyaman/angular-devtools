@@ -13,8 +13,12 @@ function at(href: string) {
 }
 
 describe('detectBaseURL', () => {
-  it('defaults to the embedded server path for a standalone panel', () => {
-    expect(detectBaseURL(at('http://localhost:5173/'))).toBe('/__ng-devtools/');
+  it('tries the embedded server path, then the folder the panel is served from', () => {
+    expect(detectBaseURL(at('http://localhost:5173/'))).toEqual(['/__ng-devtools/', './']);
+    expect(detectBaseURL(at('http://127.0.0.1:4782/reports/today/'))).toEqual([
+      '/__ng-devtools/',
+      './',
+    ]);
   });
 
   it('lets devframe pick the base when the panel is served under the server path', () => {
@@ -35,13 +39,13 @@ describe('detectBaseURL', () => {
     const loc = at(
       'http://localhost:4200/panel/?baseURL=' + encodeURIComponent('https://evil.example/'),
     );
-    expect(detectBaseURL(loc)).toBe('/__ng-devtools/');
+    expect(detectBaseURL(loc)).toEqual(['/__ng-devtools/', './']);
   });
 
   it('ignores a malformed baseURL query instead of throwing', () => {
     const loc = at('http://localhost:4200/panel/?baseURL=' + encodeURIComponent('http://['));
     expect(() => detectBaseURL(loc)).not.toThrow();
-    expect(detectBaseURL(loc)).toBe('/__ng-devtools/');
+    expect(detectBaseURL(loc)).toEqual(['/__ng-devtools/', './']);
   });
 
   it('accepts an http or https host from the extension panel', () => {
@@ -56,6 +60,6 @@ describe('detectBaseURL', () => {
     const loc = at(
       'chrome-extension://abc/ui/index.html?baseURL=' + encodeURIComponent('javascript:alert(1)'),
     );
-    expect(detectBaseURL(loc)).toBe('/__ng-devtools/');
+    expect(detectBaseURL(loc)).toEqual(['/__ng-devtools/', './']);
   });
 });

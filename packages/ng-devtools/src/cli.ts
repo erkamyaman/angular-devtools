@@ -24,11 +24,18 @@ function canonical(path: string): string {
   }
 }
 
-export function checkReportOutDir(outDir: string, options: { cwd?: string; force?: boolean } = {}) {
+export function checkReportOutDir(
+  outDir: string,
+  options: { cwd?: string; force?: boolean; invokedFrom?: string } = {},
+) {
   const cwd = canonical(resolve(options.cwd ?? process.cwd()));
   const target = canonical(resolve(cwd, outDir));
-  const up = relative(target, cwd);
-  if (up === '' || (!up.startsWith('..') && !isAbsolute(up))) {
+  const kept = [cwd, ...(options.invokedFrom ? [canonical(resolve(options.invokedFrom))] : [])];
+  const holds = (dir: string) => {
+    const up = relative(target, dir);
+    return up === '' || (!up.startsWith('..') && !isAbsolute(up));
+  };
+  if (kept.some(holds)) {
     throw new Error(
       `[ng-devtools] Refusing to build into "${outDir}": it is the working directory or one of its parents, and the build empties it first. Pick a new folder, such as --outDir dist-report.`,
     );
@@ -44,15 +51,18 @@ export function checkReportOutDir(outDir: string, options: { cwd?: string; force
   }
 }
 
-/** Adds `--force` to `build` and checks `--outDir` before devframe empties it. */
-export function guardReportOutDir(cli: CAC) {
+/**
+ * Adds `--force` to `build` and checks `--outDir` before devframe empties it.
+ * `invokedFrom` stays protected after `--root` changes the working directory.
+ */
+export function guardReportOutDir(cli: CAC, invokedFrom = process.cwd()) {
   const build = cli.commands.find((command) => command.name === 'build');
   const run = build?.commandAction;
   if (!build || !run) return;
   build.option('--force', 'Empty --out-dir even when it is not a previous report');
   build.action(async (flags: { outDir: string; force?: boolean }) => {
     try {
-      checkReportOutDir(flags.outDir, { force: flags.force });
+      checkReportOutDir(flags.outDir, { force: flags.force, invokedFrom });
     } catch (error) {
       console.error((error as Error).message);
       process.exitCode = 1;

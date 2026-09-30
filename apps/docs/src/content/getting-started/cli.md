@@ -145,7 +145,7 @@ npx @santoshyadavdev/ng-devtools build --outDir dist-report
 
 The build deletes everything in `--outDir` before it writes the report. To protect your files, it stops with an error when `--outDir` is:
 
-- the working directory or one of its parents, even with `--force`,
+- the working directory or one of its parents, even with `--force`. With `--root`, this covers both the folder you ran the command from and the `--root` folder,
 - a file, or a folder that is not empty and has no `__connection.json` (so it is not a previous report), unless you pass `--force`.
 
 ### Open or host it

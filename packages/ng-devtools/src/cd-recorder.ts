@@ -60,7 +60,7 @@ interface RawCycle {
   start: number;
   ms: number;
   passes: number;
-  trigger?: { owner: unknown; listener: unknown };
+  trigger?: string;
   checks: Map<Ctor, { checks: number; ms: number }>;
 }
 
@@ -74,7 +74,9 @@ function nameOf(instance: unknown): string {
   return typeof ctor === 'function' ? className(ctor as { name?: string }) : '?';
 }
 
-function triggerText(trigger: RawCycle['trigger']): string | undefined {
+function triggerText(
+  trigger: { owner: unknown; listener: unknown } | undefined,
+): string | undefined {
   if (!trigger) return undefined;
   const owner = nameOf(trigger.owner);
   const listener =
@@ -87,8 +89,9 @@ function triggerText(trigger: RawCycle['trigger']): string | undefined {
 const round = (ms: number) => Math.round(ms * 100) / 100;
 
 /**
- * Records change detection cycles from Angular's profiler. `onEvent` keeps raw
- * references and numbers only; names and ids are built in `snapshot`.
+ * Records change detection cycles from Angular's profiler. `onEvent` keeps
+ * classes, numbers and weak references to instances; names and ids are built
+ * in `snapshot`.
  */
 export function createCdRecorder(options: {
   maxCycles: number;
@@ -104,9 +107,11 @@ export function createCdRecorder(options: {
   let cycles: RawCycle[] = [];
   let current: RawCycle | null = null;
   let stack: Frame[] = [];
-  let lastOutput: RawCycle['trigger'];
+  let lastOutput: { owner: unknown; listener: unknown } | undefined;
   let totals = new Map<Ctor, CdComponentStat & { lastCycle: number }>();
-  let perInstance = new Map<object, number>();
+  let perInstance = new WeakMap<object, number>();
+  let instances: WeakRef<object>[] = [];
+  let prunedCycle = 0;
 
   const onEvent = (event: number, instance?: unknown, hook?: unknown) => {
     if (!recording) return;
@@ -121,7 +126,7 @@ export function createCdRecorder(options: {
           start: now(),
           ms: 0,
           passes: 0,
-          trigger: lastOutput,
+          trigger: triggerText(lastOutput),
           checks: new Map(),
         };
         lastOutput = undefined;
@@ -167,8 +172,18 @@ export function createCdRecorder(options: {
             lastCycle: current.id,
           });
         }
-        if (perInstance.has(instance) || perInstance.size < MAX_HOSTS) {
-          perInstance.set(instance, (perInstance.get(instance) ?? 0) + 1);
+        const seen = perInstance.get(instance);
+        if (seen !== undefined) {
+          perInstance.set(instance, seen + 1);
+          return;
+        }
+        if (instances.length >= MAX_HOSTS && prunedCycle !== current.id) {
+          prunedCycle = current.id;
+          instances = instances.filter((ref) => ref.deref());
+        }
+        if (instances.length < MAX_HOSTS) {
+          instances.push(new WeakRef(instance));
+          perInstance.set(instance, 1);
         }
         return;
       }
@@ -195,7 +210,9 @@ export function createCdRecorder(options: {
     stack = [];
     lastOutput = undefined;
     totals = new Map();
-    perInstance = new Map();
+    perInstance = new WeakMap();
+    instances = [];
+    prunedCycle = 0;
   };
 
   return {
@@ -214,6 +231,7 @@ export function createCdRecorder(options: {
       recording = false;
       current = null;
       stack = [];
+      lastOutput = undefined;
     },
     clear() {
       reset();
@@ -222,9 +240,10 @@ export function createCdRecorder(options: {
     /** Cycles and totals with names, and checks per host id from `hostId`. */
     snapshot(hostId: (instance: object) => string | null): CdRecording {
       const hosts: Record<string, number> = {};
-      for (const [instance, count] of perInstance) {
-        const id = hostId(instance);
-        if (id) hosts[id] = (hosts[id] ?? 0) + count;
+      for (const ref of instances) {
+        const instance = ref.deref();
+        const id = instance && hostId(instance);
+        if (id) hosts[id] = (hosts[id] ?? 0) + (perInstance.get(instance!) ?? 0);
       }
       return {
         recording,
@@ -242,7 +261,7 @@ export function createCdRecorder(options: {
             at: cycle.at,
             ms: round(cycle.ms),
             passes: cycle.passes,
-            ...(cycle.trigger ? { trigger: triggerText(cycle.trigger) } : {}),
+            ...(cycle.trigger ? { trigger: cycle.trigger } : {}),
             checks: checks.reduce((sum, check) => sum + check.checks, 0),
             components: checks.sort((a, b) => b.ms - a.ms).slice(0, TOP_PER_CYCLE),
           };

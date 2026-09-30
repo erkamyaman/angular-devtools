@@ -108,4 +108,36 @@ describe.sequential('overlay keepalive and background tabs', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(sent('report-page-visibility').at(-1)?.args[0]).toMatchObject({ hidden: false });
   });
+
+  it('does not mark a closed tab as in the background', async () => {
+    await start();
+    window.dispatchEvent(new Event('pagehide'));
+    setHidden(true);
+    await vi.advanceTimersByTimeAsync(130_000);
+    const reports = sent('report-page-visibility').map((call) => call.args[0]);
+    expect(reports).not.toContainEqual(expect.objectContaining({ hidden: true }));
+    expect(reports.at(-1)).toMatchObject({ hidden: false });
+  });
+
+  it('stops the background heartbeat when a hidden tab goes away', async () => {
+    await start();
+    setHidden(true);
+    await vi.advanceTimersByTimeAsync(0);
+    window.dispatchEvent(new Event('pagehide'));
+    calls.length = 0;
+    await vi.advanceTimersByTimeAsync(130_000);
+    expect(sent('report-page-visibility')).toEqual([]);
+  });
+
+  it('reports a background tab again after it comes back from the back/forward cache', async () => {
+    await start();
+    window.dispatchEvent(new Event('pagehide'));
+    await vi.advanceTimersByTimeAsync(0);
+    calls.length = 0;
+    window.dispatchEvent(new Event('pageshow'));
+    await vi.advanceTimersByTimeAsync(0);
+    setHidden(true);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(sent('report-page-visibility').at(-1)?.args[0]).toMatchObject({ hidden: true });
+  });
 });

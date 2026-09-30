@@ -210,7 +210,7 @@ const MAX_RULES = 50;
                         [title]="entry.url"
                         [attr.data-call-id]="entry.id"
                         [attr.aria-pressed]="selectedCall()?.id === entry.id"
-                        aria-controls="call-preview"
+                        [attr.aria-controls]="selectedCall() ? 'call-preview' : null"
                       >
                         {{ entry.url }}
                       </button>
@@ -306,6 +306,7 @@ const MAX_RULES = 50;
           <label>
             <span>URL pattern <span class="hint">(substring or * glob)</span></span>
             <input
+              id="rule-pattern"
               required
               spellcheck="false"
               autocomplete="off"
@@ -1601,6 +1602,7 @@ export class NetworkInspector {
     };
     if (await this.saveRules([...this.rules(), rule], 'Rule added.', rule)) {
       this.draft.set({ ...EMPTY_DRAFT });
+      this.host.nativeElement.querySelector<HTMLInputElement>('#rule-pattern')?.focus();
     }
   }
 
