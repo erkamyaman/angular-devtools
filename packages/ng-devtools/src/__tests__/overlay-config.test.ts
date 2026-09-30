@@ -45,6 +45,26 @@ afterEach(() => {
 });
 
 describe('overlay collectors', () => {
+  it('ping instead of resending unchanged trees and HTTP calls', async () => {
+    await start({ limits: { refreshMs: 500 } });
+    expect(calls).toContain('push-component-tree');
+    expect(calls).toContain('push-http');
+    calls.length = 0;
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(Date.now() + 9000);
+      await new Promise((resolve) => setTimeout(resolve, 700));
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(calls).not.toContain('push-component-tree');
+    expect(calls).not.toContain('push-injector-tree');
+    expect(calls).not.toContain('push-http');
+    expect(calls).toContain('ping-component-tree');
+    expect(calls).toContain('ping-injector-tree');
+    expect(calls).toContain('ping-http');
+  });
+
   it('run every collector when the server sends no config', async () => {
     const called = await start();
     expect(called).toContain('push-component-tree');
