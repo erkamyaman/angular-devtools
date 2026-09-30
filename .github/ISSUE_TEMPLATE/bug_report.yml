@@ -21,6 +21,7 @@ body:
         - Agent tools (MCP)
         - Vite plugin or setup
         - Demo app
+        - Documentation site
     validations:
       required: true
   - type: textarea
