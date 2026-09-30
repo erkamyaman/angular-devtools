@@ -36,8 +36,8 @@ export const getBuildMeta = defineRpcFunction({
       const typescript =
         installedVersion(ctx.cwd, 'typescript') ?? versionFromRange(deps['typescript']);
 
-      const project = mainProject(ctx.cwd);
       const app = servedAnalogRoot(ctx.cwd);
+      const project = mainProject(app) ?? mainProject(ctx.cwd);
       const analog = analogVersion(app);
       return {
         angularVersion,

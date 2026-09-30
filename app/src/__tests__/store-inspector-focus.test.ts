@@ -82,4 +82,39 @@ describe('StoreInspector restore focus', () => {
     expect(latest).not.toBeNull();
     expect(document.activeElement).toBe(latest);
   });
+
+  it('focuses "Back to latest" after a deferred restore on an already paused page', async () => {
+    let resolve!: (value: unknown) => void;
+    const client = {
+      connectionMeta: {},
+      scope: () => ({
+        rpc: {
+          call: async (name: string) =>
+            name === 'request-ngrx-action' ? new Promise((done) => (resolve = done)) : [],
+          sharedState: async () => ({
+            value: () => ({ pages: [page(true)] }),
+            on: () => () => undefined,
+          }),
+        },
+      }),
+    } as unknown as DevframeRpcClient;
+    const fixture = TestBed.createComponent(StoreInspector);
+    document.body.appendChild(fixture.nativeElement);
+    fixture.componentRef.setInput('rpc', client);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    const latest = host.querySelector('.paused button');
+    expect(latest).not.toBeNull();
+
+    const restoring = fixture.componentInstance.restore(1, true);
+    fixture.detectChanges();
+    await Promise.resolve();
+    fixture.detectChanges();
+    resolve({ ok: true, paused: true, message: 'Jumped. Paused.' });
+    await restoring;
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(document.activeElement).toBe(latest);
+  });
 });

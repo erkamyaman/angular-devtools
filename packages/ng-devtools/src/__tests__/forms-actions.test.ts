@@ -128,6 +128,24 @@ Component({
   `,
 })(Order);
 
+class Delivery {
+  form = new FormGroup({
+    speed: new FormControl('slow', { updateOn: 'submit' }),
+  });
+}
+Component({
+  selector: 'delivery-form',
+  imports: [ReactiveFormsModule],
+  template: `
+    <form [formGroup]="form">
+      <select id="speed" formControlName="speed">
+        <option value="slow">Slow</option>
+        <option value="fast">Fast</option>
+      </select>
+    </form>
+  `,
+})(Delivery);
+
 class Shirt {
   size = 1;
 }
@@ -320,6 +338,23 @@ describe('form actions on native selects', () => {
     expect((await set(['a', 'z'])).error).toContain('no option with the value "z"');
     expect((await set('a')).ok).toBe(false);
     expect(form.controls.tags.value).toEqual(['a', 'c']);
+  });
+
+  it('accepts a pending select value on a control that updates on submit', async () => {
+    const fixture = await render(Delivery);
+    const ctx = contextFor(fixture.nativeElement);
+    const control = fixture.componentInstance.form.controls.speed;
+    const set = (value: unknown) =>
+      runFormAction(ctx, {
+        action: 'set-value',
+        formId: 'form-1',
+        path: 'speed',
+        value,
+        mode: 'user',
+      });
+    expect(await set('fast')).toMatchObject({ ok: true });
+    expect(control.value).toBe('slow');
+    expect((await set('turbo')).error).toContain('no option with the value "turbo"');
   });
 
   it('writes an ngModel select and fills selects in user mode', async () => {
