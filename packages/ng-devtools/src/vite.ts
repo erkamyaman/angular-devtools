@@ -6,8 +6,8 @@ import type { WsOriginRegistry } from 'devframe/rpc/transports/ws-server';
 import { isLoopbackHostname } from 'devframe/utils/origin';
 import { NG_DEVTOOLS_HUB_BASE, initNgDevtoolsHub } from './hub.ts';
 import { analogMiddleware, setDevOrigin } from './analog-server-log.ts';
-import { analogConfig } from './rpc/analog-scan.ts';
-import { setAnalogRoot, stopAnalog } from './rpc/analog-register.ts';
+import { analogConfig, setAnalogRoot } from './rpc/analog-scan.ts';
+import { stopAnalog } from './rpc/analog-register.ts';
 import { httpRegistry } from './http-rules.ts';
 import { pickNgDevtoolsConfig, resolveNgDevtoolsConfig, type NgDevtoolsConfig } from './config.ts';
 

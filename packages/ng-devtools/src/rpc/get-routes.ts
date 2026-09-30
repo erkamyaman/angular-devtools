@@ -1,7 +1,7 @@
 import { defineRpcFunction } from 'devframe';
 import * as v from 'valibot';
 import { describable } from './agent-schema.ts';
-import { analogRoot, analogVersion, buildRoutes, flattenRoutes } from './analog-scan.ts';
+import { analogVersion, buildRoutes, flattenRoutes, servedAnalogRoot } from './analog-scan.ts';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import {
@@ -47,7 +47,7 @@ export const getRoutes = defineRpcFunction({
 });
 
 export function extractRoutes(cwd: string): ExtractedRoute[] {
-  const app = analogRoot(cwd);
+  const app = servedAnalogRoot(cwd);
   const routes: ExtractedRoute[] = analogVersion(app) ? analogRoutes(app, cwd) : [];
   const files: string[] = [];
   for (const root of sourceRoots(cwd)) {
