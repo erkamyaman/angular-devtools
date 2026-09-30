@@ -28,7 +28,7 @@ The devtools read your running app and send what they find to a server on your m
     Binds to <code>localhost</code> and asks for a one-time code by default.
   </ngmd-card>
   <ngmd-card icon="compass" title="Chrome extension">
-    Reaches loopback hosts out of the box. Any other host needs a click on <strong>Allow access</strong>, for that host only.
+    Reaches loopback hosts out of the box. Any other host needs a click on <strong>Allow access</strong>, for that host only. Asks for the one-time code when the server does.
   </ngmd-card>
 </ngmd-card-grid>
 
@@ -120,6 +120,8 @@ The extension has host permissions for loopback hosts only: `localhost` and its 
 On any other host, the panel doesn't send a request until you click **Allow access**. Chrome then asks you to grant the extension that one host, on the scheme of the page and any port. The extension never asks for all hosts at once.
 
 Granting the extension a host doesn't change what the devtools server accepts. The server still applies the checks on this page. Both the Vite plugin and the Express hub accept the extension's `chrome-extension://` origin by default. An Express hub with its own `allowedOrigins` list needs the extension origin in that list. See [Chrome extension](/getting-started/chrome-extension#host-access).
+
+When the server asks for the [one-time code](#one-time-code), the panel shows a form for it and reads no data until you enter the code. The panel keeps the token it gets in the extension's own storage, one per server origin, so it doesn't ask again while the server trusts that token. See [One-time code](/getting-started/chrome-extension#one-time-code) on the Chrome extension page.
 
 ## What is redacted
 

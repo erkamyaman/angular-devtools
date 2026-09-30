@@ -89,6 +89,23 @@ The panel only connects to pages served over `http` or `https`. On other pages i
 
 The extension can reach loopback hosts from the start. For any other host, such as a LAN IP or a tunnel, the panel shows an **Allow access** button instead of looking for the server. Click it and confirm the Chrome prompt. The panel then looks for the server again. See [Host access](#host-access) for what the button grants.
 
+### One-time code
+
+If the devtools server asks for the [one-time code](/security#one-time-code), the panel shows **Enter the one-time code** in place of the inspector, and the status in the header reads **Code needed**. The Express hub asks for the code by default. The Vite plugin asks when it allows a host or origin other than a loopback one, such as a tunnel or a name in `server.allowedHosts`.
+
+<ngmd-workflow>
+  <ngmd-step title="Find the code">
+    The server prints a 6-digit <strong>auth code</strong> in the terminal where it runs.
+  </ngmd-step>
+  <ngmd-step title="Enter it">
+    Type the code in <strong>One-time code</strong> and press <strong>Connect</strong>. The panel then loads the inspector.
+  </ngmd-step>
+</ngmd-workflow>
+
+A wrong code shows an error and keeps the form open, so you can try again. A code expires after 5 minutes, and the server replaces it after 5 wrong tries. **Print a new code** asks the server to print a fresh one.
+
+The panel keeps the token it gets in the extension's own storage, one per server origin. Reloading the page or reopening DevTools doesn't ask for the code again while the server still trusts that token.
+
 ### The inspected tab
 
 The overlay gives each page an id. The panel passes the id of the page it inspects to the UI. If several tabs run the same app, the panel shows the tab you inspect, not the one that reported last.
@@ -119,7 +136,7 @@ Other hosts are optional host permissions. **Allow access** asks Chrome for the 
 
 Granting the extension a host doesn't change what the devtools server accepts. The server still applies its own checks. The Vite plugin, for example, only answers requests from a loopback address. See [Access and redaction](/security).
 
-The Vite plugin and the Express hub accept the extension's `chrome-extension://` origin by default. If your Express hub passes its own `allowedOrigins` list, add `chrome-extension://<id>` to it. The ID is on the extension card in `chrome://extensions`.
+The Vite plugin and the Express hub accept the extension's `chrome-extension://` origin by default. When the server also asks for the one-time code, enter it in the panel (see [One-time code](#one-time-code)). If your Express hub passes its own `allowedOrigins` list, add `chrome-extension://<id>` to it. The ID is on the extension card in `chrome://extensions`.
 
 ### Content scripts
 
@@ -133,6 +150,9 @@ The content scripts are wider. Two of them run on every page. They check for an 
   </ngmd-accordion-item>
   <ngmd-accordion-item title="The panel asks me to allow access">
     The page is not on a loopback host. Click <strong>Allow access</strong> to let the extension reach that host. Chrome asks you to confirm.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="The panel asks for a one-time code">
+    The devtools server asks for its one-time code. Enter the 6-digit <strong>auth code</strong> from the terminal that runs your dev server. See <a href="#one-time-code">One-time code</a>.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="The panel lists the URLs it tried">
     None of them served a connection file. Check that the server of the page mounts the devtools and that the server accepts the request. See <a href="/security">Access and redaction</a>.
