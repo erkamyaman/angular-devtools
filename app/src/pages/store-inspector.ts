@@ -1,4 +1,14 @@
-import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import type { DevframeRpcClient } from 'devframe/client';
 import { time } from '../format';
 import { hostPageId } from '../page-id';
@@ -176,7 +186,7 @@ const CLASSIC_KINDS = new Set([
               </div>
 
               @if (current.classic?.paused) {
-                <div class="paused" role="status">
+                <div class="paused">
                   <p>
                     <strong>Viewing a past state.</strong> New actions are logged but do not change
                     the state until you go back to the latest state.
@@ -187,6 +197,7 @@ const CLASSIC_KINDS = new Set([
                     [disabled]="busy() || !canRestore()"
                     [attr.aria-describedby]="canRestore() ? null : 'store-latest-off'"
                     (click)="backToLatest()"
+                    #latestButton
                   >
                     Back to latest
                   </button>
@@ -199,7 +210,7 @@ const CLASSIC_KINDS = new Set([
               <div class="facts">
                 <section class="fact" aria-labelledby="ngrx-state-heading">
                   <h4 id="ngrx-state-heading">State</h4>
-                  <pre class="tree" tabindex="0" aria-labelledby="ngrx-state-heading">{{
+                  <pre #stateTree class="tree" tabindex="0" aria-labelledby="ngrx-state-heading">{{
                     stateText()
                   }}</pre>
                 </section>
@@ -348,7 +359,7 @@ const CLASSIC_KINDS = new Set([
                                 type="button"
                                 class="btn primary"
                                 [disabled]="busy()"
-                                (click)="restore(selected.seq)"
+                                (click)="restore(selected.seq, selected.source === 'store')"
                               >
                                 Restore
                               </button>
@@ -1160,6 +1171,9 @@ export class StoreInspector {
   readonly selectedSeq = signal<number | null>(null);
   readonly confirmSeq = signal<number | null>(null);
   readonly busy = signal(false);
+  private readonly focusLatest = signal(false);
+  private readonly stateTree = viewChild<ElementRef<HTMLElement>>('stateTree');
+  private readonly latestButton = viewChild<ElementRef<HTMLButtonElement>>('latestButton');
   readonly message = signal('');
 
   private readonly destroyRef = inject(DestroyRef);
@@ -1279,6 +1293,12 @@ export class StoreInspector {
       const client = this.rpc();
       if (client) void this.load(client);
     });
+    effect(() => {
+      const button = this.latestButton();
+      if (!button || !this.focusLatest()) return;
+      this.focusLatest.set(false);
+      button.nativeElement.focus();
+    });
     this.destroyRef.onDestroy(() => this.unsubscribe?.());
   }
 
@@ -1331,21 +1351,25 @@ export class StoreInspector {
     this.confirmSeq.set(null);
   }
 
-  async restore(seq: number) {
+  async restore(seq: number, pauses: boolean) {
     const page = this.page();
     if (!page) return;
     this.busy.set(true);
+    this.focusLatest.set(pauses);
     try {
       const result = (await call(this.rpc(), 'request-ngrx-action', {
         pageId: page.pageId,
         request: { type: 'restore', seq },
       })) as { ok?: boolean; message?: string; error?: string } | null;
       this.message.set(result?.error ?? result?.message ?? 'Restored.');
+      if (result?.error) this.focusLatest.set(false);
     } catch {
+      this.focusLatest.set(false);
       this.message.set('Could not reach the page to restore the state.');
     } finally {
       this.busy.set(false);
       this.confirmSeq.set(null);
+      if (!this.focusLatest()) this.stateTree()?.nativeElement.focus();
     }
   }
 
@@ -1358,6 +1382,8 @@ export class StoreInspector {
         pageId: page.pageId,
         request: { type: 'latest' },
       })) as { ok?: boolean; message?: string; error?: string } | null;
+      this.focusLatest.set(false);
+      this.stateTree()?.nativeElement.focus();
       this.message.set(result?.error ?? result?.message ?? 'Back on the latest state.');
     } catch {
       this.message.set('Could not reach the page to go back to the latest state.');
