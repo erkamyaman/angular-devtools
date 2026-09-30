@@ -227,6 +227,8 @@ The floating button appears on the page, the full viewer is at `/__devframes/` o
 
 The devtools only answer this machine, and only pages served from `localhost`, `127.0.0.1` or the Chrome extension, so another website open in your browser can't reach them. If you open the dev server through another hostname that points to your machine (for example `myapp.test`), list it in Vite's `server.allowedHosts` and the devtools trust it too. Other origins can be added with `ngDevtools({ allowedOrigins: ['https://tunnel.example'] })`.
 
+A tunnel forwards other people's requests to your machine, so once `server.allowedHosts` or `allowedOrigins` names anything other than `localhost` or a loopback address, the devtools ask for a one-time code (printed in the terminal) before they connect. Pass `ngDevtools({ auth: false })` to skip the code, or `ngDevtools({ auth: true })` to require it everywhere, for example behind a tunnel that rewrites the `Host` header to `localhost`.
+
 The Analog dock shows:
 
 - Routes: every page, layout and markdown file with its URL, route groups, `[param]` and catch-all segments, `.server.ts` files and routeMeta. Test a URL to see which files render it.
