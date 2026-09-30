@@ -38,6 +38,7 @@ import { collectSignalGraph, graphKey, toSignalTarget, type SignalTarget } from 
 import { serializeNamed } from './serialize.ts';
 import { configFromConnection } from './config.ts';
 import { setRedaction } from './forms-privacy.ts';
+import { outsideAngular, watchChangeDetection } from './change-detection.ts';
 
 declare global {
   interface Window {
@@ -50,6 +51,7 @@ let highlightTimer: ReturnType<typeof setTimeout> | undefined;
 let highlightFrame = 0;
 const PAGE_ID_KEY = 'ng-devtools-page-id';
 const ROUTER_HEARTBEAT_MS = 5000;
+const KEEPALIVE_MS = 8000;
 
 function storedPageId(): string | null {
   try {
@@ -94,12 +96,64 @@ async function claimPageId(): Promise<{ id: string; release: () => void }> {
   return { id, release: () => channel.close() };
 }
 
-export async function initOverlay(options: { baseURL?: string | string[] } = {}) {
+interface OverlayOptions {
+  baseURL?: string | string[];
+}
+
+let current: { stop: () => void } | null = null;
+let popup: Promise<typeof import('./popup.ts')> | undefined;
+
+/**
+ * Starts the overlay and resolves with its dispose. Only one overlay runs per
+ * page: starting another stops the one before it, including the auto-started one.
+ */
+export function initOverlay(options: OverlayOptions = {}): Promise<() => void> {
+  current?.stop();
+  const cleanups: (() => void)[] = [];
+  let stopped = false;
+  const instance = {
+    stop: () => {
+      if (stopped) return;
+      stopped = true;
+      if (current === instance) current = null;
+      for (const cleanup of cleanups.splice(0).reverse()) {
+        try {
+          cleanup();
+        } catch {
+          continue;
+        }
+      }
+    },
+  };
+  current = instance;
+  const own = (cleanup: () => void) => {
+    if (stopped) cleanup();
+    else cleanups.push(cleanup);
+    return !stopped;
+  };
+  return outsideAngular(() => startOverlay(options, own)).then(
+    () => instance.stop,
+    (error) => {
+      instance.stop();
+      throw error;
+    },
+  );
+}
+
+/** Stops the running overlay and removes the floating devtools button. */
+export async function disposeOverlay(): Promise<void> {
+  current?.stop();
+  const loaded = await popup?.catch(() => undefined);
+  await loaded?.hideDevtools();
+}
+
+async function startOverlay(options: OverlayOptions, own: (cleanup: () => void) => boolean) {
   // `connectDevframe()` alone looks for the connection next to the page, which
   // misses the documented `/__ng-devtools/` mount in a host app.
   const rpc = await connectDevframe({
     baseURL: options.baseURL ?? ['./', '/__ng-devtools/', '/__devframes/ng-devtools/'],
   });
+  if (!own(() => rpc.close?.())) return;
   const my = rpc.scope('ng-devtools');
   const devtoolsConfig = configFromConnection(rpc.connectionMeta);
   const on = devtoolsConfig.inspectors;
@@ -110,13 +164,13 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
 
   let componentTarget: string | null = null;
   let lastTreeJson = '';
-  let treeSkips = 0;
+  let treeSentAt = 0;
   async function pushTree(force = false) {
     const tree = collectComponentTree(getNg(), { selectedId: componentTarget });
     const json = JSON.stringify(tree);
-    if (!force && json === lastTreeJson && ++treeSkips < 4) return;
+    if (!force && json === lastTreeJson && Date.now() - treeSentAt < KEEPALIVE_MS) return;
     lastTreeJson = json;
-    treeSkips = 0;
+    treeSentAt = Date.now();
     await my.rpc.call('push-component-tree', { ...tree, pageId });
   }
 
@@ -126,10 +180,11 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   const restoreSignalHook = on.signals
     ? await installSignalWriteHook(signalHistory.onWrite)
     : () => {};
+  if (!own(restoreSignalHook)) return;
 
   let signalTarget: SignalTarget = null;
   let lastSignalKey = '';
-  let signalSkips = 0;
+  let signalSentAt = 0;
   let historyDelta = false;
   let historyFor = '';
 
@@ -137,9 +192,9 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     const graph = collectSignalGraph(getNg(), signalTarget);
     if (!graph) return;
     const key = graphKey(graph);
-    if (!force && key === lastSignalKey && ++signalSkips < 4) return;
+    if (!force && key === lastSignalKey && Date.now() - signalSentAt < KEEPALIVE_MS) return;
     lastSignalKey = key;
-    signalSkips = 0;
+    signalSentAt = Date.now();
     const owner = graph.component?.id ?? '';
     const full = force || !historyDelta || owner !== historyFor;
     historyFor = owner;
@@ -153,17 +208,18 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   }
 
   let lastInjectorJson = '';
-  let injectorSkips = 0;
+  let injectorSentAt = 0;
   async function pushInjectorTree() {
     const tree = collectInjectorTree(getNg());
     const json = JSON.stringify(tree);
-    if (json === lastInjectorJson && ++injectorSkips < 4) return;
+    if (json === lastInjectorJson && Date.now() - injectorSentAt < KEEPALIVE_MS) return;
     lastInjectorJson = json;
-    injectorSkips = 0;
+    injectorSentAt = Date.now();
     await my.rpc.call('push-injector-tree', { ...tree, pageId });
   }
 
   const { id: pageId, release: releasePageId } = await claimPageId();
+  if (!own(releasePageId)) return;
   const stopAnalog = on.analog ? attachAnalog(my, pageId, getNg, limits.refreshMs) : () => {};
   const forms = on.forms
     ? attachForms(
@@ -311,19 +367,18 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   }
 
   const collectors = [
-    on.components && pushTree,
-    on.signals && pushSignalGraph,
-    on.injectors && pushInjectorTree,
+    on.components && (() => void pushTree().catch(() => {})),
+    on.signals && (() => void pushSignalGraph().catch(() => {})),
+    on.injectors && (() => void pushInjectorTree().catch(() => {})),
     ngrx && (() => void ngrx.push()),
     forms?.push,
     pipes?.push,
-    on.router && pushRouter,
+    on.router && (() => void pushRouter()),
     http && (() => void http.push().catch(() => {})),
   ].filter((collect) => typeof collect === 'function');
-  const collect = () => collectors.forEach((run) => run());
-  collect();
-
-  const interval = setInterval(collect, limits.refreshMs);
+  const pushAll = () => collectors.forEach((run) => run());
+  pushAll();
+  const refresher = watchChangeDetection({ getNg, refresh: pushAll, pollMs: limits.refreshMs });
 
   my.rpc.register({
     name: 'highlight-in-page',
@@ -393,10 +448,14 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   });
 
   if (on.components) {
-    window.__ngDevtoolsComponentOf = (el) => {
+    const componentOf = (el: unknown) => {
       const host = el instanceof Element ? componentHostOf(getNg(), el) : null;
       return host ? elementId(host) : null;
     };
+    window.__ngDevtoolsComponentOf = componentOf;
+    own(() => {
+      if (window.__ngDevtoolsComponentOf === componentOf) delete window.__ngDevtoolsComponentOf;
+    });
   }
 
   const forget = (inspector: keyof typeof on, name: string) => {
@@ -421,25 +480,23 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   };
   addEventListener('pageshow', resendConfig);
 
-  return () => {
-    clearInterval(interval);
-    restoreSignalHook();
+  own(() => {
+    refresher.stop();
     removeEventListener('pagehide', leave);
+    removeEventListener('pageshow', resendConfig);
+    leave();
     forms?.stop();
     pipes?.stop();
-    forget('pipes', 'forget-pipes-page');
     ngrx?.stop();
     stopAnalog();
-    removeEventListener('pageshow', resendConfig);
     for (const cleanup of routerCleanup) cleanup();
     routerCleanup = [];
     stopInstrument?.();
+    stopInstrument = null;
     routerDomObserver?.disconnect();
     clearTimeout(routerPushTimer);
-    releasePageId();
     clearHighlight();
-    if (on.components) delete window.__ngDevtoolsComponentOf;
-  };
+  });
 }
 
 function findAngularElements(): Element[] {
@@ -539,5 +596,6 @@ if (
   !(typeof process !== 'undefined' && process.env?.['VITEST'])
 ) {
   initOverlay().catch(console.error);
-  import('./popup.ts').then((m) => m.showDevtools()).catch(console.error);
+  popup = import('./popup.ts');
+  popup.then((m) => m.showDevtools()).catch(console.error);
 }

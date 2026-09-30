@@ -19,10 +19,10 @@ The devtools read your running app and send what they find to a server on your m
 
 <ngmd-card-grid columns="2">
   <ngmd-card icon="zap" title="Vite plugin">
-    Loopback requests only. A request that sends an <code>Origin</code> must come from a loopback host, a Chrome extension, <code>allowedOrigins</code> or Vite's <code>server.allowedHosts</code>.
+    Loopback requests only. A request that sends an <code>Origin</code> must come from a loopback host, a Chrome extension, <code>allowedOrigins</code> or Vite's <code>server.allowedHosts</code>. Asks for a one-time code when a non-loopback host or origin is allowed.
   </ngmd-card>
   <ngmd-card icon="layers" title="Express hub">
-    A one-time code and a loopback origin check. Both on by default.
+    A one-time code and an origin check that accepts loopback origins and the Chrome extension. Both on by default.
   </ngmd-card>
   <ngmd-card icon="terminal" title="Standalone CLI">
     Binds to <code>localhost</code> and asks for a one-time code by default.
@@ -59,20 +59,30 @@ export default defineConfig({
 });
 ```
 
-The Vite plugin turns the one-time code off. The loopback and origin checks take its place.
+#### One-time code
+
+The plugin's `auth` option decides whether the devtools also ask for the one-time code. The server prints the code in the terminal, and a browser reads data only after it exchanges that code.
+
+| `auth`  | One-time code                                                                                                                                                |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| not set | On if `server.allowedHosts` or `allowedOrigins` allows a host other than `localhost` or a loopback address, otherwise off. `allowedHosts: true` turns it on. |
+| `true`  | Always on.                                                                                                                                                   |
+| `false` | Always off. The loopback and origin checks still apply.                                                                                                      |
+
+With only loopback hosts allowed, the loopback and origin checks take the place of the code.
 
 <ngmd-callout type="warning" title="Tunnels look local">
-  A tunnel client runs on your machine, so the requests it forwards come from a loopback address. Anyone who can reach the tunnel can then reach the devtools. Only allow a tunnel origin that only you can reach.
+  A tunnel client runs on your machine, so the requests it forwards come from a loopback address. That is why an allowed tunnel host or origin turns the one-time code on. If your tunnel rewrites the <code>Host</code> header to <code>localhost</code>, nothing in your config names the tunnel, so pass <code>auth: true</code>. Don't pass <code>auth: false</code> while a tunnel is allowed.
 </ngmd-callout>
 
 ### Express hub
 
 `initNgDevtoolsHub()` has two checks, both on by default:
 
-| Check         | Option           | What it does                                                                                                        |
-| ------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
-| One-time code | `auth`           | The server prints a code. A browser can read data only after it exchanges that code.                                |
-| Origin check  | `allowedOrigins` | Only loopback origins, or clients that send no `Origin`, can open the WebSocket. Pass a list to allow more origins. |
+| Check         | Option           | What it does                                                                                                                              |
+| ------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| One-time code | `auth`           | The server prints a code. A browser can read data only after it exchanges that code.                                                      |
+| Origin check  | `allowedOrigins` | Only loopback origins, the Chrome extension, or clients that send no `Origin`, can open the WebSocket. Pass a list to allow more origins. |
 
 ```ts {8}
 // src/server.ts
@@ -87,8 +97,10 @@ const devtools = initNgDevtoolsHub({
 app.use(devtools.nodeMiddleware);
 ```
 
+A list keeps loopback origins but replaces the Chrome extension default. If you use the extension with your own list, add its origin, `chrome-extension://<id>`, with the ID from `chrome://extensions`.
+
 <ngmd-callout type="warning" title="Turning the checks off">
-  Pass <code>auth: false</code> only on a machine only you use. Keep it on when you allow a tunnel origin: the origin check does not tell who is on the other end of the tunnel. <code>allowedOrigins: false</code> turns the origin check off. The demo app in this repository sets it. Keep the check on for your own apps.
+  Pass <code>auth: false</code> only on a machine only you use. Keep it on when you allow a tunnel origin: the origin check does not tell who is on the other end of the tunnel. <code>allowedOrigins: false</code> turns the origin check off. Keep the check on for your own apps.
 </ngmd-callout>
 
 ### Standalone CLI
@@ -97,7 +109,9 @@ The CLI server binds to `localhost` and asks for a one-time code. `--host` chang
 
 ### MCP endpoint
 
-The HTTP MCP endpoint answers only requests from a loopback address that carry a loopback `Origin` header. See [MCP server](/agents/mcp-server).
+The HTTP MCP endpoint answers only requests from a loopback address that carry a loopback `Origin` header.
+
+While the one-time code is on, the endpoint also asks for a bearer token. That is the Express hub by default, and the Vite plugin when its code is on. The hub prints a generated token when it starts. Set `NG_DEVTOOLS_MCP_TOKEN` to choose the token yourself. Requests without the right `Authorization: Bearer <token>` header get `401`. The stdio server needs no token. See [Send a token](/agents/mcp-server#send-a-token).
 
 ### Chrome extension
 
@@ -105,7 +119,7 @@ The extension has host permissions for loopback hosts only: `localhost` and its 
 
 On any other host, the panel doesn't send a request until you click **Allow access**. Chrome then asks you to grant the extension that one host, on the scheme of the page and any port. The extension never asks for all hosts at once.
 
-Granting the extension a host doesn't change what the devtools server accepts. The server still applies the checks on this page. See [Chrome extension](/getting-started/chrome-extension#host-access).
+Granting the extension a host doesn't change what the devtools server accepts. The server still applies the checks on this page. Both the Vite plugin and the Express hub accept the extension's `chrome-extension://` origin by default. An Express hub with its own `allowedOrigins` list needs the extension origin in that list. See [Chrome extension](/getting-started/chrome-extension#host-access).
 
 ## What is redacted
 
@@ -180,7 +194,7 @@ Response previews and TransferState values in the [SSR & HTTP tab](/inspectors/s
     Open the app on <code>localhost</code>. Add other hostnames or origins one by one, only when you need them.
   </ngmd-step>
   <ngmd-step title="Leave the checks on">
-    Keep <code>auth</code> and the origin check on in the Express hub unless the machine is yours alone.
+    Keep <code>auth</code> and the origin check on in the Express hub unless the machine is yours alone. In the Vite plugin, don't pass <code>auth: false</code> while a tunnel host or origin is allowed.
   </ngmd-step>
   <ngmd-step title="Use test data">
     Keep real credentials out of forms and API responses you inspect.

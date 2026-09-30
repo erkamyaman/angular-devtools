@@ -115,10 +115,18 @@ describe('resolveNgDevtoolsConfig', () => {
   it('splits the config out of hub and plugin options', () => {
     const { config, rest } = pickNgDevtoolsConfig({
       base: '/x/',
+      auth: false,
+      allowedOrigins: ['https://app.example'],
+      mcp: { authorization: 'token' },
       inspectors: { http: false },
       agent: { readOnly: true },
     });
-    expect(rest).toEqual({ base: '/x/' });
+    expect(rest).toEqual({
+      base: '/x/',
+      auth: false,
+      allowedOrigins: ['https://app.example'],
+      mcp: { authorization: 'token' },
+    });
     expect(config).toEqual({
       inspectors: { http: false },
       agent: { readOnly: true },

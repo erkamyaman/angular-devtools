@@ -84,7 +84,9 @@ It also adds the [floating button](/getting-started/popup-and-hub). With the hub
 
 ### Snapshots and events
 
-The overlay sends a fresh snapshot every 3 seconds and skips data that did not change. Router events are sent as they happen.
+On Angular 20 and later, the overlay reads the page about 250 ms after Angular runs change detection. It also reads it every 4 seconds as a heartbeat. On older versions, it reads the page every 3 seconds instead.
+
+Each read skips data that did not change. Router events are sent as they happen.
 
 ### One id per tab
 
@@ -110,13 +112,28 @@ bootstrapApplication(App, appConfig).then(async () => {
 });
 ```
 
-`baseURL` takes one path or a list of paths to try in order. `initOverlay` resolves to a function that stops the overlay and removes its hooks.
+`baseURL` takes one path or a list of paths to try in order. `initOverlay` resolves to a function that stops the overlay it started and removes its hooks.
 
-### Avoid two overlays
+### One overlay per page
 
-Importing the module already starts an overlay on the default URLs, and it does not hand you a function to stop it. When the devtools live only at your custom path, that overlay finds no connection, logs an error and stops. Your `initOverlay` call is then the only one running.
+Only one overlay runs on a page. Importing the module already starts one on the default URLs. When you call `initOverlay`, it stops the running overlay first, the auto-started one included, and then starts yours. The page never ends up with two connections.
 
-If the devtools also answer on a default URL, don't call `initOverlay`. Otherwise the page ends up with two connections and two polling intervals.
+## Stop the overlay
+
+Call `disposeOverlay` to turn the overlay off:
+
+```ts
+// src/app/devtools-toggle.ts
+import {disposeOverlay} from '@santoshyadavdev/ng-devtools/overlay';
+
+export async function stopDevtools() {
+  await disposeOverlay();
+}
+```
+
+`disposeOverlay` stops whichever overlay is running, including the one that importing the module started. It closes the connection, clears its timers, listeners and observers, and removes the floating button.
+
+To send data again, call `initOverlay`. It does not add the floating button back.
 
 ## NgRx signal stores
 
@@ -152,7 +169,7 @@ When you hover a component in the devtools, the overlay draws an amber box aroun
     No. The overlay adds the floating button itself. See <a href="/getting-started/popup-and-hub">Popup and hub</a>.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Does it slow down my app?">
-    It polls every 3 seconds and only sends data that changed. With the dynamic import above, it never loads in production builds.
+    It reads the page after change detection, at most once every 250 ms, plus a heartbeat every 4 seconds. It only sends data that changed. With the dynamic import above, it never loads in production builds.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Which values leave the page?">
     Live values are sent to the devtools server. Secret-looking values are redacted first. See <a href="/security">Access and redaction</a>.

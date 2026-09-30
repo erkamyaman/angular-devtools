@@ -1,9 +1,12 @@
+import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { createUi } from '@devframes/hub-ui';
 import { DEVFRAMES_HUB_BASE, initHub } from '@devframes/hub/initiate';
 import type { InitHubOptions } from '@devframes/hub/initiate';
+import type { WsOriginRegistry } from 'devframe/rpc/transports/ws-server';
+import { isAllowedOrigin } from 'devframe/utils/origin';
 import { createNgDevtools } from './devframe.ts';
 import { pickNgDevtoolsConfig, type NgDevtoolsConfig } from './config.ts';
 import pkg from '../package.json' with { type: 'json' };
@@ -13,6 +16,8 @@ const LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 223 236"><pat
 export const NG_DEVTOOLS_HUB_BASE = DEVFRAMES_HUB_BASE;
 
 export type { NgDevtoolsConfig } from './config.ts';
+
+const NG_DEVTOOLS_MCP_TOKEN_ENV = 'NG_DEVTOOLS_MCP_TOKEN';
 
 export type NgDevtoolsHubOptions = Partial<Omit<InitHubOptions, 'devframes' | 'ui'>> &
   NgDevtoolsConfig;
@@ -45,6 +50,39 @@ function hubUi() {
   };
 }
 
+function isExtensionOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    return url.protocol === 'chrome-extension:' && url.hostname !== '';
+  } catch {
+    return false;
+  }
+}
+
+export const hubDefaultOrigins: WsOriginRegistry = {
+  token: '',
+  registerFromUrl: () => undefined,
+  isAllowed: (origin: string | undefined) =>
+    (origin !== undefined && isExtensionOrigin(origin)) || isAllowedOrigin(origin, []),
+};
+
+function mcpToken(): string {
+  const fromEnv = process.env[NG_DEVTOOLS_MCP_TOKEN_ENV];
+  if (fromEnv) return fromEnv;
+  const token = randomBytes(24).toString('base64url');
+  console.log(
+    `\n  ng-devtools MCP token: ${token}\n` +
+      `  HTTP MCP clients send it as "Authorization: Bearer <token>".\n` +
+      `  Set ${NG_DEVTOOLS_MCP_TOKEN_ENV} to keep it the same across restarts.\n`,
+  );
+  return token;
+}
+
+function hubMcpFor(options: NgDevtoolsHubOptions): InitHubOptions['mcp'] {
+  if (options.mcp !== undefined || options.auth === false) return options.mcp;
+  return { authorization: mcpToken() };
+}
+
 export function initNgDevtoolsHub(options: NgDevtoolsHubOptions = {}) {
   const { config, rest } = pickNgDevtoolsConfig(options);
   return initHub({
@@ -52,6 +90,8 @@ export function initNgDevtoolsHub(options: NgDevtoolsHubOptions = {}) {
     version: pkg.version,
     base: NG_DEVTOOLS_HUB_BASE,
     ...rest,
+    allowedOrigins: rest.allowedOrigins ?? hubDefaultOrigins,
+    mcp: hubMcpFor(rest),
     devframes: [createNgDevtools(config)],
     ui: hubUi(),
   });
