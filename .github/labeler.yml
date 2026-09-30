@@ -6,6 +6,11 @@
   - changed-files:
       - any-glob-to-any-file: ['packages/ng-devtools/**', 'bin.mjs']
 
+'area: agents':
+  - changed-files:
+      - any-glob-to-any-file:
+          ['packages/ng-devtools/src/devframe.ts', 'packages/ng-devtools/src/rpc/**']
+
 'area: extension':
   - changed-files:
       - any-glob-to-any-file: ['extension/**']
@@ -14,14 +19,11 @@
   - changed-files:
       - any-glob-to-any-file: ['src/**', 'public/**', 'examples/**']
 
-documentation:
+'area: docs':
   - changed-files:
       - any-glob-to-any-file: ['apps/docs/**', 'docs/**', '*.md']
 
-'area: agents':
+'area: ci':
   - changed-files:
-      - any-glob-to-any-file: ['.claude/**', 'AGENTS.md', 'CLAUDE.md']
-
-ci:
-  - changed-files:
-      - any-glob-to-any-file: ['.github/**', '.githooks/**', 'scripts/**']
+      - any-glob-to-any-file:
+          ['.github/**', '.githooks/**', 'scripts/**', '.claude/**', 'AGENTS.md', 'CLAUDE.md']

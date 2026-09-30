@@ -29,6 +29,21 @@ By taking part you agree to the [Code of Conduct](./CODE_OF_CONDUCT.md). Report 
 - **Docs changes:** follow the [writing guide](./apps/docs/src/content/contributing/writing-docs.md). Run the docs site with `pnpm docs:dev`.
 - **Keep the docs in step with the code:** when a pull request changes behaviour, an option, a UI label or an agent tool, update the matching page in `apps/docs` in the same pull request. If no docs change is needed, add the `no-docs` label and say why in the description. The Docs check workflow warns when code changes without docs.
 
+## Labels
+
+The labels follow the Angular repository.
+
+| Label                                                                             | Use                                                                                                                                                                      |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bug`, `feature`, `breaking changes`                                              | What kind of change it is. Issue forms add `bug` or `feature` with `needs triage`.                                                                                       |
+| `P0` to `P3`                                                                      | Priority, from broken for most users (`P0`) to not urgent (`P3`).                                                                                                        |
+| `area: *`                                                                         | The part of the repository: panel, package, agents, extension, demo, docs, security, performance, accessibility, ci. Pull requests get these from the paths they change. |
+| `needs triage`, `needs reproduction`, `needs: clarification`, `needs: discussion` | What an issue is waiting for.                                                                                                                                            |
+| `state: confirmed`, `state: has PR`, `state: blocked`, `state: WIP`               | Where an issue stands.                                                                                                                                                   |
+| `action: review`, `action: cleanup`, `action: merge`, `action: discuss`           | What a pull request needs next.                                                                                                                                          |
+| `good first issue`, `help wanted`                                                 | Issues open to new contributors.                                                                                                                                         |
+| `no-docs`, `release: skip`                                                        | No docs change needed; leave out of the release notes.                                                                                                                   |
+
 ## Run the checks
 
 Run the checks from [Development setup](./apps/docs/src/content/contributing/development.md), plus these:

@@ -1,6 +1,6 @@
 name: Bug report
 description: Something in the devtools shows wrong data, breaks, or looks wrong
-labels: [bug]
+labels: [bug, needs triage]
 body:
   - type: dropdown
     id: area
