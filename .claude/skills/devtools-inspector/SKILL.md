@@ -44,7 +44,7 @@ Read `docs/contributing/coding-standards.md` ("Reading data from the page") befo
 ## Agent tools
 
 - Describe what the tool returns, where the data comes from and what an empty answer means. Answer in markdown.
-- Update descriptions in `devframe.ts` when data shapes change, and the README tool list.
+- Update descriptions in `devframe.ts` when data shapes change, and the tool list on the docs site (apps/docs/src/content/agents/tools.md). Use the `devtools-docs` skill for that edit.
 
 ## Tests
 

@@ -13,5 +13,6 @@ Check the diff against:
 - `docs/contributing/commit-message-guidelines.md` for commit messages and the pull request title.
 - Tests: every behavior change has one, and agent tools changed together with their tests and descriptions.
 - Generated output: `extension/ui` rebuilt and committed when `app/` changed.
+- Docs: when the diff touches the docs site (apps/docs) or `README.md`, check it against the `devtools-docs` skill.
 
 Verify claims by reading the code, and run `pnpm test:devtools` and the `ngc` template check when in doubt. Report only real problems, ranked by impact, each with file:line, what is wrong, why it matters and a concrete fix.

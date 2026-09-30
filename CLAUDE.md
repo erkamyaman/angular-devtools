@@ -70,6 +70,7 @@ Use the matching skill for the task:
 
 - `.claude/skills/devtools-ui` for panel UI work.
 - `.claude/skills/devtools-inspector` for data collection, the server side and agent tools.
+- `.claude/skills/devtools-docs` for the docs site (`apps/docs`) and `README.md`.
 - `.claude/skills/devtools-verify` before calling a change done.
 - `.claude/skills/devtools-commit` for commits and pull requests.
 

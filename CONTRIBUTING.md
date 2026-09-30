@@ -1,6 +1,6 @@
 # Contributing to Angular DevTools
 
-Thanks for your interest in contributing! This guide covers how to set up the project, the rules we follow, and how to get a change merged.
+Thanks for your interest in contributing. This guide covers the rules a change follows and how to get it merged. For setup, the project structure, the commands and what CI runs, see [Development setup](./apps/docs/src/content/contributing/development.md) on the docs site.
 
 ## Guidelines
 
@@ -9,91 +9,48 @@ Thanks for your interest in contributing! This guide covers how to set up the pr
 | [Commit message guidelines](docs/contributing/commit-message-guidelines.md) | `type(scope): summary`, types, scopes, body and footer            |
 | [Coding standards](docs/contributing/coding-standards.md)                   | TypeScript and Angular rules, how collectors read the page, tests |
 | [UI guidelines](docs/contributing/ui-guidelines.md)                         | Theme tokens, the brand palette, page anatomy, accessibility      |
+| [Writing guide](apps/docs/src/content/contributing/writing-docs.md)         | Voice, style and structure for the docs site and the README       |
 | [`AGENTS.md`](AGENTS.md)                                                    | Angular best practices for people and AI agents                   |
 
-## Prerequisites
+## Set up the git hooks
 
-- Node.js 24+
-- pnpm 10+
+`pnpm install` turns on the git hooks in `.githooks/` and sets [`.gitmessage`](.gitmessage) as your commit template, unless you already set `core.hooksPath` or `commit.template` yourself:
 
-## Setup
+- `pre-commit` formats the staged files with Prettier. It skips a file that also has unstaged changes, so hunks you left out with `git add -p` stay out.
+- `commit-msg` checks your message against the [commit message guidelines](docs/contributing/commit-message-guidelines.md) and warns when it doesn't follow them. It never blocks the commit.
 
-```sh
-git clone https://github.com/santoshyadavdev/angular-devtools.git
-cd angular-devtools
-pnpm install
-```
-
-`pnpm install` also turns on the git hooks in `.githooks/`: `pre-commit` formats the files you stage with Prettier, and `commit-msg` checks your message against the [commit message guidelines](docs/contributing/commit-message-guidelines.md) and warns when it doesn't follow them. It also sets [`.gitmessage`](.gitmessage) as your commit template.
-
-## Project structure
-
-```
-app/                          # The devtools panel (Angular + Vite), one view per hub dock
-  src/app.ts                  # Panel shell: header, tabs, dock views
-  src/pages/                  # Inspector pages (components, routes, signals, injectors, store, forms, pipes, network, analog, dashboard)
-  src/ui/                     # Shared UI (the dropdown)
-  src/styles/                 # Theme: palette, tokens, mixins
-packages/
-  ng-devtools/                # The publishable package
-    src/hub.ts, hub-docks.ts  # @devframes/hub setup and the dock list
-    src/devframe.ts           # Server side: RPC, shared state, agent tools
-    src/overlay.ts            # Script that runs in the inspected page
-    src/*-collector.ts        # What each inspector reads from the page
-    src/popup.ts, vite.ts     # In-page launcher, Vite plugin
-    src/rpc/                  # Source scans and agent tool helpers
-extension/                    # Chrome extension (extension/ui is generated)
-src/                          # Angular Travel, the demo app
-examples/analog/              # Analog demo app
-docs/contributing/            # The guides above
-.claude/skills/, .claude/agents/  # Skills and roles for AI agents
-```
-
-## Development
-
-```sh
-pnpm start                  # Angular Travel with the devtools on :4200
-pnpm build --configuration development && node dist/angular-devtools/server/server.mjs
-                            # SSR demo on :4000 (a plain `pnpm build` turns the launcher off)
-pnpm analog:dev             # Analog demo on :5173
-pnpm devtools:dev           # The panel on its own
-pnpm extension:build        # Rebuild the panel into extension/ui
-```
-
-## Making changes
+## Make changes
 
 - **A new inspector or a data fix:** follow [Reading data from the page](docs/contributing/coding-standards.md#reading-data-from-the-page-packagesng-devtools). Collection goes in its own module, reports carry a `pageId`, and the server expires and forgets pages.
-- **A new tab:** add it to `app/src/types/tab.types.ts`, `allTabs` and the template in `app/src/app.ts`, an icon in `app/src/pages/tab-icon.ts`, and usually a Dashboard card.
-- **UI changes:** follow the [UI guidelines](docs/contributing/ui-guidelines.md); use the theme variables, the SCSS mixins and the shared dropdown.
-- **Agent tools:** register them with `ctx.agent.registerTool()` or an RPC function's `agent` field, describe what they return and when they are empty, and add tests.
+- **A new tab, RPC function or agent tool:** follow the steps in [Development setup](./apps/docs/src/content/contributing/development.md). Describe what an agent tool returns and when it is empty, and add tests.
+- **UI changes:** follow the [UI guidelines](docs/contributing/ui-guidelines.md). Use the theme variables, the SCSS mixins and the shared dropdown.
+- **Docs changes:** follow the [writing guide](./apps/docs/src/content/contributing/writing-docs.md). Run the docs site with `pnpm docs:dev`.
 
-## Testing
+## Run the checks
+
+Run the checks from [Development setup](./apps/docs/src/content/contributing/development.md), plus these:
 
 ```sh
-pnpm format:check
 pnpm commit:check                             # commit messages on your branch
 pnpm skills:check                             # agent skills and roles
-pnpm typecheck
 pnpm exec ngc -p app/tsconfig.json --noEmit   # panel template check
-pnpm test                                     # demo app
-pnpm test:devtools                            # devtools package
 ```
 
 For UI changes, also check the pages in a browser with axe, in dark and light themes and at a narrow width. The [devtools-verify skill](.claude/skills/devtools-verify/SKILL.md) lists the exact steps.
 
-## Submitting a pull request
+## Submit a pull request
 
 1. Search the open issues and pull requests first. For a bigger feature, open an issue to discuss it before you start.
 2. Fork the repository and create a branch from `main`.
 3. Keep one feature per pull request, with its tests (and agent tool tests when tools change).
 4. If you changed `app/`, run `pnpm extension:build` and commit `extension/ui`. CI fails when it is stale.
 5. Make sure all the checks above pass.
-6. Open the pull request against `main` and fill in the template. **The title must follow the [commit message format](docs/contributing/commit-message-guidelines.md)**, for example `feat(router): show guard results for lazy routes`; it becomes the commit on `main` when the pull request is squash merged. CI checks the title and every commit message; a local `commit-msg` hook (enabled by `pnpm install`) checks each commit as you make it, and `pnpm commit:check` checks your whole branch.
-7. Address review feedback with [fixup commits](docs/contributing/using-fixup-commits.md); don't force-push over a review in progress unless asked.
+6. Open the pull request against `main` and fill in the template. **The title must follow the [commit message format](docs/contributing/commit-message-guidelines.md)**, for example `feat(router): show guard results for lazy routes`. It becomes the commit on `main` when the pull request is squash merged. CI checks the title and every commit message, and for now reports problems as warnings.
+7. Address review feedback with [fixup commits](docs/contributing/using-fixup-commits.md). Don't force-push over a review in progress unless asked.
 
-## Working with AI agents
+## Work with AI agents
 
-The repository ships skills and roles for AI coding agents, so changes made with an agent follow the same rules as everyone else's. Claude Code picks them up automatically from `.claude/`; other agents can read the same files.
+The repository ships skills and roles for AI coding agents, so changes made with an agent follow the same rules as everyone else's. Claude Code picks them up automatically from `.claude/`. Other agents can read the same files.
 
 ### Skills (`.claude/skills/`)
 
@@ -101,6 +58,7 @@ The repository ships skills and roles for AI coding agents, so changes made with
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------- |
 | [`devtools-ui`](.claude/skills/devtools-ui/SKILL.md)               | Building or restyling anything in the panel                                |
 | [`devtools-inspector`](.claude/skills/devtools-inspector/SKILL.md) | Adding an inspector or fixing the data it shows, including agent tools     |
+| [`devtools-docs`](.claude/skills/devtools-docs/SKILL.md)           | Writing or reviewing the docs site and the README                          |
 | [`devtools-verify`](.claude/skills/devtools-verify/SKILL.md)       | Checking a change like CI and a reviewer would, including axe in a browser |
 | [`devtools-commit`](.claude/skills/devtools-commit/SKILL.md)       | Writing commits, pull request titles and descriptions                      |
 

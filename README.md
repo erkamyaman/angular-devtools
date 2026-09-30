@@ -460,27 +460,6 @@ cp -r dist/devtools-ui/* extension/ui/
 
 The extension panel loads the SPA in static mode by default. To connect it to a live dev server for real-time RPC, the extension's content script or background service worker needs to detect the devframe's `__connection.json` on the inspected page and pass the connection to the panel. This is the same pattern the official Angular DevTools Chrome extension uses — a content script bridges the inspected page and the DevTools panel via `chrome.runtime.connect`.
 
-## Contributing
-
-Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), then the guides it links to:
-
-- [Commit message guidelines](docs/contributing/commit-message-guidelines.md): `type(scope): summary`. Pull request titles follow it too, and CI checks them.
-- [Coding standards](docs/contributing/coding-standards.md): TypeScript and Angular rules, and how inspectors read the running app.
-- [UI guidelines](docs/contributing/ui-guidelines.md): theme tokens, the brand palette (change it in one line in `app/src/styles/main.scss`), page anatomy and accessibility.
-
-### Skills and roles for AI agents
-
-If you work with an AI coding agent, the repository ships skills in [`.claude/skills/`](.claude/skills) and roles in [`.claude/agents/`](.claude/agents) that carry these rules, so agent-made changes follow the same conventions.
-
-| Skill                | For                                                           |
-| -------------------- | ------------------------------------------------------------- |
-| `devtools-ui`        | Panel UI and UX work                                          |
-| `devtools-inspector` | How inspectors collect data, the server side and agent tools  |
-| `devtools-verify`    | Checking a change like CI and a reviewer would, including axe |
-| `devtools-commit`    | Commits and pull requests                                     |
-
-Roles: `ui-engineer`, `inspector-engineer`, `a11y-reviewer` (read only) and `devtools-reviewer` (read only). See [CONTRIBUTING.md](CONTRIBUTING.md#working-with-ai-agents) for details.
-
 ## Community
 
 Join the conversation, ask questions, and share feedback on [Discord](https://discord.gg/YRTyJd6Qx).

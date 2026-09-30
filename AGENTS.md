@@ -58,15 +58,6 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Prefer the `@Service` decorator over `@Injectable({providedIn: 'root'})` for new singleton services (Angular v22+)
 - Use the `inject()` function instead of constructor injection
 
-## Serving Locally
-
-- **Demo app (SSR):** `pnpm build --configuration development && node dist/angular-devtools/server/server.mjs` → http://localhost:4000
-- **Devtools SPA (hot reload):** `pnpm devtools:dev` → http://localhost:5173 (requires the SSR server running for RPC data)
-- **Demo app (SPA, no SSR):** `pnpm start` → http://localhost:4200 (runs `ng serve` with SSR and hot reload; devtools popup + RPC work without a separate server)
-- The devtools popup appears on the demo app page; click it to open the inspector panel
-- Changes to `app/src/` (devtools SPA) are visible live via `pnpm devtools:dev`; the SSR server serves the SPA built into `packages/ng-devtools/dist/public` (or the npm-published copy when it has not been built), so run `pnpm devtools:build-pkg` to refresh it
-- To publish: update the version in `packages/ng-devtools/package.json`, then run `pnpm devtools:publish` (the package build bundles the SPA)
-
 ## Project guidelines, skills and roles
 
 Follow the repository guides in `docs/contributing/`:
@@ -79,7 +70,17 @@ Use the matching skill for the task:
 
 - `.claude/skills/devtools-ui` for panel UI work.
 - `.claude/skills/devtools-inspector` for data collection, the server side and agent tools.
+- `.claude/skills/devtools-docs` for the docs site (`apps/docs`) and `README.md`.
 - `.claude/skills/devtools-verify` before calling a change done.
 - `.claude/skills/devtools-commit` for commits and pull requests.
 
 Roles for delegating work live in `.claude/agents/`: `ui-engineer`, `inspector-engineer`, `a11y-reviewer` and `devtools-reviewer`.
+
+## Serving Locally
+
+- **Demo app (SSR):** `pnpm build --configuration development && node dist/angular-devtools/server/server.mjs` → http://localhost:4000
+- **Devtools SPA (hot reload):** `pnpm devtools:dev` → http://localhost:5173 (requires the SSR server running for RPC data)
+- **Demo app (SPA, no SSR):** `pnpm start` → http://localhost:4200 (runs `ng serve` with SSR and hot reload; devtools popup + RPC work without a separate server)
+- The devtools popup appears on the demo app page; click it to open the inspector panel
+- Changes to `app/src/` (devtools SPA) are visible live via `pnpm devtools:dev`; the SSR server serves the SPA built into `packages/ng-devtools/dist/public` (or the npm-published copy when it has not been built), so run `pnpm devtools:build-pkg` to refresh it
+- To publish: update the version in `packages/ng-devtools/package.json`, then run `pnpm devtools:publish` (the package build bundles the SPA)
