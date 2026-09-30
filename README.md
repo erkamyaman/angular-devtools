@@ -110,7 +110,26 @@ npx @santoshyadavdev/ng-devtools mcp
 }
 ```
 
-When embedded in Express, the MCP endpoint is also available over HTTP at `/__devframes/__mcp` (or `/__ng-devtools/__mcp` without the hub).
+When embedded in Express or Vite, the MCP endpoint is also available over HTTP at `/__devframes/__mcp` (or `/__ng-devtools/__mcp` without the hub).
+
+If the hub asks for a one-time code, the HTTP endpoint also asks for a token. That is the Express hub by default, and the Vite plugin once it trusts a tunnel host or origin. The hub prints a generated token in the terminal when it starts. Set `NG_DEVTOOLS_MCP_TOKEN` to use your own token and keep it across restarts. The endpoint only accepts requests with a loopback `Origin` header, so the client sends both headers. For example, in Claude Code's `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "ng-devtools": {
+      "type": "http",
+      "url": "http://localhost:4000/__devframes/__mcp",
+      "headers": {
+        "Authorization": "Bearer ${NG_DEVTOOLS_MCP_TOKEN}",
+        "Origin": "http://localhost:4000"
+      }
+    }
+  }
+}
+```
+
+Without the one-time code (`auth: false`, or a Vite dev server that only trusts `localhost`), the endpoint needs no token. The `mcp` command above runs over stdio and never needs one.
 
 #### Agent Tools
 
@@ -227,7 +246,7 @@ The floating button appears on the page, the full viewer is at `/__devframes/` o
 
 The devtools only answer this machine, and only pages served from `localhost`, `127.0.0.1` or the Chrome extension, so another website open in your browser can't reach them. If you open the dev server through another hostname that points to your machine (for example `myapp.test`), list it in Vite's `server.allowedHosts` and the devtools trust it too. Other origins can be added with `ngDevtools({ allowedOrigins: ['https://tunnel.example'] })`.
 
-A tunnel forwards other people's requests to your machine, so once `server.allowedHosts` or `allowedOrigins` names anything other than `localhost` or a loopback address, the devtools ask for a one-time code (printed in the terminal) before they connect. Pass `ngDevtools({ auth: false })` to skip the code, or `ngDevtools({ auth: true })` to require it everywhere, for example behind a tunnel that rewrites the `Host` header to `localhost`.
+A tunnel forwards other people's requests to your machine, so once `server.allowedHosts` or `allowedOrigins` names anything other than `localhost` or a loopback address, the devtools ask for a one-time code (printed in the terminal) before they connect. Pass `ngDevtools({ auth: false })` to skip the code, or `ngDevtools({ auth: true })` to require it everywhere, for example behind a tunnel that rewrites the `Host` header to `localhost`. While the code is on, the HTTP MCP endpoint asks for a token too (see [MCP Server for Coding Agents](#mcp-server-for-coding-agents)).
 
 The Analog dock shows:
 
