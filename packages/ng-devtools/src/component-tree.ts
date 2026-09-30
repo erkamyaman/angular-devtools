@@ -26,7 +26,7 @@ const MAX_DEPTH = 256;
 const MAX_PROPS = 60;
 const VALUE_LIMITS = { depth: 3, keys: 30, items: 30, text: 300 };
 
-const CHANGE_DETECTION: Record<number, string> = { 0: 'OnPush', 1: 'Default' };
+const CHANGE_DETECTION: Record<number, string> = { 0: 'OnPush', 1: 'Eager' };
 const ENCAPSULATION: Record<number, string> = {
   0: 'Emulated',
   2: 'None',
@@ -114,6 +114,14 @@ export function hostPath(ng: ComponentDebugNg, el: Element): string {
     parts.unshift(twins.length > 1 ? `${tag}[${twins.indexOf(node) + 1}]` : tag);
   }
   return parts.join(' > ');
+}
+
+export function componentHostOf(ng: ComponentDebugNg | undefined, el: Element): Element | null {
+  if (!ng?.getComponent) return null;
+  for (let node: Element | null = el; node; node = parentOf(node)) {
+    if (componentAt(ng, node)) return node;
+  }
+  return null;
 }
 
 function unwrap(ng: ComponentDebugNg, value: unknown): unknown {

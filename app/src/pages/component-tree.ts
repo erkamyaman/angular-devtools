@@ -2,12 +2,15 @@ import { JsonPipe } from '@angular/common';
 import {
   Component,
   DestroyRef,
+  Injector,
+  afterNextRender,
   computed,
   effect,
   inject,
   input,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import type { DevframeRpcClient } from 'devframe/client';
 import { hostPageId } from '../page-id';
@@ -21,8 +24,8 @@ interface SourceComponent {
   inputs: string[];
   outputs: string[];
   isStandalone: boolean;
+  changeDetection?: 'OnPush' | 'Eager' | 'unknown';
 }
-
 interface LiveNode {
   id: string;
   name: string;
@@ -474,6 +477,10 @@ function bare(name: string): string {
                     <dd class="mono">{{ comp.file }}:{{ comp.line }}</dd>
                     <dt>Standalone</dt>
                     <dd>{{ comp.isStandalone ? 'Yes' : 'No' }}</dd>
+                    @if (comp.kind === 'component') {
+                      <dt>Change detection</dt>
+                      <dd>{{ comp.changeDetection ?? 'Unknown' }}</dd>
+                    }
                     <dt>Inputs</dt>
                     <dd class="mono">{{ comp.inputs.join(', ') || 'None' }}</dd>
                     <dt>Outputs</dt>
@@ -1085,7 +1092,9 @@ function bare(name: string): string {
 })
 export class ComponentTree {
   readonly rpc = input<DevframeRpcClient | null>(null);
+  readonly focus = input<{ id: string } | null>(null);
   readonly showForm = output<string>();
+  readonly focusHandled = output<void>();
 
   readonly filter = signal('');
   readonly loading = signal(false);
@@ -1100,6 +1109,7 @@ export class ComponentTree {
   private readonly outlets = signal<OutletInfo[]>([]);
   private readonly pageId = hostPageId();
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
   private readonly cleanups: (() => void)[] = [];
 
   readonly page = computed<Page | null>(() => {
@@ -1230,6 +1240,14 @@ export class ComponentTree {
       void this.refresh();
       void this.watch(client);
     });
+    effect(() => {
+      const focus = this.focus();
+      if (!focus || !this.live()) return;
+      untracked(() => {
+        if (this.index().map.has(focus.id)) this.reveal(focus.id);
+        this.focusHandled.emit();
+      });
+    });
     this.destroyRef.onDestroy(() => {
       this.highlight(null);
       for (const cleanup of this.cleanups.splice(0)) cleanup();
@@ -1327,6 +1345,24 @@ export class ComponentTree {
       .scope('ng-devtools')
       .rpc.call('select-component', { pageId: this.page()?.pageId, id: next })
       .catch(() => {});
+  }
+
+  private reveal(id: string) {
+    const { parents } = this.index();
+    this.collapsed.update((set) => {
+      const next = new Set(set);
+      for (let parent = parents.get(id); parent; parent = parents.get(parent)) next.delete(parent);
+      return next;
+    });
+    if (!this.rows().some((row) => row.node.id === id)) this.filter.set('');
+    if (this.selectedId() !== id) this.select(id);
+    afterNextRender(
+      () =>
+        document
+          .querySelector(`.row[data-id="${CSS.escape(id)}"]`)
+          ?.scrollIntoView({ block: 'nearest' }),
+      { injector: this.injector },
+    );
   }
 
   toggle(id: string, event?: Event) {
