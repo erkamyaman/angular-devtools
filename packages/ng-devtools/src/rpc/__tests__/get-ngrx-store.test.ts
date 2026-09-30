@@ -51,6 +51,37 @@ describe('get-ngrx-store', () => {
   });
 });
 
+describe('get-ngrx-store action types', () => {
+  it('reads the type strings of createAction and createActionGroup', async () => {
+    const entries = await storeFor(
+      [
+        "import { createAction, createActionGroup, emptyProps, props } from '@ngrx/store';",
+        "export const addItem = createAction('[Cart] Add Item', props<{ id: number }>());",
+        'export const clear = createAction(`[Cart] Clear`);',
+        'export const dynamic = createAction(`[${source}] Dynamic`);',
+        'export const CartActions = createActionGroup({',
+        "  source: 'Cart Page',",
+        '  events: {',
+        "    'Remove Item': props<{ id: number }>(),",
+        '    opened: emptyProps(),',
+        '  },',
+        '});',
+      ].join('\n'),
+    );
+    const actions = entries.filter((e) => e.kind === 'action');
+    expect(actions.map((e) => [e.name, e.types, e.detail])).toEqual([
+      ['addItem', ['[Cart] Add Item'], '[Cart] Add Item'],
+      ['clear', ['[Cart] Clear'], '[Cart] Clear'],
+      ['dynamic', undefined, undefined],
+      [
+        'CartActions',
+        ['[Cart Page] Remove Item', '[Cart Page] opened'],
+        '[Cart Page] Remove Item, [Cart Page] opened',
+      ],
+    ]);
+  });
+});
+
 describe('get-ngrx-store members', () => {
   it('lists the members of a signal store', async () => {
     const entries = await storeFor(
