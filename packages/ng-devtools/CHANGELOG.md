@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Bug fixes
 
+- Chrome extension: when the server requires the one-time code, the panel now asks for it and saves a token per server, instead of staying on "Not authorized". This affected Vite apps opened through a local hostname or tunnel, and the Express hub.
 - Router: quick query or fragment updates on the same path, such as a search box or a filter toggle, are no longer reported as a navigation loop. Redirect loops on one path are still caught.
 
 ### Features
