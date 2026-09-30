@@ -255,13 +255,15 @@ function firstLoop(sequence: NavigationRecord[], config?: RouteNode[]): Navigati
     const hops = cycle.slice(1).map((step) => step.hop!);
     const first = sequence.indexOf(steps[i].nav);
     const navs = sequence.slice(first);
+    const cycleEnd = sequence.indexOf(steps[j].nav);
+    const cycleNavs = sequence.slice(first, cycleEnd + 1);
     const bounces = steps.slice(i + 1).filter((step) => keyOf(step.url) === key).length;
     return {
       kind: hops.every((hop) => hop.via !== 'navigate') ? 'redirect' : 'burst',
       ids: navs.map((nav) => nav.id),
       cycle: cycle.map((step) => step.url),
       hops,
-      guards: guardsOf(hops, navs),
+      guards: guardsOf(hops, cycleNavs),
       bounces,
       end: endOf(sequence[sequence.length - 1]),
     };

@@ -81,6 +81,20 @@ describe('detectLoops', () => {
     );
   });
 
+  it('only lists guards from navigations inside the cycle', () => {
+    const navigations = [
+      redirect(1, '/account', '/login', 'authGuard'),
+      redirect(2, '/login', '/account', 'guestGuard', 1),
+      redirect(3, '/account', '/onboarding', 'authGuard', 2),
+      redirect(4, '/onboarding', '/welcome', 'onboardingGuard', 3),
+      nav(5, { url: '/welcome', redirectedFrom: 4 }),
+    ];
+    const [loop] = detectLoops(navigations);
+    expect(loop.ids).toEqual([1, 2, 3, 4, 5]);
+    expect(loop.cycle).toEqual(['/account', '/login', '/account']);
+    expect(loop.guards).toEqual(['authGuard', 'guestGuard']);
+  });
+
   it('finds a loop through a config redirectTo inside a navigation', () => {
     const config: RouteNode[] = [
       { id: '0', path: 'home', fullPath: '/home', kind: 'redirect', redirectTo: '/start' },
