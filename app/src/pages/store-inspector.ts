@@ -1,4 +1,5 @@
 import {
+  afterRenderEffect,
   Component,
   DestroyRef,
   ElementRef,
@@ -1293,9 +1294,9 @@ export class StoreInspector {
       const client = this.rpc();
       if (client) void this.load(client);
     });
-    effect(() => {
+    afterRenderEffect(() => {
       const button = this.latestButton();
-      if (!button || !this.focusLatest()) return;
+      if (!button || !this.focusLatest() || this.busy()) return;
       this.focusLatest.set(false);
       button.nativeElement.focus();
     });
@@ -1355,21 +1356,22 @@ export class StoreInspector {
     const page = this.page();
     if (!page) return;
     this.busy.set(true);
-    this.focusLatest.set(pauses);
+    this.focusLatest.set(false);
+    let paused = false;
     try {
       const result = (await call(this.rpc(), 'request-ngrx-action', {
         pageId: page.pageId,
         request: { type: 'restore', seq },
       })) as { ok?: boolean; message?: string; error?: string; paused?: boolean } | null;
       this.message.set(result?.error ?? result?.message ?? 'Restored.');
-      if (result?.error || !result?.paused) this.focusLatest.set(false);
+      paused = pauses && !result?.error && !!result?.paused;
     } catch {
-      this.focusLatest.set(false);
       this.message.set('Could not reach the page to restore the state.');
     } finally {
       this.busy.set(false);
       this.confirmSeq.set(null);
-      if (!this.focusLatest()) this.stateTree()?.nativeElement.focus();
+      this.focusLatest.set(paused);
+      if (!paused) this.stateTree()?.nativeElement.focus();
     }
   }
 
