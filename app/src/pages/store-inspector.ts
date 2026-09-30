@@ -1417,9 +1417,9 @@ export class StoreInspector {
       const result = (await call(this.rpc(), 'request-ngrx-action', {
         pageId: page.pageId,
         request: { type: 'restore', seq },
-      })) as { ok?: boolean; message?: string; error?: string } | null;
+      })) as { ok?: boolean; message?: string; error?: string; paused?: boolean } | null;
       this.message.set(result?.error ?? result?.message ?? 'Restored.');
-      if (result?.error) this.focusLatest.set(false);
+      if (result?.error || !result?.paused) this.focusLatest.set(false);
     } catch {
       this.focusLatest.set(false);
       this.message.set('Could not reach the page to restore the state.');

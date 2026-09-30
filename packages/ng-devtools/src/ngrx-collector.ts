@@ -735,7 +735,8 @@ export function createNgrxCollector(
     }
     logClassic(c, `Restore #${request.seq}`, entry.action, false);
     const message = `Jumped to the state after action #${request.seq}.`;
-    return { ok: true, message: isPaused(devtools) ? `${message} ${PAUSED_NOTE}` : message };
+    const paused = isPaused(devtools);
+    return { ok: true, paused, message: paused ? `${message} ${PAUSED_NOTE}` : message };
   };
 
   return {

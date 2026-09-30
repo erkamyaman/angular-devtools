@@ -497,7 +497,7 @@ describe('ngrx collector with Store DevTools', () => {
     store.dispatch({ type: 'inc' });
     const first = collector.logSince(0)[0];
     const result = collector.run({ type: 'restore', seq: first.seq });
-    expect(result.ok).toBe(true);
+    expect(result).toMatchObject({ ok: true, paused: true });
     expect(result.message).toMatch(/paused/);
     const after = collector.lastSeq();
     expect(collector.logSince(after - 1)[0]).toMatchObject({
@@ -537,7 +537,7 @@ describe('ngrx collector with Store DevTools', () => {
     const { store, collector } = setupDevtools();
     store.dispatch({ type: 'inc' });
     const result = collector.run({ type: 'restore', seq: collector.lastSeq() });
-    expect(result.ok).toBe(true);
+    expect(result).toMatchObject({ ok: true, paused: false });
     expect(result.message).not.toMatch(/paused/);
   });
 });

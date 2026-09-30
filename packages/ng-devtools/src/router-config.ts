@@ -75,11 +75,20 @@ function redirectOf(redirectTo: unknown): string | undefined {
   return `function ${nameOf(redirectTo)}`;
 }
 
+function subtreeSize(route: AnyRecord, depth: number): number {
+  if (depth > MAX_DEPTH) return 0;
+  const nested = [
+    ...read(() => (route['children'] as AnyRecord[] | undefined) ?? [], []),
+    ...read(() => (route['_loadedRoutes'] as AnyRecord[] | undefined) ?? [], []),
+  ];
+  return nested.reduce((total, child) => total + subtreeSize(child, depth + 1), 1);
+}
+
 /**
  * The router's live configuration: every route with lazy children merged in
  * once they load, and the routes of the current navigation marked active.
  * Each level keeps its first 200 routes and the whole walk its first 1000;
- * `cut.routes` counts the routes left out.
+ * `cut.routes` counts the routes left out, with their descendants.
  */
 export function walkConfig(router: AnyRecord, cut = { routes: 0 }): RouteNode[] {
   let count = 0;
@@ -93,7 +102,7 @@ export function walkConfig(router: AnyRecord, cut = { routes: 0 }): RouteNode[] 
     const out: RouteNode[] = [];
     routes.forEach((route, index) => {
       if (index >= MAX_SIBLINGS || ++count > MAX_NODES) {
-        cut.routes++;
+        cut.routes += subtreeSize(route, depth);
         return;
       }
       const path = read(() => String(route['path'] ?? ''), '');
