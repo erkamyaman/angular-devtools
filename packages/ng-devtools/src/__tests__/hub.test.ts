@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { initNgDevtoolsHub } from '../hub.ts';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { hubDefaultOrigins, initNgDevtoolsHub, type NgDevtoolsHubOptions } from '../hub.ts';
 import { makeProject } from './analog-fixture.ts';
 
 const hubs: { close: () => Promise<void> }[] = [];
@@ -21,7 +21,29 @@ async function boot(cwd: string) {
   return { hub, ctx, docks };
 }
 
+async function bootMcp(options: NgDevtoolsHubOptions) {
+  const cwd = makeProject({ 'package.json': '{}' });
+  const hub = initNgDevtoolsHub({ cwd, ws: false, allowedOrigins: false, ...options });
+  hubs.push(hub);
+  await hub.ready;
+  return (token?: string) =>
+    hub.handler(
+      new Request('http://localhost/__devframes/__mcp', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          origin: 'http://localhost:4000',
+          ...(token === undefined ? {} : { authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+      }),
+    );
+}
+
 afterEach(async () => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
   for (const hub of hubs.splice(0)) await hub.close();
 });
 
@@ -54,5 +76,98 @@ describe('ng-devtools hub', () => {
     expect(meta.configs.ui.branding.primaryColor).toBe('#f5a524');
     const forms = (await ctx.agent.invoke('ng-devtools:inspect-forms', {})) as { markdown: string };
     expect(forms.markdown).toContain('No forms');
+  });
+});
+
+const EXTENSION = 'chrome-extension://abcdefghijklmnopabcdefghijklmnop';
+
+async function sseStatus(
+  options: Parameters<typeof initNgDevtoolsHub>[0],
+  origin: string | undefined,
+) {
+  const hub = initNgDevtoolsHub({
+    cwd: makeProject({ 'package.json': '{}' }),
+    ws: false,
+    auth: false,
+    ...options,
+  });
+  hubs.push(hub);
+  await hub.ready;
+  const headers: Record<string, string> = { accept: 'text/event-stream' };
+  if (origin !== undefined) headers['origin'] = origin;
+  const res = await hub.handler(new Request('http://localhost/__devframes/__sse', { headers }));
+  await res.body?.cancel();
+  return res.status;
+}
+
+describe('ng-devtools hub origins', () => {
+  it('accepts loopback pages and the Chrome extension by default, and nothing else', () => {
+    for (const origin of [
+      undefined,
+      'http://localhost:4000',
+      'http://127.0.0.1:4200',
+      'http://[::1]:3000',
+      EXTENSION,
+    ]) {
+      expect(hubDefaultOrigins.isAllowed(origin)).toBe(true);
+    }
+    for (const origin of [
+      'https://evil.example',
+      'http://127.attacker.example',
+      'chrome-extension://',
+      'moz-extension://abcdefghijklmnop',
+      'null',
+    ]) {
+      expect(hubDefaultOrigins.isAllowed(origin)).toBe(false);
+    }
+  });
+
+  it('lets the Chrome extension panel open the SSE stream by default', async () => {
+    expect(await sseStatus({}, EXTENSION)).toBe(200);
+    expect(await sseStatus({}, 'http://localhost:4000')).toBe(200);
+    expect(await sseStatus({}, 'https://evil.example')).toBe(403);
+  });
+
+  it('keeps an explicit allowedOrigins setting as given', async () => {
+    const tunnel = { allowedOrigins: ['https://tunnel.example'] };
+    expect(await sseStatus(tunnel, 'https://tunnel.example')).toBe(200);
+    expect(await sseStatus(tunnel, EXTENSION)).toBe(403);
+    expect(await sseStatus({ allowedOrigins: [EXTENSION] }, EXTENSION)).toBe(200);
+    expect(await sseStatus({ allowedOrigins: false }, 'https://evil.example')).toBe(200);
+  });
+});
+
+describe('ng-devtools hub MCP route', () => {
+  it('stays open when the hub runs without auth', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const mcp = await bootMcp({ auth: false });
+    expect((await mcp()).status).toBe(200);
+    expect(log.mock.calls.flat().join('\n')).not.toContain('MCP token');
+  });
+
+  it('requires the token from NG_DEVTOOLS_MCP_TOKEN when auth is on', async () => {
+    vi.stubEnv('NG_DEVTOOLS_MCP_TOKEN', 'env-secret');
+    const mcp = await bootMcp({});
+    expect((await mcp()).status).toBe(401);
+    expect((await mcp('wrong')).status).toBe(401);
+    const allowed = await mcp('env-secret');
+    expect(allowed.status).toBe(200);
+    expect(await allowed.text()).toContain('ng-devtools_get-routes');
+  });
+
+  it('prints a generated token when none is configured', async () => {
+    vi.stubEnv('NG_DEVTOOLS_MCP_TOKEN', '');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const mcp = await bootMcp({ auth: true });
+    const token = /MCP token: (\S+)/.exec(log.mock.calls.flat().join('\n'))?.[1];
+    expect(token).toMatch(/^[\w-]{32}$/);
+    expect((await mcp()).status).toBe(401);
+    expect((await mcp(token)).status).toBe(200);
+  });
+
+  it('keeps an explicit mcp setting', async () => {
+    const mcp = await bootMcp({ auth: true, mcp: { authorization: 'own-secret' } });
+    expect((await mcp()).status).toBe(401);
+    expect((await mcp('own-secret')).status).toBe(200);
   });
 });
