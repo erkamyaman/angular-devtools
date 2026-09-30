@@ -9,7 +9,10 @@ import {
   signal,
 } from '@angular/core';
 import type { DevframeRpcClient } from 'devframe/client';
-import type { ResolvedNgDevtoolsConfig } from '@santoshyadavdev/ng-devtools/config';
+import {
+  summarizeNgDevtoolsConfig,
+  type ResolvedNgDevtoolsConfig,
+} from '@santoshyadavdev/ng-devtools/config';
 import { hostPageId } from '../page-id';
 import { panelConfig, tabEnabled } from '../devtools-config';
 import { TabIcon } from './tab-icon';
@@ -193,6 +196,22 @@ export function storeCard(rows: Row[]): Card {
         </button>
       }
     </div>
+
+    <section class="config" aria-labelledby="config-title">
+      <h2 id="config-title">Configuration</h2>
+      @if (configItems().length) {
+        <dl>
+          @for (item of configItems(); track item.label) {
+            <div>
+              <dt>{{ item.label }}</dt>
+              <dd>{{ item.value }}</dd>
+            </div>
+          }
+        </dl>
+      } @else {
+        <p>Defaults</p>
+      }
+    </section>
   `,
   styles: `
     @use 'mixins' as m;
@@ -386,6 +405,45 @@ export function storeCard(rows: Row[]): Card {
       font-size: 12px;
       line-height: 16px;
     }
+    .config {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .config h2 {
+      @include m.label;
+      margin: 0 0 8px;
+      color: var(--text-2);
+    }
+    .config p,
+    .config dl {
+      margin: 0;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .config dl {
+      display: grid;
+      gap: 4px;
+    }
+    .config dl div {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 8px;
+    }
+    .config dt {
+      color: var(--text-2);
+    }
+    .config dt::after {
+      content: ':';
+    }
+    .config dd {
+      margin: 0;
+      color: var(--text-strong);
+      overflow-wrap: anywhere;
+    }
     @keyframes shimmer {
       to {
         background-position: -200% 0;
@@ -426,10 +484,11 @@ export class Dashboard {
   navigate = output<StatTab>();
 
   meta = signal<BuildMeta | null>(null);
-  protected readonly stats = computed(() => {
-    const config = panelConfig(this.rpc());
-    return STATS.filter((stat) => tabEnabled(stat.tab, config));
-  });
+  private readonly config = computed(() => panelConfig(this.rpc()));
+  protected readonly stats = computed(() =>
+    STATS.filter((stat) => tabEnabled(stat.tab, this.config())),
+  );
+  protected readonly configItems = computed(() => summarizeNgDevtoolsConfig(this.config()));
   protected readonly metaState = signal<LoadState>('loading');
   protected readonly states = signal<Partial<Record<StatTab, LoadState>>>({});
   private readonly rows = signal<Partial<Record<StatTab, Row[]>>>({});

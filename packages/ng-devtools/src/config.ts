@@ -319,3 +319,68 @@ export function agentAllowed(
   const inspector = agentInspector(entry.id);
   return !inspector || config.agent.tools[inspector];
 }
+
+const INSPECTOR_LABEL: Record<NgDevtoolsInspector, string> = {
+  components: 'Components',
+  injectors: 'Injectors',
+  signals: 'Signals',
+  ngrx: 'NgRx',
+  forms: 'Forms',
+  router: 'Router',
+  pipes: 'Pipes',
+  http: 'HTTP',
+  analog: 'Analog',
+};
+
+const ACTION_LABEL: Record<NgDevtoolsAction, string> = {
+  forms: 'Form writes',
+  router: 'Navigation',
+  ngrx: 'NgRx restore',
+  http: 'HTTP mocking',
+  analog: 'Analog API calls',
+};
+
+const LIMIT_LABEL: Record<NgDevtoolsLimit, (value: number) => string> = {
+  refreshMs: (value) => `refresh every ${value} ms`,
+  navigations: (value) => `${value} navigations`,
+  formTimeline: (value) => `${value} form events`,
+  httpCalls: (value) => `${value} HTTP calls`,
+  changeLog: (value) => `${value} NgRx changes`,
+};
+
+/** The options that differ from the defaults, as label and value pairs. Empty when nothing is changed. */
+export function summarizeNgDevtoolsConfig(
+  config: ResolvedNgDevtoolsConfig,
+): { label: string; value: string }[] {
+  const items: { label: string; value: string }[] = [];
+  const add = (label: string, values: string[]) => {
+    if (values.length) items.push({ label, value: values.join(', ') });
+  };
+  const inspectors = NG_DEVTOOLS_INSPECTORS.filter((key) => config.inspectors[key]);
+  add(
+    'Inspectors off',
+    NG_DEVTOOLS_INSPECTORS.filter((key) => !config.inspectors[key]).map(
+      (key) => INSPECTOR_LABEL[key],
+    ),
+  );
+  add('Agent', config.agent.readOnly ? ['Read-only'] : []);
+  add(
+    'Hidden from the agent',
+    inspectors.filter((key) => !config.agent.tools[key]).map((key) => INSPECTOR_LABEL[key]),
+  );
+  add(
+    'Blocked actions',
+    NG_DEVTOOLS_ACTIONS.filter((key) => config.inspectors[key] && !config.actions[key]).map(
+      (key) => ACTION_LABEL[key],
+    ),
+  );
+  add('Extra secret names', config.redaction.secretNames);
+  add('Unmasked names', config.redaction.unmask);
+  add(
+    'Limits',
+    (Object.keys(NG_DEVTOOLS_LIMITS) as NgDevtoolsLimit[])
+      .filter((key) => config.limits[key] !== NG_DEVTOOLS_LIMITS[key].default)
+      .map((key) => LIMIT_LABEL[key](config.limits[key])),
+  );
+  return items;
+}

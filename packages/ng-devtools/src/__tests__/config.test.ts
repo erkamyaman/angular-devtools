@@ -7,6 +7,7 @@ import {
   agentAllowed,
   pickNgDevtoolsConfig,
   resolveNgDevtoolsConfig,
+  summarizeNgDevtoolsConfig,
   type NgDevtoolsConfig,
 } from '../config.ts';
 import { createNgDevtools } from '../devframe.ts';
@@ -161,6 +162,34 @@ describe('resolveNgDevtoolsConfig', () => {
       redaction: { secretNames: [' passport ', 'passport', '', 7, 'x'.repeat(101)], unmask: 'pin' },
     });
     expect(config.redaction).toEqual({ secretNames: ['passport'], unmask: [] });
+  });
+});
+
+describe('summarizeNgDevtoolsConfig', () => {
+  it('is empty for the defaults', () => {
+    expect(summarizeNgDevtoolsConfig(resolveNgDevtoolsConfig())).toEqual([]);
+    expect(
+      summarizeNgDevtoolsConfig(resolveNgDevtoolsConfig({ limits: { refreshMs: 3000 } })),
+    ).toEqual([]);
+  });
+
+  it('lists only what differs from the defaults', () => {
+    const config = resolveNgDevtoolsConfig({
+      inspectors: { ngrx: false, pipes: false },
+      agent: { readOnly: true, tools: { router: false, pipes: false } },
+      actions: { forms: false, http: false, ngrx: false },
+      redaction: { secretNames: ['passport'], unmask: ['pin'] },
+      limits: { refreshMs: 1000, httpCalls: 50 },
+    });
+    expect(summarizeNgDevtoolsConfig(config)).toEqual([
+      { label: 'Inspectors off', value: 'NgRx, Pipes' },
+      { label: 'Agent', value: 'Read-only' },
+      { label: 'Hidden from the agent', value: 'Router' },
+      { label: 'Blocked actions', value: 'Form writes, HTTP mocking' },
+      { label: 'Extra secret names', value: 'passport' },
+      { label: 'Unmasked names', value: 'pin' },
+      { label: 'Limits', value: 'refresh every 1000 ms, 50 HTTP calls' },
+    ]);
   });
 });
 
