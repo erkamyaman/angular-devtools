@@ -228,9 +228,16 @@ export class CodeEntry implements OnInit {
   }
 
   protected async newCode() {
+    if (this.busy()) return;
+    this.busy.set(true);
     this.error.set('');
     this.note.set('');
-    const printed = await requestCode(this.client(), true);
+    let printed: boolean;
+    try {
+      printed = await requestCode(this.client(), true);
+    } finally {
+      this.busy.set(false);
+    }
     if (printed) {
       this.code.set('');
       this.note.set('A new code is in the terminal.');
