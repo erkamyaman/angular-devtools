@@ -105,13 +105,15 @@ A list keeps loopback origins but replaces the Chrome extension default. If you 
 
 ### Standalone CLI
 
-The CLI server binds to `localhost` and asks for a one-time code. `--host` changes the bind address and `--no-auth` turns the code off. See [Standalone CLI](/getting-started/cli).
+The CLI server binds to `localhost` and asks for a one-time code. `--host` changes the bind address and `--no-auth` turns the code off. See [Standalone CLI](./getting-started/cli.md).
 
 ### MCP endpoint
 
-The HTTP MCP endpoint answers only requests from a loopback address that carry a loopback `Origin` header.
+The HTTP MCP endpoint answers only requests that carry a loopback `Origin` header. In the Vite plugin, the request must also come from a loopback address, like every devtools request.
 
-While the one-time code is on, the endpoint also asks for a bearer token. That is the Express hub by default, and the Vite plugin when its code is on. The hub prints a generated token when it starts. Set `NG_DEVTOOLS_MCP_TOKEN` to choose the token yourself. Requests without the right `Authorization: Bearer <token>` header get `401`. The stdio server needs no token. See [Send a token](/agents/mcp-server#send-a-token).
+While the one-time code is on, the endpoint also asks for a bearer token. That is the Express hub by default, and the Vite plugin when its code is on. The hub prints a generated token when it starts. Set `NG_DEVTOOLS_MCP_TOKEN` to choose the token yourself. Requests without the right `Authorization: Bearer <token>` header get `401`. The stdio server needs no token. See [Send a token](./agents/mcp-server.md#send-a-token).
+
+Without a token, the Express hub answers only requests from a loopback address. With a token, it also answers other addresses that send the right token and a loopback `Origin`. Any client can set that header, so treat the token like a password.
 
 ### Chrome extension
 
@@ -119,7 +121,7 @@ The extension has host permissions for loopback hosts only: `localhost` and its 
 
 On any other host, the panel doesn't send a request until you click **Allow access**. Chrome then asks you to grant the extension that one host, on the scheme of the page and any port. The extension never asks for all hosts at once.
 
-Granting the extension a host doesn't change what the devtools server accepts. The server still applies the checks on this page. Both the Vite plugin and the Express hub accept the extension's `chrome-extension://` origin by default. An Express hub with its own `allowedOrigins` list needs the extension origin in that list. See [Chrome extension](/getting-started/chrome-extension#host-access).
+Granting the extension a host doesn't change what the devtools server accepts. The server still applies the checks on this page. Both the Vite plugin and the Express hub accept the extension's `chrome-extension://` origin by default. An Express hub with its own `allowedOrigins` list needs the extension origin in that list. See [Chrome extension](./getting-started/chrome-extension.md#host-access).
 
 When the server asks for the [one-time code](#one-time-code), the panel shows a form for it. Until you enter the code, the server answers only the calls that request or check the code, so the panel gets no inspector data and can't call the inspector RPC. Discovery comes first, so requests such as `__connection.json` still happen before the code. The panel keeps the token it gets in the extension's own storage, one per server origin, so it doesn't ask again while the server trusts that token. See [One-time code](/getting-started/chrome-extension#one-time-code) on the Chrome extension page.
 
@@ -133,8 +135,11 @@ A field's value is replaced with `[redacted]` when the field:
 
 - is a password field,
 - has a password, one-time-code or credit-card `autocomplete`,
-- sits inside `.sentry-mask`, `.rr-mask`, `[data-private]` or `[data-ng-devtools="mask"]`, or
-- has a name that contains a secret word (password, token, card, cvv, apiKey and similar).
+- sits inside `.sentry-mask`, `.rr-mask`, `[data-private]` or `[data-ng-devtools="mask"]`,
+- has a name that contains a secret word (password, token, card, cvv, apiKey and similar), or a name listed in `mask`, or
+- sits inside a group or array whose name contains a secret word.
+
+The Fields view says why a field is redacted: **name looks secret**, **password input**, **autocomplete is a secret kind**, **marked as mask**, **inside a secret group** or **listed in mask**. The field details say the same where the Set editor is hidden, with a link to this section.
 
 Those values are also removed from error messages. The devtools don't write secret fields unless you unmask them (see [Opt fields in or out](#opt-fields-in-or-out)). Other values are sent as they are, so keep real credentials out of forms you inspect.
 
@@ -153,13 +158,17 @@ window.__NG_DEVTOOLS_FORMS__ = {mask: ['iban'], unmask: ['passport']};
 
 `[data-ng-devtools="unmask"]` opts a field back in. The `window` setting does the same by key.
 
-You can also name secret and unmasked fields on the server, with the `redaction` option. `redaction.secretNames` adds secret names for forms, the router, components, signals, NgRx and Analog, and `redaction.unmask` joins the `window` list. See [Redaction options](/getting-started/configuration#redaction).
+The `mask` and `unmask` lists apply to every inspector on the page, not only forms: nested keys of an object-valued control, Signal Forms fields, form writes and restores, component inputs, signals, NgRx state, pipes and the Analog `load()` preview all follow them. Analog server call previews are recorded on the server, so they follow `redaction.secretNames` and `redaction.unmask` only.
+
+You can also name secret and unmasked fields on the server, with the `redaction` option. `redaction.secretNames` adds secret names for forms, the router, components, signals, NgRx, pipes, Analog and SSR & HTTP URLs, and `redaction.unmask` joins the `window` list. See [Redaction options](./getting-started/configuration.md#redaction).
 
 Unmasking also changes what the devtools can write. A key listed in `unmask` on `window` can be written. The element marker only lifts the checks that come from the element (password type, `autocomplete` and mask markers), so a field with a secret-looking name is still not written.
 
+A refused write names the reason and the unmask that lifts it. The panel, `form-action` and `fill-form` show the same message.
+
 <ngmd-accordion>
   <ngmd-accordion-item title="The full list of secret words">
-    password, passwd, passphrase, passcode, pass, pwd, secret, token, otp, totp, pin, cvv, cvc, csc, ssn, iban, card, cc, credential and credentials. Names are split on camelCase and punctuation, so <code>userPassword</code> and <code>card_number</code> both match. The pairs apiKey, privateKey, secretKey, accessKey, ccNum, ccNumber and securityCode match as well.
+    password, passwd, passphrase, passcode, pass, pwd, secret, token, otp, totp, pin, cvv, cvc, csc, ssn, iban, card, cc, credential, credentials, cookie, authorization and jwt. Names are split on camelCase and punctuation, so <code>userPassword</code> and <code>card_number</code> both match. The pairs apiKey, privateKey, secretKey, accessKey, ccNum, ccNumber, securityCode, sessionId and sessionKey match as well. Every inspector uses this list.
   </ngmd-accordion-item>
 </ngmd-accordion>
 
@@ -177,17 +186,21 @@ A secret route param is only known once the route is recognized or found in the 
   A navigation whose URL was redacted cannot be replayed.
 </ngmd-alert>
 
-### Components, signals and NgRx
+### Components, signals, NgRx and pipes
 
-Component inputs, signal values and NgRx state use the same secret names as forms. A value whose name looks secret is replaced with `[redacted]`. JWTs and bearer tokens inside strings and error messages are replaced too.
+Component inputs, signal values, NgRx state, and pipe inputs, outputs and async values use the same secret names and the same `mask` and `unmask` lists as forms. A value whose name looks secret is replaced with `[redacted]`. JWTs and bearer tokens inside strings and error messages are replaced too, NgRx strings and errors included.
 
 ### Analog
 
-Server call previews and URLs are redacted: secret-looking keys in JSON bodies, secret query parameters, JWTs and bearer tokens. Only JSON and plain text responses get a preview, and it is cut at 1000 characters. The `load()` data preview on the open page redacts secret-looking keys too.
+Server call previews and URLs are redacted: keys in JSON bodies that the forms rules treat as secret, secret query parameters, JWTs and bearer tokens. This covers form action validation errors and redirect targets too. Only JSON and plain text responses get a preview, and it is cut at 1000 characters. The devtools keep the first 16 KB of a body, and a cut JSON body still has its secret-looking keys redacted. The `load()` data preview on the open page redacts the same keys. Keys are matched by whole words, so `sessionId` and `apiKey` are redacted while `author` and `passengers` stay visible. JSON nested deeper than the preview reads is shown as `[Truncated]`.
+
+### SSR & HTTP
+
+Request URLs, page URLs and error messages in the [SSR & HTTP tab](./inspectors/ssr-http.md) are redacted like router URLs, in the page and again on the devtools server. This covers SSR and client calls, and `devframe_state_read`.
 
 ### Not redacted
 
-Response previews and TransferState values in the [SSR & HTTP tab](/inspectors/ssr-http) are not redacted. They reach the devtools server unchanged, so don't expose the dev server beyond localhost.
+Response previews and TransferState values in the [SSR & HTTP tab](./inspectors/ssr-http.md) are not redacted. They reach the devtools server unchanged, so don't expose the dev server beyond localhost.
 
 ## Checklist
 
@@ -205,7 +218,7 @@ Response previews and TransferState values in the [SSR & HTTP tab](/inspectors/s
     Use <code>data-ng-devtools="mask"</code>, <code>window.__NG_DEVTOOLS_FORMS__</code> or <code>redaction.secretNames</code> for fields the secret words miss.
   </ngmd-step>
   <ngmd-step title="Block what you don't need">
-    Set <code>agent.readOnly</code> or turn off <code>actions</code> to stop the panel and agents from writing to your app. See <a href="/getting-started/configuration#actions">Configuration</a>.
+    Set <code>agent.readOnly</code> or turn off <code>actions</code> to stop the panel and agents from writing to your app. See <a href="./getting-started/configuration.md#actions">Configuration</a>.
   </ngmd-step>
 </ngmd-workflow>
 

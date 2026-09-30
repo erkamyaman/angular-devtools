@@ -33,9 +33,10 @@ export function watchTrust(client: TrustClient, onChange: (state: TrustState) =>
 }
 
 /** The origin of the devtools server the panel connects to. */
-export function serverOrigin(baseURL: string | undefined, page: string): string {
+export function serverOrigin(baseURL: string | string[] | undefined, page: string): string {
+  const base = Array.isArray(baseURL) ? baseURL[0] : baseURL;
   try {
-    return new URL(baseURL ?? './', page).origin;
+    return new URL(base ?? './', page).origin;
   } catch {
     return new URL(page).origin;
   }

@@ -9,7 +9,7 @@ description: Register patchState so that restoring a signal store also notifies 
 
 # Restore NgRx signal state
 
-The [NgRx Store tab](/inspectors/ngrx-store) can put a signal store back to its state after any change in the log. By default it writes the state signals directly. That updates your components, but `watchState` listeners do not run.
+The [NgRx Store tab](../inspectors/ngrx-store.md) can put a signal store back to its state after any change in the log. By default it writes the state signals directly. That updates your components, but `watchState` listeners do not run.
 
 Register `patchState` once, and restore goes through it instead. Then `watchState` listeners run as they would for any other change.
 
@@ -124,7 +124,7 @@ export const appConfig: ApplicationConfig = {
 ```
 
 <ngmd-alert severity="warning">
-  Without <code>provideStoreDevtools()</code>, the action log is read-only.
+  Without <code>provideStoreDevtools()</code>, action log entries cannot be restored.
 </ngmd-alert>
 
 ## Where to next

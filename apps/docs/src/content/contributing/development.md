@@ -131,13 +131,19 @@ Run the same checks as CI before you open a PR:
 
 ```bash
 pnpm format:check                   # Prettier
-pnpm typecheck                      # Host app + specs, devtools UI, devtools package + its tests
+pnpm typecheck                      # Host app + specs, devtools UI and Analog demo (with templates), devtools package + its tests
 pnpm exec nx affected -t test build # Test and build affected projects
 pnpm test:devtools                  # Devtools package tests (Vitest)
+pnpm test:panel                     # Devtools UI tests (Vitest)
+pnpm test:axe                       # axe check of every panel page (needs Chromium)
 pnpm extension:build                # Chrome extension
 pnpm skills:check                   # Agent skills and roles in .claude/
 pnpm commit:check                   # Commit messages on your branch
 ```
+
+`pnpm typecheck` runs `ngc` on `app/tsconfig.json` and `examples/analog/tsconfig.app.json`, so template errors fail it. `app/tsconfig.json` turns on `strictTemplates`.
+
+`pnpm test:panel` runs the tests in `app/src/__tests__` in jsdom, with the Analog Angular plugin compiling the components. `pnpm test:axe` builds the package, writes a static report of Angular Travel to `dist/panel-axe`, serves it, and runs axe on every tab and on each hub view (`?view=ngrx`, `analog`, `nativescript`, `capacitor`) in light and dark color schemes. It fails on any violation or page error. Run `pnpm exec playwright install chromium` once before the first run.
 
 `pnpm skills:check` validates the frontmatter of every skill and role and checks that the files and links they mention exist. `pnpm commit:check` checks every commit on your branch that is not on `main` (it compares with `upstream/main`, then `origin/main`, then `main`).
 
@@ -155,8 +161,8 @@ pnpm commit:check                   # Commit messages on your branch
   <ngmd-step title="Test and build affected projects">
     <code>nx affected -t test build</code>, compared against the last green commit on <code>main</code>.
   </ngmd-step>
-  <ngmd-step title="Test the devtools package">
-    <code>pnpm test:devtools</code>.
+  <ngmd-step title="Test the devtools package and UI">
+    <code>pnpm test:devtools</code>, then <code>pnpm test:panel</code>.
   </ngmd-step>
   <ngmd-step title="Build the extension and check it is committed">
     <code>pnpm extension:build</code>. The job fails when <code>extension/ui</code> differs from the committed copy.
@@ -165,6 +171,8 @@ pnpm commit:check                   # Commit messages on your branch
     <code>node bin.mjs --help</code>.
   </ngmd-step>
 </ngmd-workflow>
+
+A separate `axe` job in the same workflow installs Chromium and runs `pnpm test:axe`.
 
 ### Pull request checks
 
@@ -183,7 +191,8 @@ If a code change needs no docs change, add the `no-docs` label to the pull reque
 
 1. Create the function in `packages/ng-devtools/src/rpc/`.
 2. Register it in `packages/ng-devtools/src/devframe.ts`.
-3. Call it from the UI in `app/src/pages/`.
+3. Map it to its inspector in `RPC_INSPECTOR` in `packages/ng-devtools/src/config.ts`, so turning the inspector off removes it.
+4. Call it from the UI in `app/src/pages/`.
 
 ### Add a tab
 
@@ -193,10 +202,12 @@ If a code change needs no docs change, add the `no-docs` label to the pull reque
 
 ### Add an agent tool
 
-Add `agent: { description }` to an RPC function, or call `ctx.agent.registerTool()` in the devframe setup. List the tool on the [Tools](/agents/tools) page.
+Add `agent: { description }` to an RPC function, or call `ctx.agent.registerTool()` in the devframe setup. List the tool on the [Tools](../agents/tools.md) page.
+
+Map a registered tool to its inspector in `AGENT_INSPECTOR` in `packages/ng-devtools/src/config.ts`, so `inspectors` and `agent.tools` can hide it. A tool that acts on the page sets `safety: 'action'`, so `agent.readOnly` drops it. See [Configuration](../getting-started/configuration.md).
 
 <ngmd-callout type="tip" title="Changed app/?">
-  Run <code>pnpm extension:build</code> and commit <code>extension/ui</code>. CI fails when it is stale. See <a href="/contributing/chrome-extension">Build the extension</a>.
+  Run <code>pnpm extension:build</code> and commit <code>extension/ui</code>. CI fails when it is stale. See <a href="./chrome-extension.md">Build the extension</a>.
 </ngmd-callout>
 
 ## Work on the docs

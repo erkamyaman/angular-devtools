@@ -15,7 +15,7 @@ For *Analog apps, add the *Vite plugin next to `analog()` and load the overlay i
 
 <ngmd-workflow>
   <ngmd-step title="Install the package">
-    Add <code>&#64;santoshyadavdev/ng-devtools</code> and <code>devframe</code>. See <a href="/getting-started/installation">Installation</a>.
+    Add <code>&#64;santoshyadavdev/ng-devtools</code> and <code>devframe</code>. See <a href="./installation.md">Installation</a>.
   </ngmd-step>
   <ngmd-step title="Add the plugin">
     Register <code>ngDevtools()</code> after <code>analog()</code> in <code>vite.config.ts</code>.
@@ -76,17 +76,19 @@ The plugin applies to `vite serve` only. `vite build` is not affected, so nothin
 
 ### Mounts the hub
 
-It mounts the devtools hub on the Vite dev server. The WebSocket shares Vite's HTTP server when it can. Otherwise it runs on its own port.
+It mounts the devtools hub on the Vite dev server. The WebSocket shares the dev server's port, over HTTP or HTTPS (`server.https` or `@vitejs/plugin-basic-ssl`). In middleware mode, where Vite has no server of its own, the WebSocket runs on its own port.
+
+The hub keeps working after a dev server restart, for example after a config or `.env` change.
 
 ### Records Analog server activity
 
-It records Analog page renders, `load()` fetches, server functions and API calls for the [Analog inspector](/inspectors/analog). The `apiPrefix` option tells it which requests are API calls.
+It records Analog page renders, `load()` fetches, server functions and API calls for the [Analog inspector](../inspectors/analog.md). The `apiPrefix` option tells it which requests are API calls.
 
 ### Answers only your machine
 
 The plugin only answers requests from a loopback address (any `127.x.x.x` address or `::1`). Other requests to the devtools get `403` with the message "ng-devtools only answers requests from this machine." WebSocket upgrades follow the same rules.
 
-By default the plugin leaves the one-time code off, and the loopback and origin checks take its place. If `server.allowedHosts` or `allowedOrigins` allows a host that is not a loopback host, the plugin also asks for the code. See [`auth`](#auth). [Access and redaction](/security) covers every check.
+By default the plugin leaves the one-time code off, and the loopback and origin checks take its place. If `server.allowedHosts` or `allowedOrigins` allows a host that is not a loopback host, the plugin also asks for the code. See [`auth`](#auth). [Access and redaction](../security.md) covers every check.
 
 ## Options
 
@@ -106,9 +108,11 @@ ngDevtools({
 | `allowedOrigins` | none                                                          | Extra exact origins allowed to reach the devtools, for example a tunnel. |
 | `auth`           | on if a non-loopback host or origin is allowed, otherwise off | Whether the devtools ask for the one-time code.                          |
 
+The plugin also takes the devtools options, such as `inspectors`, `agent`, `actions`, `redaction` and `limits`. See [Configuration](./configuration.md).
+
 ### `base`
 
-Change `base` if `/__devframes/` clashes with a route of your own. The overlay looks for `/__devframes/ng-devtools/` and `/__ng-devtools/` by default, so a custom base also needs a custom overlay path. See [A custom mount path](/getting-started/overlay#a-custom-mount-path).
+Change `base` if `/__devframes/` clashes with a route of your own. The leading and trailing slashes are optional: `'devtools'`, `'/devtools'` and `'/devtools/'` all mount the hub at `/devtools/`, and the loopback checks cover the whole path. The overlay looks for `/__devframes/ng-devtools/` and `/__ng-devtools/` by default, so a custom base also needs a custom overlay path: pass `<base>ng-devtools/` to `initOverlay`. The floating button follows that path. See [A custom mount path](./overlay.md#a-custom-mount-path).
 
 ### `apiPrefix`
 
@@ -116,7 +120,9 @@ The plugin reads `apiPrefix` from your Analog config. Set it here only when the 
 
 ### `allowedOrigins`
 
-Each entry is an exact origin, such as `https://tunnel.example`. The request itself must still come from a loopback address.
+Each entry is an origin, such as `https://tunnel.example`. The request itself must still come from a loopback address.
+
+The plugin reads each entry the way a browser sends an origin: it drops a path or a trailing slash and lowercases the host, so `'https://Tunnel.example/app/'` allows `https://tunnel.example`. It prints a warning in the terminal when it changes an entry, and it ignores an entry that is not a URL, such as `'tunnel.example'`. The first request from each origin that the check refuses also prints a warning that names the origin.
 
 ### `auth`
 
@@ -127,6 +133,8 @@ A tunnel forwards other people's requests to your machine, and those requests ar
 | not set | The code is on only if a non-loopback host or origin is allowed.    |
 | `true`  | The code is always on.                                              |
 | `false` | The code is always off. The loopback and origin checks still apply. |
+
+While the code is on, the HTTP MCP endpoint also asks for a bearer token. See [Send a token](../agents/mcp-server.md#send-a-token).
 
 If your tunnel rewrites the `Host` header to `localhost`, you don't list it in `server.allowedHosts`, so the plugin leaves the code off. Pass `auth: true`:
 
@@ -167,7 +175,7 @@ A non-loopback entry in `server.allowedHosts` or `allowedOrigins` turns the one-
 ## Angular CLI apps
 
 <ngmd-alert severity="important">
-  The Angular CLI dev server does not accept Vite plugins. For an Angular CLI app, mount the hub in your Express server instead. See <a href="/getting-started/express">Angular CLI and Express</a>.
+  The Angular CLI dev server does not accept Vite plugins. For an Angular CLI app, mount the hub in your Express server instead. See <a href="./express.md">Angular CLI and Express</a>.
 </ngmd-alert>
 
 ## FAQ
@@ -177,10 +185,10 @@ A non-loopback entry in `server.allowedHosts` or `allowedOrigins` turns the one-
     No. It applies to the dev server only, and the overlay import is guarded by <code>import.meta.env.DEV</code>.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Why do I get a 403 from the devtools?">
-    The request did not come from your machine, or its origin is not trusted. Open the app on <code>localhost</code>, list your hostname in <code>server.allowedHosts</code>, or add the origin to <code>allowedOrigins</code>.
+    The request did not come from your machine, or its origin is not trusted. The terminal names a refused origin. Open the app on <code>localhost</code>, list your hostname in <code>server.allowedHosts</code>, or add the origin to <code>allowedOrigins</code>.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="The Analog tab shows no server calls">
-    The plugin records server calls made through the Vite dev server. Check that the plugin is registered and that <code>apiPrefix</code> matches your server routes. The <a href="/guides/analog">Analog guide</a> walks through a full setup.
+    The plugin records server calls made through the Vite dev server. Check that the plugin is registered and that <code>apiPrefix</code> matches your server routes. The <a href="../guides/analog.md">Analog guide</a> walks through a full setup.
   </ngmd-accordion-item>
 </ngmd-accordion>
 

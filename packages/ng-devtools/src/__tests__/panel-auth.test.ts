@@ -102,6 +102,12 @@ describe('serverOrigin', () => {
       'http://localhost:4000',
     );
   });
+
+  it('uses the first entry when the panel tries a list of base URLs', () => {
+    expect(serverOrigin(['/__ng-devtools/', './'], 'http://localhost:9999/panel/')).toBe(
+      'http://localhost:9999',
+    );
+  });
 });
 
 describe('saved tokens', () => {

@@ -82,17 +82,20 @@ The plugin runs on the dev server only (`apply: 'serve'`). Production builds do 
 
 ### Plugin options
 
-All three are optional.
+All four are optional.
 
-| Option           | Default                      | What it does                                           |
-| ---------------- | ---------------------------- | ------------------------------------------------------ |
-| `base`           | `/__devframes/`              | Where the hub is mounted.                              |
-| `apiPrefix`      | Read from your Analog config | The API prefix used to tell API calls from page calls. |
-| `allowedOrigins` | none                         | Extra page origins accepted next to localhost.         |
+| Option           | Default                                        | What it does                                           |
+| ---------------- | ---------------------------------------------- | ------------------------------------------------------ |
+| `base`           | `/__devframes/`                                | Where the hub is mounted.                              |
+| `apiPrefix`      | Read from your Analog config                   | The API prefix used to tell API calls from page calls. |
+| `allowedOrigins` | none                                           | Extra page origins accepted next to localhost.         |
+| `auth`           | on if a non-loopback host or origin is allowed | Whether the devtools ask for the one-time code.        |
+
+The plugin also takes the devtools options. See [Vite and Analog](../getting-started/vite.md#options) and [Configuration](../getting-started/configuration.md).
 
 ### Custom hostnames
 
-The devtools only answer requests from this machine. If you open the dev server through another hostname, add it to Vite's `server.allowedHosts`. See [Security](/security).
+The devtools only answer requests from this machine. If you open the dev server through another hostname, add it to Vite's `server.allowedHosts`. See [Security](../security.md).
 
 ## Step 3: Load the overlay
 
@@ -119,15 +122,17 @@ Start the dev server as usual. Then:
 | Full viewer     | `/__devframes/` on the Vite dev server      |
 | MCP endpoint    | `/__devframes/__mcp` on the Vite dev server |
 
-Open the **Analog** dock to see file routes, server calls, render modes, content and lint. See [the Analog inspector](/inspectors/analog) for each view.
+Open the **Analog** dock to see file routes, server calls, render modes, content and lint. See [the Analog inspector](../inspectors/analog.md) for each view.
 
 <ngmd-callout type="tip" title="Connect your agent">
-  Point your MCP client at <code>http://localhost:5173/__devframes/__mcp</code> with an <code>Origin</code> header. See <a href="/agents/mcp-server">MCP server</a>. The <code>analog-server-calls</code> and <code>analog-call-api</code> tools only work through the Vite plugin.
+  Point your MCP client at <code>http://localhost:5173/__devframes/__mcp</code> with an <code>Origin</code> header. See <a href="../agents/mcp-server.md">MCP server</a>. The <code>analog-server-calls</code> and <code>analog-call-api</code> tools only work through the Vite plugin.
 </ngmd-callout>
 
-## Optional: record HttpClient calls
+## Catch hydration errors from the first load
 
-Analog's own `load()` fetches and API calls show in the Analog dock without extra setup. To also record `HttpClient` calls in the **SSR & HTTP** tab, add the devtools providers to your app config:
+The overlay loads after the first render, so it misses hydration errors (`NG0500` to `NG0506`) logged during the first load. `provideNgDevtoolsHttp()` starts listening for them when the app starts. The Analog dock lists them under **Hydration error** in **Lint**, and the `analog-current-page` tool returns them.
+
+Analog's own `load()` fetches and API calls show in the Analog dock without extra setup. `withNgDevtools()` also records `HttpClient` calls in the **SSR & HTTP** tab.
 
 ```ts {5,10-11}
 // src/app/app.config.ts
@@ -145,7 +150,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-See [Set up SSR & HTTP](/guides/ssr-http) for the interceptor order.
+`provideNgDevtoolsHttp()` and `withNgDevtools()` do nothing in production builds. See [Set up SSR & HTTP](./ssr-http.md) for the interceptor order.
 
 ## Try the demo
 

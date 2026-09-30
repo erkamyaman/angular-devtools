@@ -45,11 +45,11 @@ Each error says where it comes from:
 
 ### Field details
 
-Click a field to open its details. From there, set a value, or click **Focus**, **Touch**, **Revalidate** or **Store as global**. **Store as global** stores the form as `$form`, and the field as `$control`, in the page console.
+Click a field to open its details below the table. Click the field again, or **Close**, to hide them. From there, set a value, or click **Focus**, **Touch**, **Revalidate** or **Store as global**. **Store as global** stores the form as `$form`, and the field as `$control`, in the page console.
 
 ### Timeline view
 
-Recent changes, newest first, each tagged with its origin: user, code or devtools. Filter the list by origin. The timeline tracks array items by identity, so moves show as moves. Async validation times show as **pending** tags.
+Recent changes, newest first, each tagged with its origin: user, code or devtools. Filter the list by origin. The timeline tracks array items by identity, so moves show as moves. Async validation times show as **pending** tags. The page keeps the last 200 events, set with [`limits.formTimeline`](../getting-started/configuration.md#limits). Once older events are dropped, the timeline and `form-history` say how many.
 
 Check **Record details** to add the calling code of each change, validator changes, and component renders per keystroke. It is off by default and applies to the whole page.
 
@@ -61,12 +61,14 @@ What submit does, and why it might do nothing. It also shows what the form sends
 
 Form bugs and model-aware accessibility checks, each with a fix. For generic accessibility checks, run axe on the page.
 
+If the devtools server does not answer, the Submit view, the Lint view and the field details say so and offer **Try again**.
+
 ### Actions bar
 
 The actions bar works on the selected form:
 
 - **Touch all**, **Revalidate** and **Focus first invalid**.
-- **Pick field on page**: click a field in the app to select it. Esc cancels.
+- **Pick field on page**: click a field in the app to select it. While picking, the button reads **Cancel picking**. Press it, or Escape in the panel or the app, to stop. The pick also stops after 12 seconds.
 - **Snapshot** saves the form's values as `s1`, `s2` and so on. **Restore** puts back the latest one. The button shows its name, like **Restore s2**.
 - **Reset** and **Submit**.
 
@@ -142,7 +144,7 @@ The devtools never run async validators. The probe emits no form events, so it d
   </ngmd-step>
 </ngmd-workflow>
 
-You can also open a form from its component in the [Components tab](/inspectors/components).
+You can also open a form from its component in the [Components tab](./components.md).
 
 ## Agent tools
 
@@ -171,12 +173,12 @@ You can also open a form from its component in the [Components tab](/inspectors/
 | `ng-devtools:form-action` | Set, touch, revalidate, reset, submit, focus, snapshot, restore and more.          |
 | `ng-devtools:fill-form`   | Fills several fields through the inputs, like a user would. Can submit afterwards. |
 
-Agents can loop: inspect, act, `wait-for-form`, then `form-diff` from the marker they had. The `ng-devtools:forms` resource holds every form and recent changes. See [Tools](/agents/tools).
+Agents can loop: inspect, act, `wait-for-form`, then `form-diff` from the marker they had. The `ng-devtools:forms` resource holds every form and recent changes. See [Tools](../agents/tools.md).
 
 ## Limits and gotchas
 
 <ngmd-callout type="danger" title="Form values leave the page">
-  The devtools send values to the devtools server, show them in the tab and return them to agents. They replace password fields and fields with secret-looking names with <code>[redacted]</code>. To mask or unmask a field, see <a href="/security">Security</a>.
+  The devtools send values to the devtools server, show them in the tab and return them to agents. They replace password fields and fields with secret-looking names with <code>[redacted]</code>. To mask or unmask a field, see <a href="../security.md">Security</a>.
 </ngmd-callout>
 
 ### Reset, submit and restore ask first
@@ -185,7 +187,7 @@ In the tab, the button turns into **Confirm reset**, **Confirm submit** or **Con
 
 ### Fields that are not written
 
-The actions don't write secret fields unless you unmask them. See [Access and redaction](/security#opt-fields-in-or-out). For Signal Forms, they skip hidden, readonly and rule-disabled fields too. They write disabled reactive fields only with `force`.
+The actions don't write secret fields unless you unmask them. See [Access and redaction](../security.md#opt-fields-in-or-out). For Signal Forms, they skip hidden, readonly and rule-disabled fields too. They write disabled reactive fields only with `force`.
 
 ### Snapshot limits
 

@@ -174,11 +174,12 @@ const config: NgmdConfig = {
         {label: 'Introduction', href: '/getting-started/introduction'},
         {label: 'Installation', href: '/getting-started/installation'},
         {label: 'Angular CLI and Express', href: '/getting-started/express'},
+        {label: 'Hono, h3 and Fastify', href: '/getting-started/other-servers', status: 'new'},
         {label: 'Vite and Analog', href: '/getting-started/vite'},
         {label: 'Standalone CLI', href: '/getting-started/cli'},
         {label: 'Configuration', href: '/getting-started/configuration', status: 'new'},
         {label: 'Popup and hub', href: '/getting-started/popup-and-hub', status: 'new'},
-        {label: 'Browser overlay', href: '/getting-started/overlay'},
+        {label: 'Browser overlay', href: '/getting-started/overlay', status: 'updated'},
         {label: 'Chrome extension', href: '/getting-started/chrome-extension'},
       ],
     },
@@ -200,7 +201,7 @@ const config: NgmdConfig = {
     {
       label: 'Agent Tools',
       items: [
-        {label: 'MCP server', href: '/agents/mcp-server'},
+        {label: 'MCP server', href: '/agents/mcp-server', status: 'updated'},
         {label: 'Tools', href: '/agents/tools'},
         {label: 'Resources', href: '/agents/resources'},
       ],
