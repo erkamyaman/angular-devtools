@@ -30,6 +30,8 @@ import { TabIcon } from './pages/tab-icon';
 import { styleHubRail } from './hub-rail-style';
 import { followHubDocks, selectHubDock } from './hub-dock-sync';
 import { panelConfig, tabEnabled } from './devtools-config';
+import { savedToken, serverOrigin, watchTrust, type TrustState } from './auth';
+import { CodeEntry } from './ui/code-entry';
 
 const HUB_VIEWS = ['angular', 'ngrx', 'analog', 'nativescript', 'capacitor'] as const;
 
@@ -127,6 +129,7 @@ function readView(): View | null {
     NetworkInspector,
     ComingSoon,
     TabIcon,
+    CodeEntry,
   ],
   template: `
     <header>
@@ -238,10 +241,11 @@ function readView(): View | null {
         class="status"
         [class.connected]="connected()"
         [class.failed]="connectionFailed()"
+        [class.locked]="needsCode()"
         role="status"
       >
         <span class="dot" aria-hidden="true"><span></span></span>
-        {{ connected() ? 'Live' : connectionFailed() ? 'Disconnected' : 'Connecting…' }}
+        {{ statusLabel() }}
       </span>
     </header>
     <main #main tabindex="-1">
@@ -249,6 +253,8 @@ function readView(): View | null {
         <p class="connection-error" role="alert">
           Can't reach the devtools server. Check that the dev server is running, then reload.
         </p>
+      } @else if (needsCode() && client(); as client) {
+        <app-code-entry [client]="client" [server]="server()" [pageOrigin]="pageOrigin" />
       } @else if (comingSoon(); as info) {
         <app-coming-soon [info]="info" />
       } @else if (!tabEnabled(tab(), config())) {
@@ -530,6 +536,13 @@ function readView(): View | null {
       background: var(--danger);
       animation: none;
     }
+    .status.locked {
+      border-color: color-mix(in srgb, var(--warn) 36%, transparent);
+      color: var(--text);
+    }
+    .status.locked .dot span {
+      animation: none;
+    }
     .status.connected .dot::before {
       background: var(--ok);
       animation: ping 2s var(--ease) infinite;
@@ -658,6 +671,17 @@ export class App implements OnInit, OnDestroy {
   rpc = signal<DevframeRpcClient | null>(null);
   connected = signal(false);
   readonly connectionFailed = signal(false);
+  readonly client = signal<DevframeRpcClient | null>(null);
+  readonly trust = signal<TrustState>('pending');
+  readonly needsCode = computed(() => this.trust() === 'needs-code');
+  readonly server = signal('');
+  protected readonly pageOrigin = location.origin;
+  readonly statusLabel = computed(() => {
+    if (this.connected()) return 'Live';
+    if (this.connectionFailed()) return 'Disconnected';
+    return this.needsCode() ? 'Code needed' : 'Connecting…';
+  });
+  private stopTrust = () => {};
 
   private stopFollowing = () => {};
   private readonly nav = viewChild<ElementRef<HTMLElement>>('nav');
@@ -721,27 +745,22 @@ export class App implements OnInit, OnDestroy {
     }
 
     const baseURL = detectBaseURL();
-    connectDevframe(baseURL ? { baseURL } : {}).then(
+    const server = serverOrigin(baseURL, location.href);
+    this.server.set(server);
+    connectDevframe({
+      ...(baseURL ? { baseURL } : {}),
+      authToken: savedToken(server, this.pageOrigin),
+      simpleAuth: false,
+    }).then(
       (client) => {
-        this.rpc.set(client);
-        this.connected.set(true);
-        const scoped = client.scope('ng-devtools').rpc as unknown as {
-          call: (name: string) => Promise<unknown>;
-        };
-        scoped.call('analog-project').then(
-          (project) => {
-            const isAnalog = !!(project as { analog?: boolean } | null)?.analog;
-            this.analog.set(isAnalog);
-            this.analogKnown.set(true);
-            if (!isAnalog && this.tab() === 'analog' && !this.view()) this.tab.set('dashboard');
-          },
-          () => {
-            this.analogKnown.set(true);
-            if (this.tab() === 'analog' && !this.view()) this.tab.set('dashboard');
-          },
-        );
+        this.client.set(client);
+        this.connected.set(client.status === 'connected');
         client.events.on('connection:status', (status) => {
           this.connected.set(status === 'connected');
+        });
+        this.stopTrust = watchTrust(client, (state) => {
+          this.trust.set(state);
+          if (state === 'trusted' && !this.rpc()) this.start(client);
         });
       },
       () => {
@@ -751,8 +770,28 @@ export class App implements OnInit, OnDestroy {
     );
   }
 
+  private start(client: DevframeRpcClient) {
+    this.rpc.set(client);
+    const scoped = client.scope('ng-devtools').rpc as unknown as {
+      call: (name: string) => Promise<unknown>;
+    };
+    scoped.call('analog-project').then(
+      (project) => {
+        const isAnalog = !!(project as { analog?: boolean } | null)?.analog;
+        this.analog.set(isAnalog);
+        this.analogKnown.set(true);
+        if (!isAnalog && this.tab() === 'analog' && !this.view()) this.tab.set('dashboard');
+      },
+      () => {
+        this.analogKnown.set(true);
+        if (this.tab() === 'analog' && !this.view()) this.tab.set('dashboard');
+      },
+    );
+  }
+
   ngOnDestroy() {
     this.stopFollowing();
+    this.stopTrust();
     this.navObserver?.disconnect();
   }
 
