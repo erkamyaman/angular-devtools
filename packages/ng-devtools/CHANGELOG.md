@@ -20,6 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Express hub: require a bearer token on the MCP HTTP route when the one-time code is on, from `NG_DEVTOOLS_MCP_TOKEN` or one printed at startup. ([#57](https://github.com/santoshyadavdev/angular-devtools/pull/57))
 - Express hub: accept the Chrome extension panel's `chrome-extension://` origin by default and keep refusing other sites, so the extension works without turning the origin check off. ([#53](https://github.com/santoshyadavdev/angular-devtools/pull/53))
 
+### Bug fixes
+
+- Router: quick query or fragment updates on the same path, such as a search box or a filter toggle, are no longer reported as a navigation loop. Redirect loops on one path are still caught.
+
 ### Features
 
 - Configuration: one `NgDevtoolsConfig` for `initNgDevtoolsHub()`, the `ngDevtools()` Vite plugin and `createNgDevtools()`. Turn inspectors off, make the agent read-only or hide tools, block panel and agent write actions, add redaction `secretNames` and change limits. The types are exported from the new `@santoshyadavdev/ng-devtools/config` entry point, and the Dashboard shows the active config. ([#56](https://github.com/santoshyadavdev/angular-devtools/pull/56))
