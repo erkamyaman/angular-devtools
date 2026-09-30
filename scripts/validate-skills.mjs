@@ -1,19 +1,20 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = join(dirname(new URL(import.meta.url).pathname), '..');
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const errors = [];
 
 function frontmatter(file) {
   const text = readFileSync(file, 'utf8');
-  const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(text);
+  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/.exec(text);
   if (!match) {
     errors.push(`${file}: missing the --- frontmatter block`);
     return null;
   }
   const fields = {};
-  for (const line of match[1].split('\n')) {
+  for (const line of match[1].split(/\r?\n/)) {
     const field = /^(\w[\w-]*):\s*(.*)$/.exec(line);
     if (field) fields[field[1]] = field[2].trim();
   }
