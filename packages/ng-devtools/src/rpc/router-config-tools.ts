@@ -289,7 +289,7 @@ export function listRoutesText(
     }
   };
   visit(config, 0);
-  const header = `Live route config (generation ${page.generation ?? '?'}): ${count} route(s)${needle ? ` matching ${code(args.filter!)}` : ''}. Lazy routes show their children once loaded.`;
+  const header = `Live route config (generation ${page.generation ?? '?'}): ${count} route(s)${needle ? ` matching ${code(args.filter!)}` : ''}. Lazy routes show their children once loaded.${page.configTruncated ? ` ${page.configTruncated} route(s) were left out: the page lists at most 200 routes per level and 1000 in total.` : ''}`;
   return capped(
     `${UNTRUSTED}\n\n${header}\n\n${lines.join('\n')}${otherPages(state, page)}${freshness(page, now)}`,
   );

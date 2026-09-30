@@ -175,6 +175,27 @@ const CLASSIC_KINDS = new Set([
                 }
               </div>
 
+              @if (current.classic?.paused) {
+                <div class="paused" role="status">
+                  <p>
+                    <strong>Viewing a past state.</strong> New actions are logged but do not change
+                    the state until you go back to the latest state.
+                  </p>
+                  <button
+                    type="button"
+                    class="btn primary"
+                    [disabled]="busy() || !canRestore()"
+                    [attr.aria-describedby]="canRestore() ? null : 'store-latest-off'"
+                    (click)="backToLatest()"
+                  >
+                    Back to latest
+                  </button>
+                  @if (!canRestore()) {
+                    <p id="store-latest-off" class="hint small">{{ restoreOff }}</p>
+                  }
+                </div>
+              }
+
               <div class="facts">
                 <section class="fact" aria-labelledby="ngrx-state-heading">
                   <h4 id="ngrx-state-heading">State</h4>
@@ -314,7 +335,8 @@ const CLASSIC_KINDS = new Set([
                             <p id="ngrx-confirm-text">
                               @if (selected.source === 'store') {
                                 Store DevTools jumps the app state to the state right after action
-                                #{{ selected.seq }}. New actions continue from there.
+                                #{{ selected.seq }}. Until you go back to the latest state, new
+                                actions are logged but do not change the state.
                               } @else {
                                 This sets every state key of {{ current.label }} back to its value
                                 right after change #{{ selected.seq }}. Components that read the
@@ -957,6 +979,26 @@ const CLASSIC_KINDS = new Set([
       display: flex;
       gap: 8px;
     }
+    .paused {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+      border-radius: var(--radius-sm);
+      background: color-mix(in srgb, var(--warn) 10%, transparent);
+    }
+    .paused p {
+      flex: 1 1 240px;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .paused .hint.small {
+      flex-basis: 100%;
+      margin-top: 0;
+    }
     .message:empty {
       display: none;
     }
@@ -1304,6 +1346,23 @@ export class StoreInspector {
     } finally {
       this.busy.set(false);
       this.confirmSeq.set(null);
+    }
+  }
+
+  async backToLatest() {
+    const page = this.page();
+    if (!page) return;
+    this.busy.set(true);
+    try {
+      const result = (await call(this.rpc(), 'request-ngrx-action', {
+        pageId: page.pageId,
+        request: { type: 'latest' },
+      })) as { ok?: boolean; message?: string; error?: string } | null;
+      this.message.set(result?.error ?? result?.message ?? 'Back on the latest state.');
+    } catch {
+      this.message.set('Could not reach the page to go back to the latest state.');
+    } finally {
+      this.busy.set(false);
     }
   }
 

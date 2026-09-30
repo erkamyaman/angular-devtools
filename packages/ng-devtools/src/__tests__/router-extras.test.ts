@@ -5,7 +5,7 @@ import {
   setNavigationLimit,
   type NavigationRecord,
 } from '../router.ts';
-import type { RouteNode } from '../router-config.ts';
+import { walkConfig, type RouteNode } from '../router-config.ts';
 import { lintRoutes, listRoutesText, matchUrl, renderModeFor } from '../rpc/router-config-tools.ts';
 import {
   describeNavigation,
@@ -242,6 +242,35 @@ describe('report validation', () => {
     expect(
       isRouterReport({ ...base, config: [node('/a')], activeIds: ['/a'], instrumented: true }),
     ).toBe(true);
+  });
+
+  it('accepts the config the page walks when a level has more than 200 routes', () => {
+    const routes = (n: number, prefix: string) =>
+      Array.from({ length: n }, (_, i) => ({ path: `${prefix}${i}` }));
+    for (const config of [
+      routes(201, 'r'),
+      [{ path: 'admin', children: routes(150, 'c'), _loadedRoutes: routes(60, 'l') }],
+    ]) {
+      const cut = { routes: 0 };
+      const tree = walkConfig({ config }, cut);
+      expect(cut.routes).toBe(config.length === 1 ? 10 : 1);
+      expect(isRouterReport({ ...base, config: tree, configTruncated: cut.routes })).toBe(true);
+    }
+    const cut = { routes: 0 };
+    walkConfig({ config: routes(200, 'r') }, cut);
+    expect(cut.routes).toBe(0);
+    expect(isRouterReport({ ...base, configTruncated: 'many' })).toBe(false);
+  });
+
+  it('says how many routes the page left out', () => {
+    const text = listRoutesText(
+      { pages: [page({ config: [node('/a')], configTruncated: 12 })] },
+      {},
+    );
+    expect(text).toContain('12 route(s) were left out');
+    expect(listRoutesText({ pages: [page({ config: [node('/a')] })] }, {})).not.toContain(
+      'left out',
+    );
   });
 
   it('accepts as many navigations as the configured limit', () => {

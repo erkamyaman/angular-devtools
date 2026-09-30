@@ -34,6 +34,7 @@ export interface RouteNode {
 }
 
 const MAX_NODES = 1000;
+const MAX_SIBLINGS = 200;
 
 function joinPath(parent: string, path: string): string {
   const joined = [parent.replace(/\/$/, ''), path].filter((part) => part !== '').join('/');
@@ -77,8 +78,10 @@ function redirectOf(redirectTo: unknown): string | undefined {
 /**
  * The router's live configuration: every route with lazy children merged in
  * once they load, and the routes of the current navigation marked active.
+ * Each level keeps its first 200 routes and the whole walk its first 1000;
+ * `cut.routes` counts the routes left out.
  */
-export function walkConfig(router: AnyRecord): RouteNode[] {
+export function walkConfig(router: AnyRecord, cut = { routes: 0 }): RouteNode[] {
   let count = 0;
   const visit = (
     routes: AnyRecord[],
@@ -89,7 +92,10 @@ export function walkConfig(router: AnyRecord): RouteNode[] {
     if (!Array.isArray(routes) || depth > MAX_DEPTH) return [];
     const out: RouteNode[] = [];
     routes.forEach((route, index) => {
-      if (++count > MAX_NODES) return;
+      if (index >= MAX_SIBLINGS || ++count > MAX_NODES) {
+        cut.routes++;
+        return;
+      }
       const path = read(() => String(route['path'] ?? ''), '');
       const id = prefix ? `${prefix}.${index}` : String(index);
       const fullPath = joinPath(parent, path);

@@ -4,7 +4,7 @@ import { describable } from './agent-schema.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { analogConfig, analogVersion } from './analog-scan.ts';
+import { analogConfig, analogRoot, analogVersion } from './analog-scan.ts';
 
 const BuildMetaSchema = v.object({
   angularVersion: v.string(),
@@ -30,32 +30,20 @@ export const getBuildMeta = defineRpcFunction({
   setup: (ctx) => ({
     handler: async () => {
       const pkg = readJson(join(ctx.cwd, 'package.json'));
-      const angularJson = readJson(join(ctx.cwd, 'angular.json'));
-
       const deps = { ...pkg['dependencies'], ...pkg['devDependencies'] };
       const angularVersion =
         installedVersion(ctx.cwd, '@angular/core') ?? versionFromRange(deps['@angular/core']);
       const typescript =
         installedVersion(ctx.cwd, 'typescript') ?? versionFromRange(deps['typescript']);
 
-      const defaultProject =
-        angularJson?.['defaultProject'] ??
-        Object.keys(angularJson?.['projects'] ?? {})[0] ??
-        pkg['name'] ??
-        'unknown';
-
-      const projectConfig = angularJson?.['projects']?.[defaultProject];
-      const hasSsr = !!(
-        projectConfig?.architect?.build?.options?.ssr ||
-        projectConfig?.architect?.build?.options?.server
-      );
-
-      const analog = analogVersion(ctx.cwd);
+      const project = mainProject(ctx.cwd);
+      const app = analogRoot(ctx.cwd);
+      const analog = analogVersion(app);
       return {
         angularVersion,
-        projectName: defaultProject,
+        projectName: project?.name ?? pkg['name'] ?? 'unknown',
         typescript,
-        ssr: analog ? analogConfig(ctx.cwd).ssr !== false : hasSsr,
+        ssr: analog ? analogConfig(app).ssr !== false : hasSsr(project?.config),
         ...(analog
           ? {
               analog:
@@ -69,6 +57,38 @@ export const getBuildMeta = defineRpcFunction({
     },
   }),
 });
+
+interface WorkspaceProject {
+  name?: string;
+  config: Record<string, any>;
+}
+
+export function mainProject(cwd: string): WorkspaceProject | undefined {
+  const angularJson = readJson(join(cwd, 'angular.json'));
+  const projects = angularJson['projects'];
+  if (projects && typeof projects === 'object') {
+    const entries = Object.entries(projects as Record<string, Record<string, any>>).filter(
+      ([, config]) => config && typeof config === 'object',
+    );
+    const [name, config] =
+      entries.find(([name]) => name === angularJson['defaultProject']) ??
+      entries.find(([, config]) => !config['root'] || config['root'] === '.') ??
+      entries.find(([, config]) => config['projectType'] === 'application') ??
+      entries[0] ??
+      [];
+    return name && config ? { name, config } : undefined;
+  }
+  const projectJson = readJson(join(cwd, 'project.json'));
+  if (!Object.keys(projectJson).length) return undefined;
+  const name = projectJson['name'];
+  return { name: typeof name === 'string' ? name : undefined, config: projectJson };
+}
+
+export function hasSsr(config: Record<string, any> | undefined): boolean {
+  const targets = config?.['architect'] ?? config?.['targets'];
+  const build = targets?.['build']?.['options'];
+  return !!(build?.['ssr'] || build?.['server'] || targets?.['server']);
+}
 
 function readJson(path: string): Record<string, any> {
   try {
