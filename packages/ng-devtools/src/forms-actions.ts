@@ -431,7 +431,11 @@ function label(value: unknown): string {
   return text.length > 60 ? `${text.slice(0, 57)}...` : text;
 }
 
-function selectWrite(ctx: ActionContext, select: HTMLSelectElement, value: unknown): string | null {
+function selectWrite(
+  ctx: ActionContext,
+  select: HTMLSelectElement,
+  value: unknown,
+): { problem: string } | { expected: unknown } {
   const accessor = directiveWith(ctx, select, '_getOptionValue');
   const compare =
     typeof accessor?.['_compareWith'] === 'function' ? accessor['_compareWith'] : Object.is;
@@ -445,24 +449,41 @@ function selectWrite(ctx: ActionContext, select: HTMLSelectElement, value: unkno
     read(() => !!compare(candidate, wanted), false) ||
     sameValue(candidate, wanted) ||
     (typeof candidate === 'string' && wanted != null && candidate === String(wanted));
+  let expected: unknown;
   if (select.multiple) {
-    if (!Array.isArray(value)) return 'is a multiple select; pass an array';
+    if (!Array.isArray(value)) return { problem: 'is a multiple select; pass an array' };
     const missing = value.find((wanted) => !options.some((o) => matches(o.value, wanted)));
-    if (missing !== undefined) return `has no option with the value ${label(missing)}`;
-    for (const o of options) o.option.selected = value.some((wanted) => matches(o.value, wanted));
+    if (missing !== undefined) return { problem: `has no option with the value ${label(missing)}` };
+    const chosen = options.filter((o) => value.some((wanted) => matches(o.value, wanted)));
+    for (const o of options) o.option.selected = chosen.includes(o);
+    expected = chosen.map((o) => o.value);
   } else {
     const index = options.findIndex((o) => matches(o.value, value));
-    if (index < 0) return `has no option with the value ${label(value)}`;
+    if (index < 0) return { problem: `has no option with the value ${label(value)}` };
     select.selectedIndex = index;
+    expected = options[index].value;
   }
   select.dispatchEvent(new Event('change', { bubbles: true }));
-  return null;
+  return { expected };
 }
 
-function sameSelection(stored: unknown, value: unknown): boolean {
+function sameOption(stored: unknown, expected: unknown): boolean {
   return (
-    sameValue(stored, value) ||
-    (stored != null && value != null && String(stored) === String(value))
+    sameValue(stored, expected) ||
+    (stored != null &&
+      expected != null &&
+      typeof stored !== 'object' &&
+      typeof expected !== 'object' &&
+      String(stored) === String(expected))
+  );
+}
+
+function sameSelection(stored: unknown, expected: unknown): boolean {
+  if (!Array.isArray(expected)) return sameOption(stored, expected);
+  return (
+    Array.isArray(stored) &&
+    stored.length === expected.length &&
+    expected.every((item, index) => sameOption(stored[index], item))
   );
 }
 
@@ -500,15 +521,17 @@ function writeValue(
     if (!value || typeof value !== 'object') return 'is a group or array; pass an object or array';
   }
   const leaf = !current || typeof current !== 'object' || current instanceof Date;
-  const element = leaf || Array.isArray(current) ? elementFor(ctx, found, path) : null;
-  const multiple = element instanceof HTMLSelectElement && element.multiple;
-  const viaDom = element && (leaf || multiple) && (mode === 'user' || found.kind === 'template');
+  const element = elementFor(ctx, found, path);
+  const select = element instanceof HTMLSelectElement;
+  const viaDom = element && (leaf || select) && (mode === 'user' || found.kind === 'template');
   if (viaDom && element instanceof HTMLSelectElement) {
-    const problem = selectWrite(ctx, element, value);
-    if (problem) return problem;
+    const outcome = selectWrite(ctx, element, value);
+    if ('problem' in outcome) return outcome.problem;
     if (mode === 'user') element.dispatchEvent(new Event('blur'));
     const stored = rawValue(found, node);
-    return sameSelection(stored, value) ? null : `holds ${label(stored)} after the write`;
+    return sameSelection(stored, outcome.expected)
+      ? null
+      : `holds ${label(stored)} after the write`;
   }
   if (viaDom && nativeWrite(element, value)) {
     if (mode === 'user') element.dispatchEvent(new Event('blur'));

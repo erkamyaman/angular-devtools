@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import process from 'node:process';
 import type { CAC, Command } from 'cac';
 import { defineDevframe } from 'devframe';
@@ -15,9 +15,18 @@ const DEFAULT_PORT = 9999;
  * Throws when `build` would delete something that is not a previous report.
  * devframe empties the output folder before it writes the report.
  */
+function canonical(path: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    const parent = dirname(path);
+    return parent === path ? path : join(canonical(parent), basename(path));
+  }
+}
+
 export function checkReportOutDir(outDir: string, options: { cwd?: string; force?: boolean } = {}) {
-  const cwd = resolve(options.cwd ?? process.cwd());
-  const target = resolve(cwd, outDir);
+  const cwd = canonical(resolve(options.cwd ?? process.cwd()));
+  const target = canonical(resolve(cwd, outDir));
   const up = relative(target, cwd);
   if (up === '' || (!up.startsWith('..') && !isAbsolute(up))) {
     throw new Error(

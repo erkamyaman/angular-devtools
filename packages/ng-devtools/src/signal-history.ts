@@ -72,7 +72,8 @@ export function createSignalHistory(
     const boundId = bound.get(node.id);
     if (boundId) {
       const track = tracks.get(boundId);
-      if (track && track.ref.deref()?.version === node.epoch) return track;
+      const raw = track?.ref.deref();
+      if (track && raw?.version === node.epoch && sameValue(raw, node)) return track;
       bound.delete(node.id);
       taken.delete(boundId);
     }

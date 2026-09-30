@@ -86,6 +86,7 @@ export interface NgrxRequestResult {
   message?: string;
   error?: string;
   entry?: NgrxLogEntry;
+  paused?: boolean;
 }
 
 export const MAX_ACTION_TYPE = 200;

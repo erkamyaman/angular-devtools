@@ -256,6 +256,22 @@ describe('report validation', () => {
       expect(cut.routes).toBe(config.length === 1 ? 10 : 1);
       expect(isRouterReport({ ...base, config: tree, configTruncated: cut.routes })).toBe(true);
     }
+    const deep = { routes: 0 };
+    walkConfig(
+      {
+        config: [
+          ...routes(200, 'r'),
+          { path: 'shop', children: routes(50, 'c') },
+          {
+            path: 'admin',
+            loadChildren: () => [],
+            _loadedRoutes: [{ path: 'x', children: routes(3, 'y') }],
+          },
+        ],
+      },
+      deep,
+    );
+    expect(deep.routes).toBe(51 + 5);
     const cut = { routes: 0 };
     walkConfig({ config: routes(200, 'r') }, cut);
     expect(cut.routes).toBe(0);
@@ -271,6 +287,19 @@ describe('report validation', () => {
     expect(listRoutesText({ pages: [page({ config: [node('/a')] })] }, {})).not.toContain(
       'left out',
     );
+  });
+
+  it('warns about left-out routes when matching a URL and auditing', () => {
+    const state = { pages: [page({ config: [node('/a')], configTruncated: 12 })] };
+    const miss = listRoutesText(state, { match: '/b' });
+    expect(miss).toContain('12 route(s) were left out');
+    expect(miss).toContain('matches no route in the reported part of the config');
+    expect(miss).not.toContain('NG04002');
+    expect(listRoutesText(state, { match: '/a' })).toContain('12 route(s) were left out');
+    expect(listRoutesText(state, { audit: true })).toContain('12 route(s) were left out');
+    const full = listRoutesText({ pages: [page({ config: [node('/a')] })] }, { match: '/b' });
+    expect(full).toContain('NG04002');
+    expect(full).not.toContain('left out');
   });
 
   it('accepts as many navigations as the configured limit', () => {
