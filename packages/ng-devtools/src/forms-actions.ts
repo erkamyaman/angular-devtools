@@ -511,7 +511,8 @@ function writeValue(
     const outcome = selectWrite(ctx, element, value);
     if ('problem' in outcome) return outcome.problem;
     if (mode === 'user') element.dispatchEvent(new Event('blur'));
-    const stored = rawValue(found, node);
+    const deferred = found.kind !== 'signal' && read(() => node['updateOn'], 'change') !== 'change';
+    const stored = deferred ? node['_pendingValue'] : rawValue(found, node);
     return sameSelection(stored, outcome.expected)
       ? null
       : `holds ${label(stored)} after the write`;

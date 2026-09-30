@@ -70,6 +70,23 @@ describe('build-meta', () => {
     expect(meta).not.toHaveProperty('analog');
   });
 
+  it('names the served Analog app in an Nx workspace', async () => {
+    const ws = fixtureDir('ng-devtools-meta-');
+    writeFileSync(
+      join(ws, 'package.json'),
+      JSON.stringify({ name: 'workspace', devDependencies: { '@analogjs/platform': '2.7.5' } }),
+    );
+    writeFileSync(join(ws, 'nx.json'), '{}');
+    const shop = join(ws, 'apps/shop');
+    mkdirSync(shop, { recursive: true });
+    writeFileSync(join(shop, 'vite.config.ts'), 'export default { plugins: [analog()] };');
+    writeFileSync(
+      join(shop, 'project.json'),
+      JSON.stringify({ name: 'shop', projectType: 'application', targets: {} }),
+    );
+    expect(await scan(getBuildMeta, ws)).toMatchObject({ projectName: 'shop', analog: '2.7.5' });
+  });
+
   it('picks the application over a library listed first in angular.json', async () => {
     const dir = fixtureDir('ng-devtools-meta-');
     writeFileSync(
