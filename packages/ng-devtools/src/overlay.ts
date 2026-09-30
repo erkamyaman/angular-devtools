@@ -34,6 +34,7 @@ import { collectComponentTree, componentHostOf } from './component-tree.ts';
 import { elementById, elementId } from './element-id.ts';
 import { collectSignalGraph, graphKey, toSignalTarget, type SignalTarget } from './signal-graph.ts';
 import { serializeNamed } from './serialize.ts';
+import { configFromConnection } from './config.ts';
 
 declare global {
   interface Window {
@@ -97,6 +98,7 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     baseURL: options.baseURL ?? ['./', '/__ng-devtools/', '/__devframes/ng-devtools/'],
   });
   const my = rpc.scope('ng-devtools');
+  const on = configFromConnection(rpc.connectionMeta).inspectors;
 
   let componentTarget: string | null = null;
   let lastTreeJson = '';
@@ -113,7 +115,9 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   const signalHistory = createSignalHistory((value, name) =>
     serializeNamed(name, value, { budget: 1000 }),
   );
-  const restoreSignalHook = await installSignalWriteHook(signalHistory.onWrite);
+  const restoreSignalHook = on.signals
+    ? await installSignalWriteHook(signalHistory.onWrite)
+    : () => {};
 
   let signalTarget: SignalTarget = null;
   let lastSignalKey = '';
@@ -152,15 +156,13 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   }
 
   const { id: pageId, release: releasePageId } = await claimPageId();
-  const stopAnalog = attachAnalog(my, pageId, getNg);
-  const forms = attachForms(my, pageId, getNg, { show: showHighlight, clear: clearHighlight });
-  const pushForms = forms.push;
-  const pipes = attachPipes(my, pageId, getNg);
-  const pushPipes = pipes.push;
-  const http = attachHttp(my, pageId);
-  const ngrx = attachNgrx(my, pageId, getNg);
-  const pushNgrxState = () => void ngrx.push();
-  const pushHttp = () => void http.push().catch(() => {});
+  const stopAnalog = on.analog ? attachAnalog(my, pageId, getNg) : () => {};
+  const forms = on.forms
+    ? attachForms(my, pageId, getNg, { show: showHighlight, clear: clearHighlight })
+    : null;
+  const pipes = on.pipes ? attachPipes(my, pageId, getNg) : null;
+  const http = on.http ? attachHttp(my, pageId) : null;
+  const ngrx = on.ngrx ? attachNgrx(my, pageId, getNg) : null;
 
   const navigations: NavigationRecord[] = [];
   const preloads: PreloadRecord[] = [];
@@ -182,7 +184,7 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
   let outlets: ReturnType<typeof outletsOf> = [];
   let links: ReturnType<typeof linksOf> = [];
   const routerDomObserver =
-    typeof MutationObserver === 'function'
+    on.router && typeof MutationObserver === 'function'
       ? new MutationObserver(() => (routerDomDirty = true))
       : null;
   routerDomObserver?.observe(document.documentElement, {
@@ -294,25 +296,20 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     routerPushTimer = setTimeout(() => void pushRouter(), 50);
   }
 
-  pushTree();
-  pushSignalGraph();
-  pushInjectorTree();
-  pushNgrxState();
-  pushForms();
-  pushPipes();
-  pushRouter();
-  pushHttp();
+  const collectors = [
+    on.components && pushTree,
+    on.signals && pushSignalGraph,
+    on.injectors && pushInjectorTree,
+    ngrx && (() => void ngrx.push()),
+    forms?.push,
+    pipes?.push,
+    on.router && pushRouter,
+    http && (() => void http.push().catch(() => {})),
+  ].filter((collect) => typeof collect === 'function');
+  const collect = () => collectors.forEach((run) => run());
+  collect();
 
-  const interval = setInterval(() => {
-    pushTree();
-    pushSignalGraph();
-    pushInjectorTree();
-    pushNgrxState();
-    pushForms();
-    pushPipes();
-    pushRouter();
-    pushHttp();
-  }, 3000);
+  const interval = setInterval(collect, 3000);
 
   my.rpc.register({
     name: 'highlight-in-page',
@@ -381,27 +378,32 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     },
   });
 
-  window.__ngDevtoolsComponentOf = (el) => {
-    const host = el instanceof Element ? componentHostOf(getNg(), el) : null;
-    return host ? elementId(host) : null;
-  };
+  if (on.components) {
+    window.__ngDevtoolsComponentOf = (el) => {
+      const host = el instanceof Element ? componentHostOf(getNg(), el) : null;
+      return host ? elementId(host) : null;
+    };
+  }
 
+  const forget = (inspector: keyof typeof on, name: string) => {
+    if (on[inspector]) void my.rpc.call(name, pageId).catch(() => {});
+  };
   const leave = () => {
-    pipes.pause();
-    void my.rpc.call('forget-forms-page', pageId).catch(() => {});
-    void my.rpc.call('forget-router-page', pageId).catch(() => {});
-    void my.rpc.call('forget-pipes-page', pageId).catch(() => {});
-    void my.rpc.call('forget-component-page', pageId).catch(() => {});
+    pipes?.pause();
+    forget('forms', 'forget-forms-page');
+    forget('router', 'forget-router-page');
+    forget('pipes', 'forget-pipes-page');
+    forget('components', 'forget-component-page');
     lastInjectorJson = '';
-    void my.rpc.call('forget-injector-page', pageId).catch(() => {});
-    http.leave();
-    void my.rpc.call('forget-analog-page', pageId).catch(() => {});
-    ngrx.leave();
+    forget('injectors', 'forget-injector-page');
+    http?.leave();
+    forget('analog', 'forget-analog-page');
+    ngrx?.leave();
   };
   addEventListener('pagehide', leave);
   const resendConfig = () => {
     sentGeneration = -1;
-    pipes.resume();
+    pipes?.resume();
   };
   addEventListener('pageshow', resendConfig);
 
@@ -409,10 +411,10 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     clearInterval(interval);
     restoreSignalHook();
     removeEventListener('pagehide', leave);
-    forms.stop();
-    pipes.stop();
-    void my.rpc.call('forget-pipes-page', pageId).catch(() => {});
-    ngrx.stop();
+    forms?.stop();
+    pipes?.stop();
+    forget('pipes', 'forget-pipes-page');
+    ngrx?.stop();
     stopAnalog();
     removeEventListener('pageshow', resendConfig);
     for (const cleanup of routerCleanup) cleanup();
@@ -422,7 +424,7 @@ export async function initOverlay(options: { baseURL?: string | string[] } = {})
     clearTimeout(routerPushTimer);
     releasePageId();
     clearHighlight();
-    delete window.__ngDevtoolsComponentOf;
+    if (on.components) delete window.__ngDevtoolsComponentOf;
   };
 }
 
