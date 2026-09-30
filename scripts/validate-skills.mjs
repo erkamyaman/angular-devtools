@@ -28,7 +28,7 @@ function checkLinks(file, body) {
     if (!existsSync(target)) errors.push(`${file}: broken link ${link}`);
   }
   for (const [, path] of body.matchAll(
-    /`((?:app|packages|docs|scripts|src|\.claude|\.github)\/[^`\s*<>]+)`/g,
+    /`((?:app|apps|packages|docs|scripts|src|\.claude|\.github)\/[^`\s*<>]+)`/g,
   )) {
     if (!existsSync(join(root, path))) errors.push(`${file}: ${path} does not exist`);
   }
