@@ -5,6 +5,20 @@ cd "$root" || exit 0
 list="$(mktemp)" || exit 0
 trap 'rm -f "$list"' EXIT
 
+main_index=
+case "${GIT_INDEX_FILE:-}" in
+  *next-index-*.lock)
+    main_index="$(
+      unset GIT_INDEX_FILE
+      git rev-parse --path-format=absolute --git-path index
+    ).lock" || exit 0
+    if [ ! -f "$main_index" ]; then
+      echo "pre-commit: not formatting because the index for this partial commit was not found. Run pnpm format:check before you push." >&2
+      exit 0
+    fi
+    ;;
+esac
+
 unstaged="$(git -c core.quotePath=false diff --name-only)"
 
 git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR |
@@ -23,4 +37,7 @@ git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR |
 tr '\n' '\0' <"$list" | xargs -0 pnpm --silent exec prettier --write --ignore-unknown >/dev/null 2>&1 ||
   echo "WARNING: failed to format staged files." >&2
 tr '\n' '\0' <"$list" | xargs -0 git --literal-pathspecs add --
+if [ -n "$main_index" ]; then
+  tr '\n' '\0' <"$list" | GIT_INDEX_FILE="$main_index" xargs -0 git --literal-pathspecs add --
+fi
 exit 0
