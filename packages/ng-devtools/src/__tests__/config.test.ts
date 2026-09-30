@@ -138,6 +138,16 @@ describe('agent tool and RPC registration', () => {
     expect(tools).toEqual(expect.arrayContaining(['inspect-forms', 'list-routes', 'analog-lint']));
   });
 
+  it('drops the agent tools of a blocked action and keeps the rest', async () => {
+    const forms = await boot({ actions: { forms: false } });
+    expect(forms.actionTools.sort()).toEqual(['analog-call-api', 'highlight', 'navigate'].sort());
+    expect(forms.tools).toEqual(expect.arrayContaining(['inspect-forms', 'form-history']));
+    const router = await boot({ actions: { router: false } });
+    expect(router.actionTools).not.toContain('navigate');
+    expect(router.actionTools).toEqual(expect.arrayContaining(['form-action', 'fill-form']));
+    expect(router.tools).toContain('list-routes');
+  });
+
   it('leaves out the RPC functions, tools and resources of a disabled inspector', async () => {
     const { rpc, tools, resources } = await boot({ inspectors: { forms: false, analog: false } });
     expect(rpc.filter((name) => RPC_INSPECTOR[name] === 'forms')).toEqual([]);
@@ -172,6 +182,10 @@ describe('panel actions', () => {
     });
     expect(await invoke('request-ngrx-action', { request: { type: 'restore', seq: 1 } })).toEqual({
       error: expect.stringContaining('actions.ngrx'),
+    });
+    expect(await invoke('request-form-action', { action: 'fill', formId: 'F.form@p1' })).toEqual({
+      ok: false,
+      error: expect.stringContaining('actions.forms'),
     });
     expect(await invoke('request-form-action', null)).toEqual({
       ok: false,

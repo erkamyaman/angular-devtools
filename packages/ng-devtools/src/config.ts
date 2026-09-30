@@ -116,13 +116,20 @@ export const FORM_WRITE_ACTIONS: readonly string[] = [
 /** Router actions that start, stop or repeat a navigation. */
 export const ROUTER_WRITE_ACTIONS: readonly string[] = ['navigate', 'abort', 'replay'];
 
+/** Agent tools that perform an action's writes; blocking the action drops them. */
+export const ACTION_TOOLS: Record<NgDevtoolsAction, readonly string[]> = {
+  forms: ['form-action', 'fill-form'],
+  router: ['navigate'],
+  ngrx: [],
+};
+
 export function actionBlockedMessage(action: NgDevtoolsAction): string {
   const what = {
     forms: 'Writing to forms',
     router: 'Navigating',
     ngrx: 'Restoring NgRx state',
   }[action];
-  return `${what} from the panel is turned off in the devtools config (actions.${action}).`;
+  return `${what} is turned off in the devtools config (actions.${action}).`;
 }
 
 /**
@@ -214,8 +221,12 @@ export const AGENT_INSPECTOR: Record<string, NgDevtoolsInspector> = {
   'explain-pipe': 'pipes',
 };
 
+function agentName(id: string): string {
+  return id.replace(/^ng-devtools:/, '');
+}
+
 function agentInspector(id: string): NgDevtoolsInspector | undefined {
-  const name = id.replace(/^ng-devtools:/, '');
+  const name = agentName(id);
   return (
     AGENT_INSPECTOR[name] ??
     RPC_INSPECTOR[name] ??
@@ -233,6 +244,10 @@ export function agentAllowed(
   config: ResolvedNgDevtoolsConfig,
 ): boolean {
   if (config.agent.readOnly && entry.safety === 'action') return false;
+  const name = agentName(entry.id);
+  if (NG_DEVTOOLS_ACTIONS.some((key) => !config.actions[key] && ACTION_TOOLS[key].includes(name))) {
+    return false;
+  }
   const inspector = agentInspector(entry.id);
   return !inspector || config.agent.tools[inspector];
 }

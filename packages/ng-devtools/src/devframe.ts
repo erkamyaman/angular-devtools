@@ -381,7 +381,14 @@ const ngDevtools = defineDevframe({
       return (state.pages.find((p) => p.snapshot) ?? state.pages[0])?.pageId;
     };
 
-    const requestRouterAction = (page: string | undefined, request: unknown) =>
+    const requestRouterAction = (page: string | undefined, request: unknown) => {
+      const action = (request as { action?: unknown } | undefined)?.action;
+      return !config.actions.router && ROUTER_WRITE_ACTIONS.includes(action as string)
+        ? Promise.resolve<unknown>({ error: actionBlockedMessage('router') })
+        : sendRouterAction(page, request);
+    };
+
+    const sendRouterAction = (page: string | undefined, request: unknown) =>
       new Promise<unknown>((resolve) => {
         const pageId = page || defaultPageId();
         const requestId = `a${++actionSeq}`;
@@ -416,16 +423,11 @@ const ngDevtools = defineDevframe({
       name: 'request-router-action',
       type: 'action',
       jsonSerializable: true,
-      handler: (message: { pageId?: string; request?: unknown }) => {
-        const action = (message?.request as { action?: unknown } | undefined)?.action;
-        if (!config.actions.router && ROUTER_WRITE_ACTIONS.includes(action as string)) {
-          return { error: actionBlockedMessage('router') };
-        }
-        return requestRouterAction(
+      handler: (message: { pageId?: string; request?: unknown }) =>
+        requestRouterAction(
           typeof message?.pageId === 'string' ? message.pageId : undefined,
           message?.request,
-        );
-      },
+        ),
     });
 
     const pageFor = (pageId: unknown) => {
@@ -668,6 +670,14 @@ const ngDevtools = defineDevframe({
     let formActionSeq = 0;
 
     const requestFormAction = (request: Record<string, unknown>, timeoutMs = 15_000) =>
+      !config.actions.forms && FORM_WRITE_ACTIONS.includes(request['action'] as string)
+        ? Promise.resolve<Record<string, unknown>>({
+            ok: false,
+            error: actionBlockedMessage('forms'),
+          })
+        : sendFormAction(request, timeoutMs);
+
+    const sendFormAction = (request: Record<string, unknown>, timeoutMs: number) =>
       new Promise<Record<string, unknown>>((resolve) => {
         const requestId = `f${++formActionSeq}`;
         const formId = typeof request['formId'] === 'string' ? request['formId'] : undefined;
@@ -712,14 +722,10 @@ const ngDevtools = defineDevframe({
       name: 'request-form-action',
       type: 'action',
       jsonSerializable: true,
-      handler: (request: unknown) => {
-        if (!request || typeof request !== 'object') return { ok: false, error: 'Bad request.' };
-        const action = (request as { action?: unknown }).action;
-        if (!config.actions.forms && FORM_WRITE_ACTIONS.includes(action as string)) {
-          return { ok: false, error: actionBlockedMessage('forms') };
-        }
-        return requestFormAction(request as Record<string, unknown>);
-      },
+      handler: (request: unknown) =>
+        request && typeof request === 'object'
+          ? requestFormAction(request as Record<string, unknown>)
+          : { ok: false, error: 'Bad request.' },
     });
 
     register({
