@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { hubDefaultOrigins, initNgDevtoolsHub } from '../hub.ts';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { hubDefaultOrigins, initNgDevtoolsHub, type NgDevtoolsHubOptions } from '../hub.ts';
 import { makeProject } from './analog-fixture.ts';
 
 const hubs: { close: () => Promise<void> }[] = [];
@@ -21,7 +21,29 @@ async function boot(cwd: string) {
   return { hub, ctx, docks };
 }
 
+async function bootMcp(options: NgDevtoolsHubOptions) {
+  const cwd = makeProject({ 'package.json': '{}' });
+  const hub = initNgDevtoolsHub({ cwd, ws: false, allowedOrigins: false, ...options });
+  hubs.push(hub);
+  await hub.ready;
+  return (token?: string) =>
+    hub.handler(
+      new Request('http://localhost/__devframes/__mcp', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+          origin: 'http://localhost:4000',
+          ...(token === undefined ? {} : { authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+      }),
+    );
+}
+
 afterEach(async () => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
   for (const hub of hubs.splice(0)) await hub.close();
 });
 
@@ -112,5 +134,40 @@ describe('ng-devtools hub origins', () => {
     expect(await sseStatus(tunnel, EXTENSION)).toBe(403);
     expect(await sseStatus({ allowedOrigins: [EXTENSION] }, EXTENSION)).toBe(200);
     expect(await sseStatus({ allowedOrigins: false }, 'https://evil.example')).toBe(200);
+  });
+});
+
+describe('ng-devtools hub MCP route', () => {
+  it('stays open when the hub runs without auth', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const mcp = await bootMcp({ auth: false });
+    expect((await mcp()).status).toBe(200);
+    expect(log.mock.calls.flat().join('\n')).not.toContain('MCP token');
+  });
+
+  it('requires the token from NG_DEVTOOLS_MCP_TOKEN when auth is on', async () => {
+    vi.stubEnv('NG_DEVTOOLS_MCP_TOKEN', 'env-secret');
+    const mcp = await bootMcp({});
+    expect((await mcp()).status).toBe(401);
+    expect((await mcp('wrong')).status).toBe(401);
+    const allowed = await mcp('env-secret');
+    expect(allowed.status).toBe(200);
+    expect(await allowed.text()).toContain('ng-devtools_get-routes');
+  });
+
+  it('prints a generated token when none is configured', async () => {
+    vi.stubEnv('NG_DEVTOOLS_MCP_TOKEN', '');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const mcp = await bootMcp({ auth: true });
+    const token = /MCP token: (\S+)/.exec(log.mock.calls.flat().join('\n'))?.[1];
+    expect(token).toMatch(/^[\w-]{32}$/);
+    expect((await mcp()).status).toBe(401);
+    expect((await mcp(token)).status).toBe(200);
+  });
+
+  it('keeps an explicit mcp setting', async () => {
+    const mcp = await bootMcp({ auth: true, mcp: { authorization: 'own-secret' } });
+    expect((await mcp()).status).toBe(401);
+    expect((await mcp('own-secret')).status).toBe(200);
   });
 });
