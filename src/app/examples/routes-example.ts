@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ExamplePage } from './example-page';
 import { pingPong } from './ping-pong';
@@ -26,7 +26,9 @@ import { pingPong } from './ping-pong';
         <a routerLink="locked" routerLinkActive="active" ariaCurrentWhenActive="page">Locked</a>
         <a routerLink="broken" routerLinkActive="active" ariaCurrentWhenActive="page">Broken</a>
         <a routerLink="loop-a" routerLinkActive="active" ariaCurrentWhenActive="page">Guard loop</a>
-        <button type="button" (click)="pingPong()">Navigation ping-pong</button>
+        <button type="button" [attr.aria-disabled]="running() || null" (click)="pingPong()">
+          Navigation ping-pong
+        </button>
       </nav>
 
       <div class="outlet">
@@ -49,6 +51,9 @@ import { pingPong } from './ping-pong';
       color: var(--muted);
       text-decoration: none;
     }
+    .sub button[aria-disabled='true'] {
+      cursor: progress;
+    }
     .sub button {
       border: 0;
       background: none;
@@ -57,7 +62,7 @@ import { pingPong } from './ping-pong';
       cursor: pointer;
     }
     .sub a:hover,
-    .sub button:hover {
+    .sub button:not([aria-disabled='true']):hover {
       background: var(--subtle);
       color: var(--ink);
     }
@@ -81,7 +86,15 @@ import { pingPong } from './ping-pong';
 export class RoutesExample {
   private readonly router = inject(Router);
 
-  protected pingPong() {
-    void pingPong(this.router);
+  protected readonly running = signal(false);
+
+  protected async pingPong() {
+    if (this.running()) return;
+    this.running.set(true);
+    try {
+      await pingPong(this.router);
+    } finally {
+      this.running.set(false);
+    }
   }
 }
