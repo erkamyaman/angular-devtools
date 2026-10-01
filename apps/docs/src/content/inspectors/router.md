@@ -48,7 +48,7 @@ The **Navigations** view looks for loops in the recorded navigations. A loop is 
 
 A chain of `navigate` calls that stays on one path is not a loop, even when it returns to an earlier URL. Only the query or fragment changes there, as with a search box or a filter that keeps its state in the URL. A redirect loop counts even on one path, for example a guard that keeps adding and removing a query param.
 
-To see one, click **Guard loop** in the Routes lab of the demo app (`/examples/routes`). Its two guards redirect to each other five times, then to **Summary**.
+To see one, open the Routes lab of the demo app (`/examples/routes`). **Guard loop** makes two guards redirect to each other five times, then to **Summary** (a redirect loop). **Navigation ping-pong** navigates between **Details** and **Summary** from code (a navigation loop).
 
 When the view finds a loop, a **Loop detected** section appears above the list. It shows the cycle of URLs, such as `/account → /login → /account`. Under it, each hop names its cause: the guard, the `redirectTo` entry or the `navigate` call. A last line lists the navigation ids, how many times the chain came back, how it ended and the guards involved.
 
@@ -196,7 +196,7 @@ Without that recording, the guards listed for a navigation are candidates: the `
 | `ng-devtools:navigate`            | Acts on the router: `navigate`, `abort`, `replay`, `probe`, `instrument` and `resolve-lazy`.                                                                                       |
 | `ng-devtools:router` (resource)   | The active route tree and recent navigations of each page.                                                                                                                         |
 
-`navigate` only accepts same-origin relative URLs that start with `/`. `resolve-lazy` needs a `routeId`. See [Tools](../agents/tools.md).
+`navigate` only accepts same-origin relative URLs that start with `/`. `resolve-lazy` needs a `routeId`. With [`actions.router`](../getting-started/configuration.md#actions) set to `false`, the tool refuses `navigate`, `abort`, `replay` and `probe`, and keeps `instrument` and `resolve-lazy`. See [Tools](../agents/tools.md).
 
 ## Limits and gotchas
 
@@ -232,6 +232,9 @@ The page keeps the last 50 navigations and 50 preloads. Set the navigation count
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Does Probe in app change the URL?">
     No. It runs the real matcher with <code>skipLocationChange</code> and stops after recognition. <code>canActivate</code>, <code>canDeactivate</code> and resolvers do not run. If a <code>canMatch</code> guard or the navigation error handler redirects, the probe stops the redirected navigation too and names its target.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Why is Probe in app turned off?">
+    The probe runs your app's <code>canMatch</code> guards, so <a href="../getting-started/configuration.md#actions"><code>actions.router</code></a> set to <code>false</code> turns it off, along with <strong>Go</strong>, <strong>Abort</strong> and <strong>Replay</strong>. <strong>Record each guard and resolver</strong> and <strong>Read lazy</strong> stay on.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Why is the source table collapsed?">
     The live config is available, so it is the better source. Click <strong>Show table</strong> to open the source list.
