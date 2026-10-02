@@ -1124,6 +1124,10 @@ function countFields(node: FormFieldNode): number {
     .errors code {
       color: #fde68a;
       overflow-wrap: anywhere;
+
+      @include m.light {
+        color: var(--accent);
+      }
     }
     .value .muted {
       margin-top: 2px;

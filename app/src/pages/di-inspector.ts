@@ -55,7 +55,7 @@ const NULL_ID = 'inj-null';
 
 const KIND_TONE: Record<string, string> = {
   component: 'var(--accent)',
-  directive: '#7cb4ff',
+  directive: 'var(--directive)',
   environment: 'var(--ok)',
   null: 'var(--text-3)',
 };
@@ -494,9 +494,14 @@ function isTree(value: unknown): value is InjectorNode[] {
     @use 'mixins' as m;
 
     :host {
+      --directive: #7cb4ff;
       display: block;
       color: var(--text);
       font-size: 13px;
+
+      @include m.light {
+        --directive: #1d4ed8;
+      }
     }
     .mono {
       font-family: var(--font-mono);

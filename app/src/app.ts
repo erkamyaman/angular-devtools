@@ -5,6 +5,7 @@ import {
   afterNextRender,
   afterRenderEffect,
   computed,
+  effect,
   inject,
   linkedSignal,
   signal,
@@ -28,6 +29,7 @@ import { NetworkInspector } from './pages/network-inspector';
 import { ComingSoon, type ComingSoonInfo } from './pages/coming-soon';
 import { TabIcon } from './pages/tab-icon';
 import { styleHubRail } from './hub-rail-style';
+import { ThemeService } from './theme.service';
 import { followHubDocks, selectHubDock } from './hub-dock-sync';
 import { panelConfig, tabEnabled } from './devtools-config';
 import { hostPageId, scopeToPage } from './page-id';
@@ -62,6 +64,14 @@ const VIEW_ACCENT: Partial<Record<View, string>> = {
   'angular-native': '#ff4d6d',
   nativescript: '#8196ff',
   capacitor: '#53b9ff',
+};
+
+const VIEW_ACCENT_LIGHT: Partial<Record<View, string>> = {
+  ngrx: '#a21caf',
+  analog: '#be123c',
+  'angular-native': '#be123c',
+  nativescript: '#3448c5',
+  capacitor: '#0369a1',
 };
 
 const VIEW_TAB: Partial<Record<View, Tab>> = { ngrx: 'store', analog: 'analog' };
@@ -441,6 +451,10 @@ function readView(): View | null {
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+
+      @include m.light {
+        background-image: linear-gradient(90deg, #be123c 0%, #a21caf 50%, #6d28d9 100%);
+      }
     }
     nav {
       position: relative;
@@ -700,7 +714,8 @@ export class App implements OnInit, OnDestroy {
   readonly view = signal<View | null>(readView());
   readonly viewAccent = computed(() => {
     const view = this.view();
-    return (view && VIEW_ACCENT[view]) ?? null;
+    const accents = this.themeService.current() === 'light' ? VIEW_ACCENT_LIGHT : VIEW_ACCENT;
+    return (view && accents[view]) ?? null;
   });
   readonly title = computed(() => {
     const view = this.view();
@@ -769,6 +784,7 @@ export class App implements OnInit, OnDestroy {
   private readonly nav = viewChild<ElementRef<HTMLElement>>('nav');
   private readonly main = viewChild<ElementRef<HTMLElement>>('main');
   private readonly injector = inject(Injector);
+  private readonly themeService = inject(ThemeService);
   private navObserver?: ResizeObserver;
   readonly navFade = signal({ start: false, end: false });
 
@@ -785,6 +801,16 @@ export class App implements OnInit, OnDestroy {
       untracked(() => {
         this.revealActiveTab();
         this.measureNav();
+      });
+    });
+    effect(() => {
+      const theme = this.themeService.current();
+      untracked(() => {
+        try {
+          if (window.parent !== window) styleHubRail(window.parent.document, theme);
+        } catch {
+          // cross-origin parent
+        }
       });
     });
   }
@@ -813,11 +839,6 @@ export class App implements OnInit, OnDestroy {
   ngOnInit() {
     if (this.view()) {
       this.stopFollowing = followHubDocks(HUB_VIEWS, (view) => this.showView(view));
-    }
-    try {
-      if (window.parent !== window) styleHubRail(window.parent.document);
-    } catch {
-      // a cross origin parent cannot be styled
     }
     const restored = initialTab(
       location.hash,
