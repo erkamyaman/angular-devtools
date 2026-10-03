@@ -32,6 +32,21 @@ const STORED_PAGE_ID = `(() => {
 })()`;
 
 let detection = 0;
+let themeName = chrome.devtools.panels.themeName || 'dark';
+
+function applyTheme(name) {
+  themeName = name;
+  document.documentElement.dataset.theme = name === 'dark' ? 'dark' : 'light';
+}
+
+applyTheme(themeName);
+chrome.devtools.panels.setThemeChangeHandler?.((name) => {
+  applyTheme(name);
+  frame.contentWindow?.postMessage(
+    { type: 'ng-devtools:theme-change', theme: name },
+    chrome.runtime.getURL(''),
+  );
+});
 
 function evalInPage(expression) {
   return new Promise((resolve) => {
@@ -161,6 +176,7 @@ function loadPanel(baseURL, pageId) {
   const src = new URL(chrome.runtime.getURL('ui/index.html'));
   src.searchParams.set('baseURL', baseURL.href);
   if (typeof pageId === 'string' && pageId) src.searchParams.set('pageId', pageId);
+  src.searchParams.set('theme', themeName);
   frame.src = src.href;
   status.classList.add('hidden');
   frame.style.display = 'block';

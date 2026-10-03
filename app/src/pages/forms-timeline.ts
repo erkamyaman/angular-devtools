@@ -262,6 +262,9 @@ const ORIGINS = ['all', 'user', 'code', 'devtools'] as const;
       box-shadow: inset 2px 0 0 var(--accent);
       color: var(--text-strong);
     }
+    .events li[data-type='submit'] time {
+      color: var(--text-2);
+    }
     time {
       color: var(--text-3);
       font-family: var(--font-mono);
@@ -284,6 +287,10 @@ const ORIGINS = ['all', 'user', 'code', 'devtools'] as const;
     .path {
       color: #fde68a;
       overflow-wrap: anywhere;
+
+      @include m.light {
+        color: var(--accent);
+      }
     }
     .event-type {
       color: var(--text-strong);

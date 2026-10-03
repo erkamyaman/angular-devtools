@@ -43,7 +43,7 @@ async function serve(prefix) {
 const { server, base } = await serve(PREFIX);
 const atRoot = await serve('/');
 
-const VIEWS = ['ngrx', 'analog', 'nativescript', 'capacitor'];
+const VIEWS = ['ngrx', 'analog', 'angular-native', 'nativescript', 'capacitor'];
 const failures = [];
 const browser = await chromium.launch();
 
@@ -68,7 +68,7 @@ try {
   }
   await rootPage.close();
 
-  for (const colorScheme of ['light', 'dark']) {
+  for (const colorScheme of ['dark', 'light']) {
     const context = await browser.newContext({
       colorScheme,
       reducedMotion: 'reduce',

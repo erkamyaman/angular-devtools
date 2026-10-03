@@ -114,16 +114,21 @@ The overlay sets `window.__ngDevtoolsPageId` once it claims the page id, and rem
 
 ### Loading the UI
 
-The panel loads `ui/index.html` with two query parameters:
+The panel loads `ui/index.html` with three query parameters:
 
 | Parameter | Value                                                                                    |
 | --------- | ---------------------------------------------------------------------------------------- |
 | `baseURL` | The path that served the connection file, on the origin of the page.                     |
 | `pageId`  | The page id from [Waiting for the page id](#waiting-for-the-page-id), when there is one. |
+| `theme`   | The DevTools theme name, `dark` or `default`.                                            |
 
 Outside the extension, the UI accepts a `baseURL` only on its own origin. Inside the extension, it accepts any `http` or `https` URL. The panel only passes hosts the extension can reach.
 
 On each navigation of the inspected page, the panel shows its status view again and repeats the whole search.
+
+### Theme
+
+The panel follows the DevTools theme. `panel-bridge.js` reads `chrome.devtools.panels.themeName` at startup, sets `data-theme` on `panel.html` so the status view matches, and passes the name to the UI as the `theme` parameter (`dark` or `default`, which is light). Its `setThemeChangeHandler` updates `panel.html` and posts an `ng-devtools:theme-change` message to the UI frame when DevTools switches theme. `ThemeService` in the panel sets `data-theme` on `<html>`, and the CSS tokens in `app/src/styles/_theme.scss` follow it.
 
 ### Elements panel selection
 

@@ -22,6 +22,13 @@ import {
   type NgrxPages,
 } from './rpc/ngrx-tools.ts';
 import {
+  INSPECT_SIGNAL_STORE_DESCRIPTION,
+  SIGNAL_STORE_HISTORY_DESCRIPTION,
+  inspectSignalStoreText,
+  signalStoreHistoryText,
+  withUntrustedPreamble,
+} from './rpc/ngrx-live-tools.ts';
+import {
   dispatchProblem,
   type NgrxRequest,
   type NgrxRequestResult,
@@ -1321,7 +1328,7 @@ const ngDevtools = defineDevframe({
       id: 'ng-devtools:component-tree',
       name: 'Angular Component Tree',
       description:
-        'Live component instances per connected page, as JSON: `pages[pageId].roots` is a tree with one node per rendered instance (`id` instance id, `name` class name, `tag` host tag, `directives` on the host), `count`, `truncated` and `truncatedBy` (`components` or `depth`, the cap that stopped collection, when the page has more instances than it lists), and `detail` (live input values, outputs, other properties, listeners, change detection, encapsulation and injected dependencies) for the selected instance: the one picked in the panel, on the page, or through ng-devtools:highlight or ng-devtools:inspect-component. `detail.properties` lists the other own fields (signals and resources unwrapped). `nodes` repeats the roots of the most recent page. Empty when no page is connected.',
+        'Live component instances per connected page, as JSON: `pages[pageId].roots` is a tree with one node per rendered instance (`id` instance id, `name` class name, `tag` host tag, `directives` on the host), `platform` (`angular-native` for an Angular Native app, missing for a browser page), `count`, `truncated` and `truncatedBy` (`components` or `depth`, the cap that stopped collection, when the page has more instances than it lists), and `detail` (live input values, outputs, other properties, listeners, change detection, encapsulation and injected dependencies) for the selected instance: the one picked in the panel, on the page, or through ng-devtools:highlight or ng-devtools:inspect-component. `detail.properties` lists the other own fields (signals and resources unwrapped). `nodes` repeats the roots of the most recent page. Empty when no page is connected.',
       mimeType: 'application/json',
       read: () => ({ text: JSON.stringify(componentTree.value(), null, 2) }),
     });
@@ -1369,6 +1376,60 @@ const ngDevtools = defineDevframe({
         'The active route tree (params, data, guards, resolvers) and recent navigations of each connected page. Empty when no page is connected.',
       mimeType: 'application/json',
       read: () => ({ text: routerResourceText(routerState.value() as RouterState) }),
+    });
+
+    const ngrxPageProperty = {
+      type: 'string',
+      description: 'Page id, when more than one tab reports. Defaults to every page.',
+    } as const;
+
+    agent.registerTool({
+      id: 'ng-devtools:inspect-signal-store',
+      description: INSPECT_SIGNAL_STORE_DESCRIPTION,
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: ngrxPageProperty,
+          storeId: {
+            type: 'string',
+            description:
+              'Store id (e.g. `ngrx-1`, as shown on the NgRx Store page or returned by a previous call). Omit for a summary of every store across the matching page(s).',
+          },
+        },
+      },
+      handler: async (args: { page?: string; storeId?: string }) => ({
+        markdown: withUntrustedPreamble(
+          inspectSignalStoreText(ngrxPages, args?.page, args?.storeId),
+        ),
+      }),
+    });
+
+    agent.registerTool({
+      id: 'ng-devtools:signal-store-history',
+      description: SIGNAL_STORE_HISTORY_DESCRIPTION,
+      safety: 'read',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          page: ngrxPageProperty,
+          storeId: {
+            type: 'string',
+            description:
+              'Store id to filter the log to. Omit to include every store, plus `@ngrx/signals/events` events with no store effect.',
+          },
+          since: {
+            type: 'number',
+            description:
+              'Only return entries whose `seq` is strictly greater than this. Pass the last `seq` from a previous call to poll.',
+          },
+        },
+      },
+      handler: async (args: { page?: string; storeId?: string; since?: number }) => ({
+        markdown: withUntrustedPreamble(
+          signalStoreHistoryText(ngrxPages, args?.page, args?.storeId, args?.since),
+        ),
+      }),
     });
 
     // Agent tools
@@ -1862,7 +1923,7 @@ const ngDevtools = defineDevframe({
     agent.registerTool({
       id: 'ng-devtools:navigate',
       description:
-        'Acts on the running app\'s router (development only). action "navigate" goes to `url` (same-origin, starting with "/") or to `pattern` with `params` (e.g. /users/:id with {"id":"7"}), optionally with replaceUrl or skipLocationChange, and waits for the outcome; "abort" stops the navigation in flight; "replay" re-runs navigation `id` and compares the outcome; "probe" runs the real matcher for `url` without navigating (it runs canMatch and may load lazy chunks; when a canMatch guard redirects, it stops the redirect and returns `redirectedTo`); "instrument" turns per-guard and per-resolver recording on or off; "resolve-lazy" reads the routes of an unloaded lazy route (`routeId` from list-routes) without registering them.',
+        'Acts on the running app\'s router (development only). action "navigate" goes to `url` (same-origin, starting with "/") or to `pattern` with `params` (e.g. /users/:id with {"id":"7"}), optionally with replaceUrl or skipLocationChange, and waits for the outcome; "abort" stops the navigation in flight; "replay" re-runs navigation `id` and compares the outcome; "probe" runs the real matcher for `url` without navigating (it runs canMatch and may load lazy chunks; when a canMatch guard redirects, it stops the redirect and returns `redirectedTo`); "instrument" turns per-guard and per-resolver recording on or off; "resolve-lazy" reads the routes of an unloaded lazy route (`routeId` from list-routes) without registering them. navigate, abort, replay and probe need the router write action (actions.router); instrument and resolve-lazy work without it.',
       safety: 'action',
       inputSchema: {
         type: 'object',
@@ -1902,6 +1963,8 @@ const ngDevtools = defineDevframe({
         on?: boolean;
         routeId?: string;
       }) => {
+        if (!config.actions.router && ROUTER_WRITE_ACTIONS.includes(args.action))
+          return { markdown: actionBlockedMessage('router') };
         const state = routerState.value() as RouterState;
         const target = args.page
           ? state.pages.find((p) => p.pageId === args.page)
@@ -2436,7 +2499,7 @@ const ngDevtools = defineDevframe({
     agent.registerTool({
       id: 'ng-devtools:list-pages',
       description:
-        'List the browser tabs that report live data to this server, newest first: page id, URL, seconds since the last report and which inspectors report. Pass a page id as `page` to the live tools to pick a tab; without it they use the most recent page.',
+        'List the browser tabs and Angular Native apps that report live data to this server, newest first: page id, URL, platform (`browser` or `Angular Native`), seconds since the last report and which inspectors report. Pass a page id as `page` to the live tools to pick a page; without it they use the most recent page.',
       safety: 'read',
       inputSchema: { type: 'object', properties: {} },
       handler: async () => {
@@ -2445,11 +2508,16 @@ const ngDevtools = defineDevframe({
           if (page.snapshot?.url) urls.set(page.pageId, page.snapshot.url);
         }
         for (const page of httpPages.values()) urls.set(page.pageId, page.url);
+        const platforms = new Map<string, string>();
+        for (const page of componentPages.values()) {
+          if (page.platform) platforms.set(page.pageId, page.platform);
+        }
         const withUrl = <T extends { pageId: string; reportedAt: number }>(pages: Iterable<T>) =>
           [...pages].map((page) => ({
             pageId: page.pageId,
             reportedAt: page.reportedAt,
             url: urls.get(page.pageId),
+            platform: platforms.get(page.pageId),
           }));
         const pages = summarizePages({
           components: withUrl(componentPages.values()),

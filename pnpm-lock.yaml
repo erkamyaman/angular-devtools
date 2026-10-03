@@ -41,8 +41,8 @@ importers:
         specifier: workspace:*
         version: link:packages/ng-devtools
       devframe:
-        specifier: ^1.1.0
-        version: 1.1.0(@devframes/agentic@1.1.0)(cac@7.0.0)(srvx@1.0.5)
+        specifier: ^1.2.0
+        version: 1.2.0(@devframes/agentic@1.2.0)(cac@7.0.0)(srvx@1.0.5)
       express:
         specifier: ^5.1.0
         version: 5.2.1
@@ -78,11 +78,11 @@ importers:
         specifier: ^4.13.0
         version: 4.13.0(playwright-core@1.63.0)
       '@devframes/agentic':
-        specifier: ^1.1.0
-        version: 1.1.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.1.0)
+        specifier: ^1.2.0
+        version: 1.2.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0)
       '@devframes/vite':
-        specifier: ^1.0.0
-        version: 1.0.0(devframe@1.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))
+        specifier: ^1.2.0
+        version: 1.2.0(@devframes/hub-ui@1.2.0(@devframes/hub@1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0))(devframe@1.2.0))(@devframes/hub@1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0))(devframe@1.2.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))
       '@ngrx/store':
         specifier: ^22.0.1
         version: 22.0.1(@angular/core@22.1.7(@angular/compiler@22.1.7)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2)
@@ -91,7 +91,13 @@ importers:
         version: 22.0.1(@angular/core@22.1.7(@angular/compiler@22.1.7)(rxjs@7.8.2)(zone.js@0.16.3))(@ngrx/store@22.0.1(@angular/core@22.1.7(@angular/compiler@22.1.7)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2))(rxjs@7.8.2)
       '@nx/angular':
         specifier: 23.2.1
-        version: 23.2.1(@angular-devkit/core@22.1.8(chokidar@5.0.0))(@angular-devkit/schematics@22.1.8(chokidar@5.0.0))(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@babel/traverse@7.29.8)(@schematics/angular@22.1.8(chokidar@5.0.0))(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)(rxjs@7.8.2)(typescript@6.0.3)
+        version: 23.2.1(@angular-devkit/core@22.1.8(chokidar@5.0.0))(@angular-devkit/schematics@22.1.8(chokidar@5.0.0))(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@babel/traverse@7.29.8)(@nx/vite@23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))))(@schematics/angular@22.1.8(chokidar@5.0.0))(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)(rxjs@7.8.2)(typescript@6.0.3)
+      '@nx/vite':
+        specifier: 23.2.1
+        version: 23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)))
+      '@nx/vitest':
+        specifier: 23.2.1
+        version: 23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)))
       '@nx/workspace':
         specifier: 23.2.1
         version: 23.2.1
@@ -221,7 +227,7 @@ importers:
     devDependencies:
       '@analogjs/platform':
         specifier: ^2.7.5
-        version: 2.7.5(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@nx/angular@23.2.1(@angular-devkit/core@22.1.8(chokidar@5.0.0))(@angular-devkit/schematics@22.1.8(chokidar@5.0.0))(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@babel/traverse@7.29.8)(@schematics/angular@22.1.8(chokidar@5.0.0))(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)(rxjs@7.8.2)(typescript@6.0.3))(@nx/devkit@23.2.1(nx@23.2.1))(@parcel/watcher@2.6.0)(marked-gfm-heading-id@4.1.4(marked@15.0.12))(marked-highlight@2.2.4(marked@15.0.12))(marked-mangle@1.1.14(marked@15.0.12))(marked-shiki@1.2.1(marked@15.0.12)(shiki@1.29.2))(marked@15.0.12)(prismjs@1.30.0)(rolldown@1.2.9)(shiki@1.29.2)(srvx@1.0.5)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))
+        version: 2.7.5(fba9291c5ed439def27f8fb724d9a6f6)
       '@analogjs/vite-plugin-angular':
         specifier: ^2.7.5
         version: 2.7.5(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))
@@ -312,7 +318,7 @@ importers:
     devDependencies:
       '@analogjs/platform':
         specifier: 2.7.5
-        version: 2.7.5(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@nx/angular@23.2.1(@angular-devkit/core@22.1.8(chokidar@5.0.0))(@angular-devkit/schematics@22.1.8(chokidar@5.0.0))(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@babel/traverse@7.29.8)(@schematics/angular@22.1.8(chokidar@5.0.0))(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)(rxjs@7.8.2)(typescript@6.0.3))(@nx/devkit@23.2.1(nx@23.2.1))(@parcel/watcher@2.6.0)(marked-gfm-heading-id@4.1.4(marked@15.0.12))(marked-highlight@2.2.4(marked@15.0.12))(marked-mangle@1.1.14(marked@15.0.12))(marked-shiki@1.2.1(marked@15.0.12)(shiki@1.29.2))(marked@15.0.12)(prismjs@1.30.0)(rolldown@1.2.9)(shiki@1.29.2)(srvx@1.0.5)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))
+        version: 2.7.5(fba9291c5ed439def27f8fb724d9a6f6)
       '@analogjs/vite-plugin-angular':
         specifier: 2.7.5
         version: 2.7.5(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))
@@ -335,14 +341,14 @@ importers:
   packages/ng-devtools:
     dependencies:
       '@devframes/agentic':
-        specifier: ^1.1.0
-        version: 1.1.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.1.0)
+        specifier: ^1.2.0
+        version: 1.2.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0)
       '@devframes/hub':
-        specifier: ^1.1.0
-        version: 1.1.0(@devframes/agentic@1.1.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.1.0)
+        specifier: ^1.2.0
+        version: 1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0)
       '@devframes/hub-ui':
-        specifier: ^1.1.0
-        version: 1.1.0(@devframes/hub@1.1.0(@devframes/agentic@1.1.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.1.0))(devframe@1.1.0)
+        specifier: ^1.2.0
+        version: 1.2.0(@devframes/hub@1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0))(devframe@1.2.0)
       '@valibot/to-json-schema':
         specifier: ^1.8.0
         version: 1.8.0(valibot@1.5.0(typescript@6.0.3))
@@ -350,8 +356,8 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       devframe:
-        specifier: ^1.1.0
-        version: 1.1.0(@devframes/agentic@1.1.0)(cac@7.0.0)(srvx@1.0.5)
+        specifier: ^1.2.0
+        version: 1.2.0(@devframes/agentic@1.2.0)(cac@7.0.0)(srvx@1.0.5)
       h3:
         specifier: ^1.15.11
         version: 1.15.11
@@ -368,6 +374,9 @@ importers:
       '@angular/core':
         specifier: ^22.1.0
         version: 22.1.7(@angular/compiler@22.1.7)(rxjs@7.8.2)(zone.js@0.16.3)
+      '@nativescript/core':
+        specifier: ^9.1.0
+        version: 9.1.2
       hono:
         specifier: 4.13.8
         version: 4.13.8
@@ -1318,9 +1327,20 @@ packages:
     resolution: {integrity: sha512-SIOD2DxrRRwQ+jgzlXCqoEFiKOFqaPjhnNTGKXSRLvp1HiOvapLaFG2kEr9dYQTYe8rKrd9uvDUzmAITeNyaHQ==}
     engines: {node: '>=18.0.0'}
 
+  '@csstools/color-helpers@5.1.0':
+    resolution: {integrity: sha512-S11EXWJyy0Mz5SYvRmY8nJYTFFd1LCNV+7cXyAgQtOOuzb4EsgfqDufL+9esx72/eLhsRdGZwaldu/h+E4t4BA==}
+    engines: {node: '>=18'}
+
   '@csstools/color-helpers@6.1.1':
     resolution: {integrity: sha512-gLNsunvwf3mCi5u5o46/Z/JcJMnhbHSaZ69rkgPzNM3J4s8hWwpPUQB6/tt0EDFyCiWzxANlx+2LJwpYj4zS1w==}
     engines: {node: '>=20.19.0'}
+
+  '@csstools/css-calc@2.1.4':
+    resolution: {integrity: sha512-3N8oaj+0juUw/1H3YwmDDJXCgTB1gKU6Hc/bB502u9zR0q2vd786XJH9QfrKIEgFlZmhZiq6epXl4rHqhzsIgQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@csstools/css-parser-algorithms': ^3.0.5
+      '@csstools/css-tokenizer': ^3.0.4
 
   '@csstools/css-calc@3.4.0':
     resolution: {integrity: sha512-XQKj5B7QiZcHiegCOCAzcAOJdhGgWOHbbu62h5e5mkHnn8lWcfiJhllkqWmxu5zWR9jucPHuo1iTB56P033hcg==}
@@ -1329,12 +1349,25 @@ packages:
       '@csstools/css-parser-algorithms': ^4.0.0
       '@csstools/css-tokenizer': ^4.0.0
 
+  '@csstools/css-color-parser@3.1.0':
+    resolution: {integrity: sha512-nbtKwh3a6xNVIp/VRuXV64yTKnb1IjTAEEh3irzS+HkKjAOYLTGNb9pmVNntZ8iVBHcWDA2Dof0QtPgFI1BaTA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@csstools/css-parser-algorithms': ^3.0.5
+      '@csstools/css-tokenizer': ^3.0.4
+
   '@csstools/css-color-parser@4.2.3':
     resolution: {integrity: sha512-y4LpL+lmpuyKDiEFq2PnZUVFdAjsoB/qQJod79yLNokXyW7jewi+/WJ69EfItj8A2unWtxXnGjw6LYXgXu5ZjA==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       '@csstools/css-parser-algorithms': ^4.0.0
       '@csstools/css-tokenizer': ^4.0.0
+
+  '@csstools/css-parser-algorithms@3.0.5':
+    resolution: {integrity: sha512-DaDeUkXZKjdGhgYaHNJTV9pV7Y9B3b644jCLs9Upc3VeNGg6LWARAT6O+Q+/COo+2gg/bM5rhpMAtf70WqfBdQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@csstools/css-tokenizer': ^3.0.4
 
   '@csstools/css-parser-algorithms@4.0.0':
     resolution: {integrity: sha512-+B87qS7fIG3L5h3qwJ/IFbjoVoOe/bpOdh9hAjXbvx0o8ImEmUsGXN0inFOnk2ChCFgqkkGFQ+TpM5rbhkKe4w==}
@@ -1350,40 +1383,44 @@ packages:
       css-tree:
         optional: true
 
+  '@csstools/css-tokenizer@3.0.4':
+    resolution: {integrity: sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==}
+    engines: {node: '>=18'}
+
   '@csstools/css-tokenizer@4.0.1':
     resolution: {integrity: sha512-bPlN9S9O1A0euCpEWE4qnvB5YDuyYVsUTrxSgmAM1Is0j4tICHoVyOVAXfWMP/kS9ZrjvyIXWV2PmomiAXXqOw==}
     engines: {node: '>=20.19.0'}
 
-  '@devframes/agentic@1.1.0':
-    resolution: {integrity: sha512-YLD+yCMiNuUnf1EslRWx0j+kwY8+ByX8RjKghC1ElqX/SrkMGw21K1u8+sd0REdX3uHy22nxL+X/tFaEjk0oLg==}
+  '@devframes/agentic@1.2.0':
+    resolution: {integrity: sha512-8FzqOO0TN7RLRhs4Z0svd8Cofs+ojgOtKIatUCPP42VvoockJ+5Eyh+1NQyw3BGAGlnXS8jCQVB0SYMECrcfjQ==}
     peerDependencies:
-      devframe: 1.1.0
+      devframe: 1.2.0
 
-  '@devframes/hub-ui@1.1.0':
-    resolution: {integrity: sha512-+Y9sKa3QuFdd7/kbo6nmI0IvUoueYGeRU0jDsrvmjaqKNVOP5sg+pwj+LijJKaAZEmgGJgaCOpxQNYVtNlQpjw==}
+  '@devframes/hub-ui@1.2.0':
+    resolution: {integrity: sha512-7q9zfo/i+Iiu5oO4RQdB3aWzt+4BWmKaK4L0UxwPxKibFx45xe3GrATNnoW1PY0kxY1gz2kqc9jdwXDOmXmmdw==}
     peerDependencies:
-      '@devframes/hub': 1.1.0
-      '@devframes/json-render': 1.1.0
-      devframe: 1.1.0
+      '@devframes/hub': 1.2.0
+      '@devframes/json-render': 1.2.0
+      devframe: 1.2.0
     peerDependenciesMeta:
       '@devframes/json-render':
         optional: true
 
-  '@devframes/hub@1.1.0':
-    resolution: {integrity: sha512-8zLWJzJEgLFc8/lQ1ApsZ3Q8Io6TUBd/C83nPr0gHqk7pk6MPbu0Y7vzVVCItw2Cd/Ww4h0PtIPt1IwCwIw1Yw==}
+  '@devframes/hub@1.2.0':
+    resolution: {integrity: sha512-ipsqS0MwpjlAw/S17gOKQ9loCd56BbY9r3vUWPGFtGqdvcyScpMF2UdkIr4vCjYN1y+6W/G5mVL1wjjOUAjV5w==}
     peerDependencies:
-      '@devframes/agentic': 1.1.0
-      devframe: 1.1.0
+      '@devframes/agentic': 1.2.0
+      devframe: 1.2.0
     peerDependenciesMeta:
       '@devframes/agentic':
         optional: true
 
-  '@devframes/vite@1.0.0':
-    resolution: {integrity: sha512-dyNd7z2xSS+7s3wU7HPkbkslsgaYLqEh0QQFY5bOYoiY/PkEGtuZybNQ+TjAxVPLDIsJX8S9uUTSVKPp8gEbew==}
+  '@devframes/vite@1.2.0':
+    resolution: {integrity: sha512-upJNfhAlAKfXYajzclF//8SLHnF2m6pjf2eXtpaYHZuIjWQfJG31CjVR3qqCQT1Fn2oyiZjPLuvbMqqYfijVaA==}
     peerDependencies:
-      '@devframes/hub': 1.0.0
-      '@devframes/hub-ui': 1.0.0
-      devframe: 1.0.0
+      '@devframes/hub': 1.2.0
+      '@devframes/hub-ui': 1.2.0
+      devframe: 1.2.0
       vite: ^7.0.0 || ^8.0.0
     peerDependenciesMeta:
       '@devframes/hub':
@@ -2048,12 +2085,12 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@modelcontextprotocol/client@2.1.0':
-    resolution: {integrity: sha512-mDVhoy5WjDb0U+4dQPzLcciC2erSex/GRVQqnoZdiuMoE3YiTZdiS7ezNcFwX4XEOWOaj7jZr0kLYnILnL8orA==}
+  '@modelcontextprotocol/client@2.3.0':
+    resolution: {integrity: sha512-pbHtGj6EeFCHngFE8gtNPaKrsj8Mb1IMw45BLcaPML/m2WTxI7pyYmeNQvaux88Lw8BSO5r7nyRbUyIkICmGrg==}
     engines: {node: '>=20'}
 
-  '@modelcontextprotocol/core@2.1.0':
-    resolution: {integrity: sha512-YdFj5gMRHr0gYNAhTbQDgjLHiEJdIAUYxomhKseUNye7ZGlISQmUoLh2sveFFCiQ7j2YMffT1kgSND0FSfIFjQ==}
+  '@modelcontextprotocol/core@2.3.0':
+    resolution: {integrity: sha512-09BHFaNVBe5pB2AhzCfLj0cqmsKLERvZQ4FblzP90UMGLaXVqdZPByFjURwsUYCmxonUW2yAwgTTvle+8O2/8w==}
     engines: {node: '>=20'}
 
   '@modelcontextprotocol/sdk@1.30.0':
@@ -2066,8 +2103,8 @@ packages:
       '@cfworker/json-schema':
         optional: true
 
-  '@modelcontextprotocol/server@2.1.0':
-    resolution: {integrity: sha512-FdvwZU5N03O77Suh35JqjAqq5R1ZTEPFtwu6N4BgBq28qrQtrCnpbLL5U2pwYCuE194jAw0xnlOVmIqhfoYuUQ==}
+  '@modelcontextprotocol/server@2.3.0':
+    resolution: {integrity: sha512-+6b0LdsQLmHsvS7J6sQJ4weTpzUn61fU1JKS+321/+IyDYoHW5CR2Tgqcs6GgAAQvlesCo6yX3xttgmx+XGtJw==}
     engines: {node: '>=20'}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
@@ -2230,6 +2267,12 @@ packages:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
       '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
 
+  '@nativescript/core@9.1.2':
+    resolution: {integrity: sha512-zL/dgfuLmcVu9nR47UEFOaPHXoaRKuWMBnDwiaMAwXmf4WKd6yr1gIXcNHheKgBNGrls06LgbBpkB841fI+HcA==}
+
+  '@nativescript/hook@3.0.5':
+    resolution: {integrity: sha512-MzL7R/nPZU2qnvDWWuJ8RB7H3luEwANgFX/d/ILdg7bSYxl6uANCfzlueHnWgrQmBxu6dTkvPsFW2WNVUxlhUg==}
+
   '@ngrx/signals@22.0.1':
     resolution: {integrity: sha512-R62VsPrnH54LgA3LAqw+GWA9FHii526CH1aqah8aiK1RZocp+3N9rS3g5wrrXU655eVH65jhN4k/k+EFyxO/RA==}
     peerDependencies:
@@ -2381,6 +2424,25 @@ packages:
     resolution: {integrity: sha512-qZQBNB4L/yljM81Fm5M/LoyCMoGJc7yc//KePQ5xiyhzZjJENooHsFkB8ps/pSv4cfHKfYJbvgBAMPOLXeHqqA==}
     cpu: [x64]
     os: [win32]
+
+  '@nx/vite@23.2.1':
+    resolution: {integrity: sha512-Bjka3BcMn3pdC1qqdtpTSnQIWkqCUxEDKHBG+2ZIp1JtsMbl/xOhZv7zNeiBVf9KinpFD33n36bu7DaTpp2B6w==}
+    peerDependencies:
+      vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
+
+  '@nx/vitest@23.2.1':
+    resolution: {integrity: sha512-LL0C5wDKhL8qEZ+XX4ec/EoGMP3BLQiqswPR/bgH9OssK9hBBBNndcQiJvEyh3+M+4ULxrT+NAXIOgIpCrVVww==}
+    peerDependencies:
+      '@nx/eslint': 23.2.1
+      vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
+      vitest: ^3.0.0 || ^4.0.0
+    peerDependenciesMeta:
+      '@nx/eslint':
+        optional: true
+      vite:
+        optional: true
+      vitest:
+        optional: true
 
   '@nx/web@23.2.1':
     resolution: {integrity: sha512-XmlnwbNP4cjNHmD9G7C/aWigxujmDhIB6mTFw9qCq27c7q52baDRFVQhQsS9JZxla44Z4oUhc9Jgf0Rvn35qMA==}
@@ -3620,133 +3682,157 @@ packages:
     resolution: {integrity: sha512-Oc2KInVkPfUjEB4PeV6X0NvIoyYTzDe/WmqFrTwBqKs6YKnz4A7XwWQvJTb7M0rLz9a6WgpUUiiS5QKaCi4O/g==}
     cpu: [arm64]
     os: [android]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-darwin-arm64@0.10.2':
     resolution: {integrity: sha512-3H7eNPIHJndUJXZ4QUGBPq1zC6RGcUZfm7bymJes+/N7wTVWUn1bxZ9JcozYHpkWQNm9f23G8YWbaHD9aYH72A==}
     cpu: [arm64]
     os: [darwin]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-darwin-x64@0.10.2':
     resolution: {integrity: sha512-AJOUpR2s3LF9AWiiub/Uyc/UoXNTWcq8hK3cVI6fUSXtwh34dG21J6hRuNlO6JVJFTo4o3ScVvZOrh/YFfUEAA==}
     cpu: [x64]
     os: [darwin]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-freebsd-x64@0.10.2':
     resolution: {integrity: sha512-ms7DcZu87u5CiK/wMwvpKAvAmtaqKjCQIXNweMLypG6qbuiaOMQf1jpbB5+j46xBcgCovo8TQMcv0bCQLKIL9w==}
     cpu: [x64]
     os: [freebsd]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm-gnu@0.10.2':
     resolution: {integrity: sha512-xJDpYAsKV5+eaiBhTYl05fvT6sst4PsCeuIFMRu9b0/WCSrNQPfCDtAQ5/MS6xNpsdujdZEPR+gmfWk3ZG5i3A==}
     cpu: [arm]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm-musl@0.10.2':
     resolution: {integrity: sha512-qfTkgd7AEx61l4K9VtXWCGTxc/fmXJ4ZheDz3i+/AAJUtg4sa0bPrc0VBxPggB/rayR8Z3+JfrBItuyanBJJ9Q==}
     cpu: [arm]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm64-gnu@0.10.2':
     resolution: {integrity: sha512-4e6Mifm/4UdjtU3D8mATIrvgP+xEiH8xtQOjd0zpd72XKWT7ug3sdyhq2utkkZFP6BvYp7SgZrI+aR4VeIOHdw==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-arm64-musl@0.10.2':
     resolution: {integrity: sha512-RdsJrUfDYFVV3JOmWFUWwSu31fa1APn12xDeIKxgl/YWxrabwtxsDBNjF2561c7tmcbiewdCUvngqRs8AyGVLA==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-x64-gnu@0.10.2':
     resolution: {integrity: sha512-mVzWimEPPreaPyXIUvxsHoJzvO7ckZ5j0LgQFHz04zQIRwt9A9T2hA7K5/jYjJKkMxWG/U2VjhGNwVhtyU+uqg==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-linux-x64-musl@0.10.2':
     resolution: {integrity: sha512-Y77fyISurmr2mvO1yeq3u+x/WJbACgPR4w+lzEVx30ViCxZzIGrZPRN1yEdZ9xUNPNsIO5thBHIdRNG+UGUG+Q==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-win32-arm64@0.10.2':
     resolution: {integrity: sha512-1+tGLyG0u5YYy0lev4ck7/0sd8xJ9SZde0dLut7qLDPZV5WVTV8x6OxNXUne/PGuHZyO1vK+txPQzzHOyXHGSw==}
     cpu: [arm64]
     os: [win32]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-codegen/binding-win32-x64@0.10.2':
     resolution: {integrity: sha512-8a2SExRohRbwC0MY4VpOF0/RSckrJ2ASZqAor5/RYSJJaeadR93n10gZzcKT6pY9ukiSOIZCRKVRD2tH73T0qA==}
     cpu: [x64]
     os: [win32]
+    deprecated: yuku-codegen is pure JavaScript since 0.14
 
   '@yuku-parser/binding-android-arm64@0.10.2':
     resolution: {integrity: sha512-2VPBU9fRGRAQ2xPAvghnec3oou5Nrxm2Bezhf+13UMspAxQSkF/32r+ySKXSwIPA5/RivumDJDxAxc301Sgicw==}
     cpu: [arm64]
     os: [android]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-darwin-arm64@0.10.2':
     resolution: {integrity: sha512-LD+PMZE51tCYTOss5HBkm3/AE39MvcMDBfWJx7A4yDcjfNbAQDnHZKtzSOuqrswx+TQHY0ws5xn6+fWOwtmfBA==}
     cpu: [arm64]
     os: [darwin]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-darwin-x64@0.10.2':
     resolution: {integrity: sha512-mmZ8cND+AoIIMRERyMinlg5ApHxP23B9jH2B5wT7T+dliPa9rubLxneB/SUjFwyUjGaFnB5G7t4YvpfbO5zbkQ==}
     cpu: [x64]
     os: [darwin]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-freebsd-x64@0.10.2':
     resolution: {integrity: sha512-gVIjaaIddbRfAhHlC8N809wQWml7mxfSVnzaLtzGXObTeFTPAg/YVnQXt1UOhPM1ah5eG/8Y0RUlNpB4GVe7eQ==}
     cpu: [x64]
     os: [freebsd]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm-gnu@0.10.2':
     resolution: {integrity: sha512-q/XPPQQAPdlw05aPj30ygBhekmQryGOwxVraBgApjKK8yY1kNQgqq6XCYLF1WHSee+lhxclrTO7W0/bt7dR1GA==}
     cpu: [arm]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm-musl@0.10.2':
     resolution: {integrity: sha512-A+Cb0I1hFF4wilTQpWs79k1aNnj4B2tkrHx3zsuUNF9BtVY2zPZ4yeQEM/zjXrS/qJlNMZVK9NrWJjwdpnTrfg==}
     cpu: [arm]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm64-gnu@0.10.2':
     resolution: {integrity: sha512-aGNSzqIqqphFwAdIFwVvKIyXD1Iy3CxrEJVIZAT87Ecyi4vCmmDD2v2l9h+Gd3/wSy3JZlOI792LJbKAjyy9rQ==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-arm64-musl@0.10.2':
     resolution: {integrity: sha512-Ddl1sF0rtuCXyHGSOV6dcmdx+ETv1iD+IVFqQuOjzkJZWclxJxdBWX6ZJMRtTiGqGUTbqLEKiTXxpR/Bvqk+2A==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-x64-gnu@0.10.2':
     resolution: {integrity: sha512-/nlcpR6IF5U+0m5L9wvAIXeQa2DT+BXuvqKDsTcOTlcc0B4dHNyqE5hTXsS4hAyimpy2ZK8A1zMNF5hTrjg2cg==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-linux-x64-musl@0.10.2':
     resolution: {integrity: sha512-GX80dxTQD/M/OryyuxJcFzFENzry3cDFPvCFTyWogNWQH3fSHfMrNfpwpl1YzMos1eV9NygK5GSDG7VArQlb4w==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-win32-arm64@0.10.2':
     resolution: {integrity: sha512-agePQBV4VHewiGU0ACSjscZ/hJd283f9JfAF19Gf1rI5+wy5tTgx4GS36i0b3xim15AQ4RCpDRosEvhLZ4zAOw==}
     cpu: [arm64]
     os: [win32]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-parser/binding-win32-x64@0.10.2':
     resolution: {integrity: sha512-s8//CMpgL5+y1lvDCdyh1rwGI5+ytDJywFJRe1vnhI7n0j+caxshNucurikYLLVeQ2SYFex6aPrzgQxkabBQRA==}
     cpu: [x64]
     os: [win32]
+    deprecated: yuku-parser runs on yuku-core since 0.14
 
   '@yuku-toolchain/types@0.10.2':
     resolution: {integrity: sha512-sSeo4SSSToiS+sSD+bwn/s94EEcaLJ7tG5LCp8gFYC1G5VzxzX7fqB6m9RU1yMD8KTpu6zdU/I1NlQf8hVBJ9Q==}
@@ -4398,11 +4484,11 @@ packages:
     engines: {node: '>= 16.0.0'}
     hasBin: true
 
-  devframe@1.1.0:
-    resolution: {integrity: sha512-pvp42kOkiEr32Msqngb3mW9AQFHwOxNMn8MYNO/TBkJhyeykbDUWHwiZVubRYnasmZeqT4MLYGF9AHjHIkmDnA==}
+  devframe@1.2.0:
+    resolution: {integrity: sha512-MeLtg4QHnm/khez+pGzRVIaFCi6AT/4Tz8mS+UshySNzr+MTDSNWq4VHEbgio/Bzvd1Qu3sJAwfpqm+V6xNcag==}
     hasBin: true
     peerDependencies:
-      '@devframes/agentic': 1.1.0
+      '@devframes/agentic': 1.2.0
       cac: ^7.0.0
     peerDependenciesMeta:
       '@devframes/agentic':
@@ -7132,7 +7218,7 @@ snapshots:
     optionalDependencies:
       '@nx/devkit': 23.2.1(nx@23.2.1)
 
-  '@analogjs/platform@2.7.5(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@nx/angular@23.2.1(@angular-devkit/core@22.1.8(chokidar@5.0.0))(@angular-devkit/schematics@22.1.8(chokidar@5.0.0))(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@babel/traverse@7.29.8)(@schematics/angular@22.1.8(chokidar@5.0.0))(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)(rxjs@7.8.2)(typescript@6.0.3))(@nx/devkit@23.2.1(nx@23.2.1))(@parcel/watcher@2.6.0)(marked-gfm-heading-id@4.1.4(marked@15.0.12))(marked-highlight@2.2.4(marked@15.0.12))(marked-mangle@1.1.14(marked@15.0.12))(marked-shiki@1.2.1(marked@15.0.12)(shiki@1.29.2))(marked@15.0.12)(prismjs@1.30.0)(rolldown@1.2.9)(shiki@1.29.2)(srvx@1.0.5)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))':
+  '@analogjs/platform@2.7.5(fba9291c5ed439def27f8fb724d9a6f6)':
     dependencies:
       '@analogjs/vite-plugin-angular': 2.7.5(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))
       '@analogjs/vite-plugin-nitro': 2.7.5(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@parcel/watcher@2.6.0)(rolldown@1.2.9)(srvx@1.0.5)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))
@@ -7144,8 +7230,9 @@ snapshots:
       vite: 8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)
       vitefu: 1.1.3(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))
     optionalDependencies:
-      '@nx/angular': 23.2.1(@angular-devkit/core@22.1.8(chokidar@5.0.0))(@angular-devkit/schematics@22.1.8(chokidar@5.0.0))(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@babel/traverse@7.29.8)(@schematics/angular@22.1.8(chokidar@5.0.0))(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)(rxjs@7.8.2)(typescript@6.0.3)
+      '@nx/angular': 23.2.1(@angular-devkit/core@22.1.8(chokidar@5.0.0))(@angular-devkit/schematics@22.1.8(chokidar@5.0.0))(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@babel/traverse@7.29.8)(@nx/vite@23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))))(@schematics/angular@22.1.8(chokidar@5.0.0))(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)(rxjs@7.8.2)(typescript@6.0.3)
       '@nx/devkit': 23.2.1(nx@23.2.1)
+      '@nx/vite': 23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)))
       marked-highlight: 2.2.4(marked@15.0.12)
       marked-shiki: 1.2.1(marked@15.0.12)(shiki@1.29.2)
       prismjs: 1.30.0
@@ -8349,12 +8436,26 @@ snapshots:
 
   '@cloudflare/kv-asset-handler@0.4.2': {}
 
+  '@csstools/color-helpers@5.1.0': {}
+
   '@csstools/color-helpers@6.1.1': {}
+
+  '@csstools/css-calc@2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
+    dependencies:
+      '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-tokenizer': 3.0.4
 
   '@csstools/css-calc@3.4.0(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.1))(@csstools/css-tokenizer@4.0.1)':
     dependencies:
       '@csstools/css-parser-algorithms': 4.0.0(@csstools/css-tokenizer@4.0.1)
       '@csstools/css-tokenizer': 4.0.1
+
+  '@csstools/css-color-parser@3.1.0(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
+    dependencies:
+      '@csstools/color-helpers': 5.1.0
+      '@csstools/css-calc': 2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-tokenizer': 3.0.4
 
   '@csstools/css-color-parser@4.2.3(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.1))(@csstools/css-tokenizer@4.0.1)':
     dependencies:
@@ -8362,6 +8463,10 @@ snapshots:
       '@csstools/css-calc': 3.4.0(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.1))(@csstools/css-tokenizer@4.0.1)
       '@csstools/css-parser-algorithms': 4.0.0(@csstools/css-tokenizer@4.0.1)
       '@csstools/css-tokenizer': 4.0.1
+
+  '@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4)':
+    dependencies:
+      '@csstools/css-tokenizer': 3.0.4
 
   '@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.1)':
     dependencies:
@@ -8371,43 +8476,47 @@ snapshots:
     optionalDependencies:
       css-tree: 3.2.1
 
+  '@csstools/css-tokenizer@3.0.4': {}
+
   '@csstools/css-tokenizer@4.0.1': {}
 
-  '@devframes/agentic@1.1.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.1.0)':
+  '@devframes/agentic@1.2.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0)':
     dependencies:
-      '@modelcontextprotocol/client': 2.1.0
-      '@modelcontextprotocol/server': 2.1.0
-      devframe: 1.1.0(@devframes/agentic@1.1.0)(cac@7.0.0)(srvx@1.0.5)
+      '@modelcontextprotocol/client': 2.3.0
+      '@modelcontextprotocol/server': 2.3.0
+      devframe: 1.2.0(@devframes/agentic@1.2.0)(cac@7.0.0)(srvx@1.0.5)
       h3: 2.0.1-rc.32(crossws@0.4.12(srvx@1.0.5))
       pathe: 2.0.3
     transitivePeerDependencies:
       - crossws
       - ocache
 
-  '@devframes/hub-ui@1.1.0(@devframes/hub@1.1.0(@devframes/agentic@1.1.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.1.0))(devframe@1.1.0)':
+  '@devframes/hub-ui@1.2.0(@devframes/hub@1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0))(devframe@1.2.0)':
     dependencies:
-      '@devframes/hub': 1.1.0(@devframes/agentic@1.1.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.1.0)
-      devframe: 1.1.0(@devframes/agentic@1.1.0)(cac@7.0.0)(srvx@1.0.5)
+      '@devframes/hub': 1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0)
+      devframe: 1.2.0(@devframes/agentic@1.2.0)(cac@7.0.0)(srvx@1.0.5)
 
-  '@devframes/hub@1.1.0(@devframes/agentic@1.1.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.1.0)':
+  '@devframes/hub@1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0)':
     dependencies:
       destr: 2.0.5
-      devframe: 1.1.0(@devframes/agentic@1.1.0)(cac@7.0.0)(srvx@1.0.5)
+      devframe: 1.2.0(@devframes/agentic@1.2.0)(cac@7.0.0)(srvx@1.0.5)
       h3: 2.0.1-rc.32(crossws@0.4.12(srvx@1.0.5))
       pathe: 2.0.3
       tinyexec: 1.3.1
       zigpty: 0.2.1
     optionalDependencies:
-      '@devframes/agentic': 1.1.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.1.0)
+      '@devframes/agentic': 1.2.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0)
     transitivePeerDependencies:
       - crossws
       - ocache
 
-  '@devframes/vite@1.0.0(devframe@1.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))':
+  '@devframes/vite@1.2.0(@devframes/hub-ui@1.2.0(@devframes/hub@1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0))(devframe@1.2.0))(@devframes/hub@1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0))(devframe@1.2.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))':
     dependencies:
-      devframe: 1.1.0(@devframes/agentic@1.1.0)(cac@7.0.0)(srvx@1.0.5)
+      devframe: 1.2.0(@devframes/agentic@1.2.0)(cac@7.0.0)(srvx@1.0.5)
       pathe: 2.0.3
     optionalDependencies:
+      '@devframes/hub': 1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0)
+      '@devframes/hub-ui': 1.2.0(@devframes/hub@1.2.0(@devframes/agentic@1.2.0)(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0))(devframe@1.2.0)
       vite: 8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)
 
   '@emnapi/core@1.11.1':
@@ -8898,9 +9007,9 @@ snapshots:
       - encoding
       - supports-color
 
-  '@modelcontextprotocol/client@2.1.0':
+  '@modelcontextprotocol/client@2.3.0':
     dependencies:
-      '@modelcontextprotocol/core': 2.1.0
+      '@modelcontextprotocol/core': 2.3.0
       cross-spawn: 7.0.6
       eventsource: 3.0.7
       eventsource-parser: 3.1.1
@@ -8908,7 +9017,7 @@ snapshots:
       pkce-challenge: 5.0.1
       zod: 4.6.5
 
-  '@modelcontextprotocol/core@2.1.0':
+  '@modelcontextprotocol/core@2.3.0':
     dependencies:
       zod: 4.6.5
 
@@ -8934,9 +9043,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@modelcontextprotocol/server@2.1.0':
+  '@modelcontextprotocol/server@2.3.0':
     dependencies:
-      '@modelcontextprotocol/core': 2.1.0
+      '@modelcontextprotocol/core': 2.3.0
       zod: 4.6.5
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
@@ -9052,6 +9161,24 @@ snapshots:
       '@tybys/wasm-util': 0.10.4
     optional: true
 
+  '@nativescript/core@9.1.2':
+    dependencies:
+      '@csstools/css-calc': 2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-color-parser': 3.1.0(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
+      '@csstools/css-tokenizer': 3.0.4
+      '@nativescript/hook': 3.0.5
+      acorn: 8.18.0
+      css-tree: 3.2.1
+      css-what: 7.0.0
+      emoji-regex: 10.6.0
+      semver: 7.8.5
+      source-map: 0.7.6
+      source-map-js: 1.2.1
+      tslib: 2.8.1
+
+  '@nativescript/hook@3.0.5': {}
+
   '@ngrx/signals@22.0.1(@angular/core@22.1.7(@angular/compiler@22.1.7)(rxjs@7.8.2)(zone.js@0.16.3))(rxjs@7.8.2)':
     dependencies:
       '@angular/core': 22.1.7(@angular/compiler@22.1.7)(rxjs@7.8.2)(zone.js@0.16.3)
@@ -9084,14 +9211,14 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.3
 
-  '@nx/angular@23.2.1(@angular-devkit/core@22.1.8(chokidar@5.0.0))(@angular-devkit/schematics@22.1.8(chokidar@5.0.0))(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@babel/traverse@7.29.8)(@schematics/angular@22.1.8(chokidar@5.0.0))(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)(rxjs@7.8.2)(typescript@6.0.3)':
+  '@nx/angular@23.2.1(@angular-devkit/core@22.1.8(chokidar@5.0.0))(@angular-devkit/schematics@22.1.8(chokidar@5.0.0))(@angular/build@22.1.8(7bf82a545fa1df14b49b61d6ca208405))(@babel/traverse@7.29.8)(@nx/vite@23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))))(@schematics/angular@22.1.8(chokidar@5.0.0))(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)(rxjs@7.8.2)(typescript@6.0.3)':
     dependencies:
       '@angular-devkit/core': 22.1.8(chokidar@5.0.0)
       '@angular-devkit/schematics': 22.1.8(chokidar@5.0.0)
       '@nx/devkit': 23.2.1(nx@23.2.1)
       '@nx/eslint': 23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)
       '@nx/js': 23.2.1(@babel/traverse@7.29.8)(nx@23.2.1)
-      '@nx/web': 23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)
+      '@nx/web': 23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(@nx/vite@23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))))(nx@23.2.1)
       '@phenomnomnominal/tsquery': 6.2.0(typescript@6.0.3)
       '@schematics/angular': 22.1.8(chokidar@5.0.0)
       '@typescript-eslint/type-utils': 8.71.0(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)
@@ -9215,7 +9342,52 @@ snapshots:
   '@nx/nx-win32-x64-msvc@23.2.1':
     optional: true
 
-  '@nx/web@23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)':
+  '@nx/vite@23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)))':
+    dependencies:
+      '@nx/devkit': 23.2.1(nx@23.2.1)
+      '@nx/js': 23.2.1(@babel/traverse@7.29.8)(nx@23.2.1)
+      '@nx/vitest': 23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)))
+      '@phenomnomnominal/tsquery': 6.2.0(typescript@6.0.3)
+      ajv: 8.20.0
+      picomatch: 4.0.4
+      semver: 7.8.5
+      tsconfig-paths: 4.2.0
+      tslib: 2.8.1
+      vite: 8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)
+    transitivePeerDependencies:
+      - '@babel/traverse'
+      - '@nx/eslint'
+      - '@swc-node/register'
+      - '@swc/cli'
+      - '@swc/core'
+      - nx
+      - supports-color
+      - typescript
+      - verdaccio
+      - vitest
+
+  '@nx/vitest@23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)))':
+    dependencies:
+      '@nx/devkit': 23.2.1(nx@23.2.1)
+      '@nx/js': 23.2.1(@babel/traverse@7.29.8)(nx@23.2.1)
+      '@phenomnomnominal/tsquery': 6.2.0(typescript@6.0.3)
+      semver: 7.8.5
+      tslib: 2.8.1
+    optionalDependencies:
+      '@nx/eslint': 23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)
+      vite: 8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)
+      vitest: 4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))
+    transitivePeerDependencies:
+      - '@babel/traverse'
+      - '@swc-node/register'
+      - '@swc/cli'
+      - '@swc/core'
+      - nx
+      - supports-color
+      - typescript
+      - verdaccio
+
+  '@nx/web@23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(@nx/vite@23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))))(nx@23.2.1)':
     dependencies:
       '@nx/devkit': 23.2.1(nx@23.2.1)
       '@nx/js': 23.2.1(@babel/traverse@7.29.8)(nx@23.2.1)
@@ -9225,6 +9397,7 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@nx/eslint': 23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1)
+      '@nx/vite': 23.2.1(@babel/traverse@7.29.8)(@nx/eslint@23.2.1(@babel/traverse@7.29.8)(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0))(nx@23.2.1))(nx@23.2.1)(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0))(vitest@4.1.11(@types/node@24.13.6)(jsdom@28.1.0)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(terser@5.51.2)(yaml@2.9.0)))
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -10808,14 +10981,14 @@ snapshots:
     dependencies:
       address: 2.0.3
 
-  devframe@1.1.0(@devframes/agentic@1.1.0)(cac@7.0.0)(srvx@1.0.5):
+  devframe@1.2.0(@devframes/agentic@1.2.0)(cac@7.0.0)(srvx@1.0.5):
     dependencies:
       crossws: 0.4.12(srvx@1.0.5)
       h3: 2.0.1-rc.32(crossws@0.4.12(srvx@1.0.5))
       nostics: 1.3.0
       pathe: 2.0.3
     optionalDependencies:
-      '@devframes/agentic': 1.1.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.1.0)
+      '@devframes/agentic': 1.2.0(crossws@0.4.12(srvx@1.0.5))(devframe@1.2.0)
       cac: 7.0.0
     transitivePeerDependencies:
       - ocache

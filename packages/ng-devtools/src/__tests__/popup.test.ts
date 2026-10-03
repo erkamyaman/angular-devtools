@@ -379,4 +379,38 @@ describe.sequential('devtools popup', () => {
       expect(shown).toEqual([]);
     });
   });
+
+  describe('theme sync', () => {
+    const root = () => document.getElementById('ng-devtools-popup-root')!;
+    const send = (data: unknown, source: MessageEventSource | null = frame().contentWindow) =>
+      window.dispatchEvent(new MessageEvent('message', { data, source }));
+
+    it('follows the theme the panel posts and restores it on the next open', async () => {
+      await loadPopup(true);
+      send({ type: 'ng-devtools:theme-change', theme: 'light' });
+
+      expect(root().dataset['theme']).toBe('light');
+      expect(stored().theme).toBe('light');
+
+      await loadPopup(true);
+      expect(root().dataset['theme']).toBe('light');
+    });
+
+    it('pins dark when the panel switches back, so a light system does not win', async () => {
+      await loadPopup(true);
+      send({ type: 'ng-devtools:theme-change', theme: 'light' });
+      send({ type: 'ng-devtools:theme-change', theme: 'dark' });
+
+      expect(root().dataset['theme']).toBe('dark');
+      expect(stored().theme).toBe('dark');
+    });
+
+    it('ignores its own window and other message types', async () => {
+      await loadPopup(true);
+      send({ type: 'ng-devtools:theme-change', theme: 'light' }, window);
+      send({ type: 'other', theme: 'light' });
+
+      expect(root().dataset['theme']).toBeUndefined();
+    });
+  });
 });
