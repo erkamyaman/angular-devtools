@@ -57,6 +57,7 @@ MCP agent support (`@devframes/agentic`) is included. You don't install it separ
 | `@santoshyadavdev/ng-devtools/vite`                   | The Vite plugin for Analog apps.                                                       |
 | `@santoshyadavdev/ng-devtools/overlay`                | The browser script that collects live data from your page.                             |
 | `@santoshyadavdev/ng-devtools/overlay-angular-native` | The overlay for an Angular Native app. See [Angular Native](./angular-native.md).      |
+| `@santoshyadavdev/ng-devtools/overlay-nativescript`   | The overlay for a NativeScript Angular app. See [NativeScript](./nativescript.md).     |
 | `@santoshyadavdev/ng-devtools/popup`                  | The floating button and panel on your page.                                            |
 | `@santoshyadavdev/ng-devtools/http`                   | The HTTP interceptor and hydration hooks for the SSR & HTTP tab.                       |
 | `@santoshyadavdev/ng-devtools/config`                 | The `NgDevtoolsConfig` type and its defaults. See [Configuration](./configuration.md). |

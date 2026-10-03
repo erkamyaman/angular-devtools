@@ -149,7 +149,7 @@ const NO_ANGULAR_NATIVE: ComingSoonInfo = {
   ],
   link: {
     label: 'Set up Angular Native',
-    href: 'https://github.com/santoshyadavdev/angular-devtools/blob/main/apps/docs/src/content/getting-started/angular-native.md',
+    href: 'https://github.com/santoshyadavdev/angular-devtools/blob/main/apps/docs/src/content/guides/angular-native.md',
   },
 };
 
