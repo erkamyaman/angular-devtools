@@ -4,7 +4,7 @@ description: Release the npm package from GitHub Actions, check it from a local 
 ---
 
 <ngmd-hero title="Publishing" gradient>
-  One npm package and one Chrome extension, each with its own version. The package releases from a workflow; the extension ships by hand.
+  One npm package and one Chrome extension, on the same version. The package releases from a workflow; the extension ships by hand.
 </ngmd-hero>
 
 # Publishing
@@ -56,24 +56,21 @@ The **Release** workflow (`.github/workflows/release.yml`) publishes the package
   <ngmd-step title="Let the workflow push to main">
     The workflow pushes the version commit and the tag with the default <code>GITHUB_TOKEN</code>. If a branch protection rule or ruleset guards <code>main</code>, allow GitHub Actions to bypass it.
   </ngmd-step>
-  <ngmd-step title="Add the changelog">
-    Create <code>packages/ng-devtools/CHANGELOG.md</code> before the first release. The workflow refuses to publish a version without a section in it.
-  </ngmd-step>
 </ngmd-workflow>
 
 ### Each release
 
-1. In a pull request, add a section for the version to `packages/ng-devtools/CHANGELOG.md`, headed `## 0.0.6 - 2026-10-01`. The changelog follows [Keep a Changelog](https://keepachangelog.com), with entries grouped as Upgrade notes, Security fixes, Features and Documentation.
+1. In a pull request, add a section for the version to `packages/ng-devtools/CHANGELOG.md`, headed with the version alone, like `## 0.0.7`. The changelog follows [Keep a Changelog](https://keepachangelog.com), with entries grouped as Upgrade notes, Security fixes, Features, Fixes and Documentation.
 2. If `app/` changed since the last release, check that `extension/ui` is current. CI fails when it is stale.
-3. Once the pull request is merged and CI is green on `main`, run **Release** from the Actions tab on `main`. Its input is an exact version (`0.0.6`), or `patch`, or `minor` for a breaking change.
+3. Once the pull request is merged and CI is green on `main`, run **Release** from the Actions tab on `main`. Its input is an exact version (`0.0.7`), or `patch`, or `minor` for a breaking change.
 
 ### What the workflow does
 
 | Step                | What happens                                                                                                                                                                |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CI                  | Runs `ci.yml` on the commit being released.                                                                                                                                 |
-| Version             | Sets `version` in `packages/ng-devtools/package.json`.                                                                                                                      |
-| Check the changelog | Fails unless `CHANGELOG.md` has a `## <version> - <date>` section. That section becomes the release notes.                                                                  |
+| Version             | Sets `version` in `packages/ng-devtools/package.json` and `extension/manifest.json`, and the `ng-devtools v<version>` banner in the docs samples.                           |
+| Check the changelog | Fails unless `CHANGELOG.md` has a `## <version>` section. That section becomes the release notes.                                                                           |
 | Build               | `pnpm pack` builds the library and the UI into one tarball, with `publishConfig.exports` applied.                                                                           |
 | Verify the tarball  | `pnpm verify:publish` installs that tarball into a fresh Angular CLI app from a local registry, builds it, and checks the hub. See [Check the package](#check-the-package). |
 | Publish             | `npm publish --provenance` publishes the tarball on the `latest` tag.                                                                                                       |
@@ -123,7 +120,7 @@ Use this only if the workflow can't run.
 
 ### 1. Bump the version
 
-Update `version` in `packages/ng-devtools/package.json`. In the same commit, add a section for the version to `packages/ng-devtools/CHANGELOG.md`. Use a message like `chore(release): ng-devtools 0.0.5`.
+Update `version` in `packages/ng-devtools/package.json` and `extension/manifest.json`, and the `ng-devtools v<version>` banner in `getting-started/cli.md` and `getting-started/angular-native.md`. In the same commit, add a section for the version to `packages/ng-devtools/CHANGELOG.md`. Use a message like `chore(release): ng-devtools 0.0.7`.
 
 ### 2. Check the build
 
@@ -153,12 +150,10 @@ This runs `pnpm --filter @santoshyadavdev/ng-devtools publish --access public`. 
 
 ## Release the Chrome extension
 
-The extension has its own version, in `extension/manifest.json`. It does not follow the npm package version.
+The extension's version, in `extension/manifest.json`, follows the npm package. The **Release** workflow sets it, but doesn't upload the extension.
 
-1. Bump `version` in `extension/manifest.json`.
-2. Run `pnpm extension:zip`. It rebuilds `extension/ui` first.
-3. Commit `extension/ui` and the manifest.
-4. Upload `dist/ng-devtools-extension.zip`.
+1. After a release, run `pnpm extension:zip` on `main`. It rebuilds `extension/ui` first.
+2. Upload `dist/ng-devtools-extension.zip`.
 
 See [Build the extension](./chrome-extension.md) for the upload steps.
 

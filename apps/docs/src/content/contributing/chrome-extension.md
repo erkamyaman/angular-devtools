@@ -78,7 +78,7 @@ This runs `extension:build`, then writes `dist/ng-devtools-extension.zip`. The z
 
 ### Upload
 
-1. Bump `version` in `extension/manifest.json`.
+1. Check that `version` in `extension/manifest.json` is the version to ship. The **Release** workflow sets it to the npm package version; see [Release the Chrome extension](./publishing.md#release-the-chrome-extension).
 2. Go to the <a href="https://chrome.google.com/webstore/devconsole" target="_blank" rel="noopener noreferrer">Chrome Developer Dashboard</a>.
 3. Click **New item** (or open the existing item) and upload the zip.
 4. Fill in the listing details and submit for review.
@@ -110,16 +110,21 @@ If none answers, the status view lists every URL it tried and links to the setup
 
 ### Loading the UI
 
-The panel loads `ui/index.html` with two query parameters:
+The panel loads `ui/index.html` with three query parameters:
 
 | Parameter | Value                                                                                  |
 | --------- | -------------------------------------------------------------------------------------- |
 | `baseURL` | The path that served the connection file, on the origin of the page.                   |
 | `pageId`  | The `ng-devtools-page-id` value the overlay keeps in `sessionStorage`, when it is set. |
+| `theme`   | The DevTools theme name, `dark` or `default`.                                          |
 
 Outside the extension, the UI accepts a `baseURL` only on its own origin. Inside the extension, it accepts any `http` or `https` URL. The panel only passes hosts the extension can reach.
 
 On each navigation of the inspected page, the panel shows its status view again and repeats the whole search.
+
+### Theme
+
+The panel follows the DevTools theme. `panel-bridge.js` reads `chrome.devtools.panels.themeName` at startup, sets `data-theme` on `panel.html` so the status view matches, and passes the name to the UI as the `theme` parameter (`dark` or `default`, which is light). Its `setThemeChangeHandler` updates `panel.html` and posts an `ng-devtools:theme-change` message to the UI frame when DevTools switches theme. `ThemeService` in the panel sets `data-theme` on `<html>`, and the CSS tokens in `app/src/styles/_theme.scss` follow it.
 
 ### Elements panel selection
 

@@ -262,6 +262,10 @@ export class FormsSubmit {
     }
     .path code {
       color: #fde68a;
+
+      @include m.light {
+        color: var(--accent);
+      }
     }
     .message,
     .fix {

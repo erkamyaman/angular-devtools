@@ -48,13 +48,12 @@ jobs:
         id: version
         env:
           INPUT: ${{ inputs.version }}
-        working-directory: packages/ng-devtools
         run: |
           if [[ ! "$INPUT" =~ ^(patch|minor|[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo "::error::version must be patch, minor or an exact x.y.z, not '$INPUT'"
             exit 1
           fi
-          IFS=. read -r major minor patch <<< "$(node -p "require('./package.json').version")"
+          IFS=. read -r major minor patch <<< "$(node -p "require('./packages/ng-devtools/package.json').version")"
           case "$INPUT" in
             patch) version="$major.$minor.$((patch + 1))" ;;
             minor) version="$major.$((minor + 1)).0" ;;
@@ -62,10 +61,12 @@ jobs:
             # release that failed part way through finishes it.
             *) version="$INPUT" ;;
           esac
-          # Only the version line changes. `npm version` would rewrite the whole file, and turn
+          # Only the version lines change. `npm version` would rewrite the whole file, and turn
           # the escaped characters in the description into literal ones.
-          sed -i -E "s/^(  \"version\": )\"[^\"]+\"/\1\"$version\"/" package.json
-          test "$(node -p "require('./package.json').version")" = "$version"
+          sed -i -E "s/^(  \"version\": )\"[^\"]+\"/\1\"$version\"/" packages/ng-devtools/package.json extension/manifest.json
+          test "$(node -p "require('./packages/ng-devtools/package.json').version")" = "$version"
+          test "$(node -p "require('./extension/manifest.json').version")" = "$version"
+          grep -rlE 'ng-devtools v[0-9]+\.[0-9]+\.[0-9]+' apps/docs/src/content | xargs -r sed -i -E "s/(ng-devtools v)[0-9]+\.[0-9]+\.[0-9]+/\1$version/"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Check the changelog
@@ -74,8 +75,8 @@ jobs:
         run: |
           mkdir -p .release
           file=packages/ng-devtools/CHANGELOG.md
-          # This version's section, from its `## x.y.z - date` heading (brackets allowed) to the
-          # next `## ` heading.
+          # This version's section, from its `## x.y.z` heading (a date and brackets allowed) to
+          # the next `## ` heading.
           if [ -f "$file" ]; then
             awk -v v="$VERSION" '
               /^## / {
@@ -85,7 +86,7 @@ jobs:
               inside' "$file" > .release/notes.md
           fi
           if [ ! -s .release/notes.md ]; then
-            echo "::error file=$file::Add a '## $VERSION - <date>' section to $file before releasing."
+            echo "::error file=$file::Add a '## $VERSION' section to $file before releasing."
             exit 1
           fi
 
@@ -120,8 +121,13 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           tag="ng-devtools@$VERSION"
-          if ! git diff --quiet -- packages/ng-devtools/package.json; then
-            git commit -m "chore(release): ng-devtools $VERSION" -- packages/ng-devtools/package.json
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "tag $tag already exists"
+            exit 0
+          fi
+          files=(packages/ng-devtools/package.json extension/manifest.json apps/docs/src/content)
+          if ! git diff --quiet -- "${files[@]}"; then
+            git commit -m "chore(release): ng-devtools $VERSION" -- "${files[@]}"
           fi
           # Pull requests can merge while a release runs. Replay the version commit on top of them
           # and tag where it lands. A rebase conflict fails the step rather than guessing.
@@ -132,7 +138,7 @@ jobs:
             if git push origin HEAD:main; then break; fi
             if [ "$attempt" = 3 ]; then exit 1; fi
           done
-          git push -f origin "refs/tags/$tag"
+          git push origin "refs/tags/$tag"
 
       - name: GitHub release
         env:

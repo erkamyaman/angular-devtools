@@ -30,6 +30,8 @@ jobs:
       - uses: ./.github/actions/setup
 
       - uses: nrwl/nx-set-shas@v4
+        with:
+          workflow-id: ci.yml
 
       - name: Check formatting
         run: pnpm format:check
