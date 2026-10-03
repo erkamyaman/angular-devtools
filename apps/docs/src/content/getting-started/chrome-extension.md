@@ -97,7 +97,7 @@ The extension can reach loopback hosts from the start. For any other host, such 
 
 The overlay gives each page an id and exposes it on the page as `window.__ngDevtoolsPageId`. The panel passes the id of the page it inspects to the UI. If several tabs run the same app, the panel shows the tab you inspect, not the one that reported last.
 
-The overlay claims the id after it connects to the server, so it can come later than the server answers. The panel waits up to five seconds for the id. If no id appears in that time, it loads the UI without one and shows the page that reported last.
+The overlay claims the id after it connects to the server, so it can come later than the server answers. The panel waits up to five seconds for the id. If no id appears in that time, it uses the id the tab kept from an earlier load, if there is one. Without any id, it loads the UI and shows the page that reported last.
 
 ### Navigation
 
