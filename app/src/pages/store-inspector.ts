@@ -125,7 +125,7 @@ const CLASSIC_KINDS = new Set([
       @if (failed()) {
         <div class="empty" role="alert">
           <p class="empty-title">Could not load the live store state.</p>
-          <p class="hint">Check that the dev server with ng-devtools is still running.</p>
+          <p class="hint">Check that the dev server with Pangular Inspector is still running.</p>
           <button type="button" class="btn" (click)="retry()">Retry</button>
         </div>
       } @else if (!page()) {
@@ -1839,7 +1839,7 @@ export class StoreInspector {
       .catch(() => this.sourceEntries.set([]))
       .finally(() => this.sourceLoaded.set(true));
     try {
-      const state = await client.scope('ng-devtools').rpc.sharedState('ngrx-store');
+      const state = await client.scope('pangular').rpc.sharedState('ngrx-store');
       if (this.destroyRef.destroyed) return;
       const apply = (value: unknown) => {
         const next = value as Partial<NgrxState> | undefined;

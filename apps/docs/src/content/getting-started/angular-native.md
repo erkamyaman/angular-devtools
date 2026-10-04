@@ -9,7 +9,7 @@ description: Send live components, signals, injectors and NgRx stores from an An
 
 # Angular Native
 
-[Angular Native](https://ng-native.com) renders *Angular onto React Native's Fabric renderer, so the app has no DOM for the [browser overlay](./overlay.md) to walk. The `@santoshyadavdev/ng-devtools/overlay-angular-native` entry point walks Angular Native's own node tree instead and sends the same live data to a devtools server that runs on your machine.
+[Angular Native](https://ng-native.com) renders *Angular onto React Native's Fabric renderer, so the app has no DOM for the [browser overlay](./overlay.md) to walk. The `@pangular-inspector/devtools/overlay-angular-native` entry point walks Angular Native's own node tree instead and sends the same live data to a devtools server that runs on your machine.
 
 ## What it shows
 
@@ -59,7 +59,7 @@ The [Angular Native demo](../contributing/demo-apps.md#angular-native-demo) (`ex
 
 <ngmd-workflow>
   <ngmd-step title="Install the package">
-    Add <code>&#64;santoshyadavdev/ng-devtools</code> and <code>devframe</code> to the app, as on the <a href="./installation.md">installation</a> page.
+    Add <code>&#64;pangular-inspector/devtools</code> and <code>devframe</code> to the app, as on the <a href="./installation.md">installation</a> page.
   </ngmd-step>
   <ngmd-step title="Start the overlay after mount()">
     Pass the root node of the mounted app. The check keeps the overlay out of release builds.
@@ -79,7 +79,7 @@ The [Angular Native demo](../contributing/demo-apps.md#angular-native-demo) (`ex
 import {AppRegistry, Image, Platform, processColor} from 'react-native';
 import {mount} from '@ng-native/platform';
 import {getFabricUIManager, registerPlatformComponents} from '@ng-native/fabric';
-import {initAngularNativeOverlay} from '@santoshyadavdev/ng-devtools/overlay-angular-native';
+import {initAngularNativeOverlay} from '@pangular-inspector/devtools/overlay-angular-native';
 import {App} from './app/app.ts';
 
 registerPlatformComponents(Platform.OS);
@@ -98,13 +98,13 @@ AppRegistry.registerRunnable('main', ({rootTag}) => {
 ### Start the server
 
 ```bash
-npx @santoshyadavdev/ng-devtools dev --no-auth
+npx @pangular-inspector/devtools dev --no-auth
 ```
 
 When it is ready, the server prints the Angular Native view on its own line:
 
 ```text
-  ng-devtools v0.0.6
+  pangular v0.0.7
   Panel: http://localhost:9999/
   Angular Native apps: http://localhost:9999/?view=angular-native
   MCP:   http://localhost:9999/__mcp
@@ -149,7 +149,7 @@ The server's [configuration](./configuration.md) applies to the app: inspectors 
 
 <ngmd-accordion>
   <ngmd-accordion-item title="The live tabs stay empty" open>
-    Check the Metro log for a <code>[ng-devtools]</code> line. A warning about <code>--no-auth</code> means the server asked for a code. A warning about reaching the server means the address is wrong for where the app runs. A release build has no <code>ng</code> global, so nothing is collected there.
+    Check the Metro log for a <code>[pangular]</code> line. A warning about <code>--no-auth</code> means the server asked for a code. A warning about reaching the server means the address is wrong for where the app runs. A release build has no <code>ng</code> global, so nothing is collected there.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="The Providers list of an injector is empty">
     Angular records providers only when a <code>window</code> global exists as <code>mount()</code> creates the platform. If the list stays empty, check that <code>window</code> is defined before <code>mount()</code> runs.

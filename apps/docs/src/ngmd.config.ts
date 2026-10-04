@@ -133,11 +133,11 @@ export interface NgmdConfig {
 
 const config: NgmdConfig = {
   site: {
-    name: 'Angular DevTools',
+    name: 'Pangular Inspector',
     description:
       'Inspect Angular components, signals, dependency injection, routes, forms and stores. In the page, from the CLI, or through a coding agent over MCP.',
-    tagline: 'Devtools for Angular apps and coding agents',
-    url: 'https://santoshyadavdev.github.io/angular-devtools',
+    tagline: 'The unified Angular devtools',
+    url: 'https://pangular-inspector.dev',
     githubUrl: 'https://github.com/santoshyadavdev/angular-devtools',
     githubDir: 'apps/docs',
     links: {
