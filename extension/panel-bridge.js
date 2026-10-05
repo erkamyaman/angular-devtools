@@ -10,7 +10,7 @@ const retryButton = document.getElementById('status-retry');
 const docsLink = document.getElementById('status-docs');
 const SETUP_DOCS = { href: docsLink.href, text: docsLink.textContent };
 const REFUSED_DOCS = {
-  href: 'https://github.com/santoshyadavdev/angular-devtools/blob/main/apps/docs/src/content/getting-started/vite.md#answers-only-your-machine',
+  href: 'https://github.com/pangular-inspector/devtools/blob/main/apps/docs/src/content/getting-started/vite.md#answers-only-your-machine',
   text: 'Why the devtools server refuses requests',
 };
 

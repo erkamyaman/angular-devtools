@@ -98,7 +98,7 @@ export interface ComingSoonInfo {
       @if (info().author; as author) {
         <a
           class="author"
-          [href]="'https://github.com/santoshyadavdev/angular-devtools/pull/' + info().pr"
+          [href]="'https://github.com/pangular-inspector/devtools/pull/' + info().pr"
           target="_blank"
           rel="noopener noreferrer"
         >

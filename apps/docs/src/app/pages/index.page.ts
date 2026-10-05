@@ -519,12 +519,12 @@ export default class Home implements AfterViewInit {
   readonly comingSoon = [
     {
       name: 'NativeScript',
-      url: 'https://github.com/santoshyadavdev/angular-devtools/pull/16',
+      url: 'https://github.com/pangular-inspector/devtools/pull/16',
       logo: 'https://cdn.simpleicons.org/nativescript/3C5AFD',
     },
     {
       name: 'Capacitor',
-      url: 'https://github.com/santoshyadavdev/angular-devtools/pull/21',
+      url: 'https://github.com/pangular-inspector/devtools/pull/21',
       logo: 'https://cdn.simpleicons.org/capacitor/119EFF',
     },
   ];

@@ -25,8 +25,8 @@ The repository is an Nx workspace with pnpm. It holds the npm package, the devto
 ## Set up the repository
 
 ```bash
-git clone https://github.com/santoshyadavdev/angular-devtools.git
-cd angular-devtools
+git clone https://github.com/pangular-inspector/devtools.git
+cd devtools
 pnpm install
 ```
 
@@ -36,10 +36,10 @@ pnpm install
 
 `pnpm install` sets `core.hooksPath` to `.githooks` and `commit.template` to `.gitmessage`. If you already set either one yourself, it keeps your value.
 
-| Hook         | What it does                                                                                                                                                                                                               |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pre-commit` | Formats the staged files with Prettier and stages the result. It skips a file that also has unstaged changes, so hunks you left out with `git add -p` stay out of the commit.                                              |
-| `commit-msg` | Checks the message against the [commit message guidelines](https://github.com/santoshyadavdev/angular-devtools/blob/main/docs/contributing/commit-message-guidelines.md). It prints a warning and never blocks the commit. |
+| Hook         | What it does                                                                                                                                                                                                          |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pre-commit` | Formats the staged files with Prettier and stages the result. It skips a file that also has unstaged changes, so hunks you left out with `git add -p` stay out of the commit.                                         |
+| `commit-msg` | Checks the message against the [commit message guidelines](https://github.com/pangular-inspector/devtools/blob/main/docs/contributing/commit-message-guidelines.md). It prints a warning and never blocks the commit. |
 
 ## Project structure
 
@@ -64,10 +64,10 @@ src/                          # Angular Travel, the host demo app
 
 | Project                        | Root                 | Targets                          |
 | ------------------------------ | -------------------- | -------------------------------- |
-| `angular-devtools`             | `.` (`project.json`) | `build`, `serve`, `test`         |
+| `pangular-inspector`           | `.` (`project.json`) | `build`, `serve`, `test`         |
 | `@pangular-inspector/devtools` | `packages/devtools`  | `build`                          |
 | `analog-demo`                  | `examples/analog`    | `dev`, `build`, `preview`        |
-| `angular-devtools-docs`        | `apps/docs`          | `dev`, `build`, `test`, and more |
+| `pangular-inspector-docs`      | `apps/docs`          | `dev`, `build`, `test`, and more |
 
 Run `pnpm exec nx show projects` to list them. Package projects get their targets from their `package.json` scripts.
 
@@ -91,12 +91,12 @@ The scripts call Nx. You can also run a target on a project directly:
 ```bash group="nx" name="Build" active
 pnpm exec nx build                              # Angular Travel
 pnpm exec nx build @pangular-inspector/devtools # The npm package
-pnpm exec nx build angular-devtools-docs        # This site
+pnpm exec nx build pangular-inspector-docs        # This site
 ```
 
 ```bash group="nx" name="Test"
 pnpm exec nx test                        # Angular Travel
-pnpm exec nx test angular-devtools-docs  # This site
+pnpm exec nx test pangular-inspector-docs  # This site
 ```
 
 ```bash group="nx" name="Serve"
@@ -116,11 +116,11 @@ pnpm exec nx affected -t test build
 
 ### Ports
 
-| Command                                                                                  | Port | Notes                                                                                                                                          |
-| ---------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm start`                                                                             | 4200 | `ng serve` with SSR and hot reload. The popup and live data work without a separate server.                                                    |
-| `pnpm build --configuration development && node dist/angular-devtools/server/server.mjs` | 4000 | The demo app as an SSR server.                                                                                                                 |
-| `pnpm devtools:dev`                                                                      | 5173 | The devtools UI with hot reload and its own RPC. Source-scan data only; live tabs need an app page connected, so use the SSR server for those. |
+| Command                                                                                    | Port | Notes                                                                                                                                          |
+| ------------------------------------------------------------------------------------------ | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm start`                                                                               | 4200 | `ng serve` with SSR and hot reload. The popup and live data work without a separate server.                                                    |
+| `pnpm build --configuration development && node dist/pangular-inspector/server/server.mjs` | 4000 | The demo app as an SSR server.                                                                                                                 |
+| `pnpm devtools:dev`                                                                        | 5173 | The devtools UI with hot reload and its own RPC. Source-scan data only; live tabs need an app page connected, so use the SSR server for those. |
 
 <ngmd-callout type="warning" title="Refresh the bundled UI">
   The SSR server serves the UI built into <code>packages/devtools/dist/public</code>. Run <code>pnpm devtools:build-pkg</code> to refresh it after you change <code>app/</code>.

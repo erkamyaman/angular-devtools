@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/santoshyadavdev/angular-devtools.git",
+    "url": "git+https://github.com/pangular-inspector/devtools.git",
     "directory": "packages/devtools"
   },
   "homepage": "https://pangular-inspector.dev",

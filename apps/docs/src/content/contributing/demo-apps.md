@@ -82,7 +82,7 @@ To see server calls in the SSR & HTTP tab, run the built SSR server:
 
 ```bash
 pnpm build --configuration development
-node dist/angular-devtools/server/server.mjs
+node dist/pangular-inspector/server/server.mjs
 ```
 
 It listens on port 4000, or on `PORT` when set.

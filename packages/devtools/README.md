@@ -25,8 +25,8 @@ It starts a local server and prints the panel URL. The panel shows what it finds
 - [Documentation](https://pangular-inspector.dev/)
 - [Standalone CLI](https://pangular-inspector.dev/getting-started/cli/)
 - [MCP server](https://pangular-inspector.dev/agents/mcp-server/)
-- [Changelog](https://github.com/santoshyadavdev/angular-devtools/blob/main/packages/devtools/CHANGELOG.md)
-- [Source and issues](https://github.com/santoshyadavdev/angular-devtools)
+- [Changelog](https://github.com/pangular-inspector/devtools/blob/main/packages/devtools/CHANGELOG.md)
+- [Source and issues](https://github.com/pangular-inspector/devtools)
 
 ## License
 

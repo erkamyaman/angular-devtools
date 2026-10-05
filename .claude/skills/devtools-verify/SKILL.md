@@ -44,7 +44,7 @@ and treat any `error TS` or `error NG` line as a failure. Strip color codes befo
 
 ```sh
 pnpm build --configuration development
-node dist/angular-devtools/server/server.mjs   # Angular Travel on :4000
+node dist/pangular-inspector/server/server.mjs   # Angular Travel on :4000
 pnpm analog:dev                                 # Analog demo on :5173
 ```
 
