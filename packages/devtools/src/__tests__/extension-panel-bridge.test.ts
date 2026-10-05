@@ -287,7 +287,7 @@ describe('extension panel bridge', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(panel.message()).toBe('No devtools server answered on http://localhost:4200. Tried:');
     expect(panel.docs.textContent).toBe('Set up the devtools server');
-    expect(panel.docs.href).toBe('https://github.com/santoshyadavdev/angular-devtools#get-started');
+    expect(panel.docs.href).toBe('https://github.com/pangular-inspector/devtools#get-started');
   });
 
   it('drops a detection that finishes after a navigation and detects again', async () => {

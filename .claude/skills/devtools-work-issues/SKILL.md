@@ -9,7 +9,7 @@ Each issue still goes through the `devtools-fix-issue` skill. This skill is abou
 
 ## 1. Plan the batch
 
-- List the issues: `gh issue list --repo santoshyadavdev/angular-devtools --label P2 --state open --limit 200`.
+- List the issues: `gh issue list --repo pangular-inspector/devtools --label P2 --state open --limit 200`.
 - Leave out issues that need a product or design decision, or a manual test the maintainer has to do. List them in the report as "for later", and settle the decisions afterwards with the `grilling` skill. If only part of an issue is clear, do that part and use `Refs #<n>` for it.
 - Titles follow `area: what is wrong` (`router: a failed lazy navigation is only logged`), and the area is a commit scope, so it usually names the group. Title any follow-up issue the same way.
 - Group the rest by the files they touch (inspector or area: forms, router, http, analog, signals, overlay and popup, cli and config, extension), so no two groups edit the same code. Aim for three to eight issues per group.
@@ -20,7 +20,7 @@ Each issue still goes through the `devtools-fix-issue` skill. This skill is abou
   `git worktree add --detach <path> <base>`, then `pnpm install --frozen-lockfile --prefer-offline` in each.
 - Agents only edit files in their own worktree. They don't commit, stage, branch, stash or push. A reviewer reads each group's work with `git diff` plus the new files, which `git diff` leaves out: list them with `git ls-files --others --exclude-standard`.
 - Each agent returns, per issue: fixed, partly fixed or skipped, the cause and fix in a line, the test it added, and its check results.
-- With many worktrees inside the repository folder, Nx finds duplicate projects. Run it as `NX_WORKSPACE_ROOT_PATH=$PWD NX_DAEMON=false pnpm exec nx test angular-devtools`.
+- With many worktrees inside the repository folder, Nx finds duplicate projects. Run it as `NX_WORKSPACE_ROOT_PATH=$PWD NX_DAEMON=false pnpm exec nx test pangular-inspector`.
 
 ## 3. Combine
 

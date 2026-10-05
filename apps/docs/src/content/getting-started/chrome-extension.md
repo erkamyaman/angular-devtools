@@ -54,8 +54,8 @@ The Chrome extension adds a panel named **Pangular Inspector** to Chrome DevTool
 ### Commands
 
 ```bash
-git clone https://github.com/santoshyadavdev/angular-devtools.git
-cd angular-devtools
+git clone https://github.com/pangular-inspector/devtools.git
+cd devtools
 pnpm install
 pnpm extension:build
 ```

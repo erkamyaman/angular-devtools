@@ -177,7 +177,7 @@ The demo app has an SSR & HTTP example at `/examples/http`. It fetches `/api/pro
 
 ```bash
 pnpm build --configuration development
-node dist/angular-devtools/server/server.mjs
+node dist/pangular-inspector/server/server.mjs
 ```
 
 Open `http://localhost:4000/examples/http`. See [Demo apps](../contributing/demo-apps.md) for the rest.

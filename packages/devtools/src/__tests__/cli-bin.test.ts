@@ -112,7 +112,7 @@ describe('pangular binary', () => {
   it('scans the --root folder over stdio and drops the tools that need a page', async () => {
     const elsewhere = fixtureDir('pangular-cwd-');
     const { tools, meta, stderr } = await mcp(['--root', REPO], elsewhere);
-    expect(meta?.projectName).toBe('angular-devtools');
+    expect(meta?.projectName).toBe('pangular-inspector');
     expect(stderr).not.toContain('source scans find nothing');
     expect(tools).toContain('get-components');
     expect(tools).toContain('lint-pipes');

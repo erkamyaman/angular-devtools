@@ -28,13 +28,13 @@ Pangular Inspector is open source under the MIT license. Here is where to reach 
   <ngmd-card icon="sparkles" title="Discord" link="https://discord.gg/YRTyJd6Qx" cta="Join">
     Join the conversation, ask questions, and share feedback.
   </ngmd-card>
-  <ngmd-card icon="shield" title="Bug reports" link="https://github.com/santoshyadavdev/angular-devtools/issues" cta="Open an issue">
+  <ngmd-card icon="shield" title="Bug reports" link="https://github.com/pangular-inspector/devtools/issues" cta="Open an issue">
     File an issue when something doesn't work as documented.
   </ngmd-card>
-  <ngmd-card icon="lightbulb" title="Feature requests" link="https://github.com/santoshyadavdev/angular-devtools/issues" cta="Suggest">
+  <ngmd-card icon="lightbulb" title="Feature requests" link="https://github.com/pangular-inspector/devtools/issues" cta="Suggest">
     Propose a new inspector, agent tool or setup.
   </ngmd-card>
-  <ngmd-card icon="code" title="Pull requests" link="https://github.com/santoshyadavdev/angular-devtools/pulls" cta="Contribute">
+  <ngmd-card icon="code" title="Pull requests" link="https://github.com/pangular-inspector/devtools/pulls" cta="Contribute">
     Fixes, docs and features.
   </ngmd-card>
 </ngmd-card-grid>
@@ -86,5 +86,5 @@ Thanks to everyone who sponsors the project. The [Sponsors page](/sponsors) list
 <ngmd-pill-row>
   <ngmd-pill href="/sponsors" title="Sponsors"></ngmd-pill>
   <ngmd-pill href="/contributing/development" title="Development setup"></ngmd-pill>
-  <ngmd-pill href="https://github.com/santoshyadavdev/angular-devtools" title="View on GitHub"></ngmd-pill>
+  <ngmd-pill href="https://github.com/pangular-inspector/devtools" title="View on GitHub"></ngmd-pill>
 </ngmd-pill-row>
