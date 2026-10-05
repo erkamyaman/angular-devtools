@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./apps/docs/public/press/logo/svg/app-icon-animated.svg" alt="Pangular Inspector logo" width="128" height="128" />
+</p>
+
 # Pangular Inspector
 
 [![npm version](https://img.shields.io/npm/v/@pangular-inspector/devtools)](https://www.npmjs.com/package/@pangular-inspector/devtools)
@@ -24,6 +28,7 @@ Read the docs at [pangular-inspector.dev](https://pangular-inspector.dev). Their
 - [Inspectors](./apps/docs/src/content/inspectors/dashboard.md)
 - [Agent tools](./apps/docs/src/content/agents/mcp-server.md)
 - [Security](./apps/docs/src/content/security.md)
+- [Press kit](./apps/docs/src/content/press-kit.md): name, logo, colors, descriptions and screenshots
 - [Contributing](./CONTRIBUTING.md)
 
 ## Maintainers
