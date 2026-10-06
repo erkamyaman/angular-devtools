@@ -22,6 +22,7 @@ extension/
   devtools.html
   devtools.js            # Creates the panel on Angular pages
   panel.html             # The panel page and its status view
+  panel-actions.js       # Answers the UI's reveal and open-source requests
   panel-bridge.js        # Asks for host access, finds the dev server, connects the UI to it
   icons/
   ui/                    # The built devtools UI (committed)
@@ -135,6 +136,19 @@ The panel follows the DevTools theme. `panel-bridge.js` reads `chrome.devtools.p
 The overlay defines `window.__pangularComponentOf` on the page. It takes an element and returns the id of the nearest component host, through shadow roots, or `null`.
 
 When the Elements panel selection changes, `panel-bridge.js` evaluates it with `$0`. If it gets an id, it posts a `pangular:inspect-component` message to the UI frame. The UI accepts the message only from its parent window and its own origin, and only while the **Components** tab is open. The tab then expands the parent rows, clears the filter if needed, selects the row and scrolls it into view.
+
+### Reveal and open source
+
+The overlay also defines `window.__pangularHostOf(pageId, id)` and `window.__pangularClassOf(pageId, id)`. They return the host element or the component class of an instance id, and `null` when the id belongs to another page.
+
+Inside the extension (a `chrome-extension:` frame), the **Components** detail header shows **Reveal in Elements** and **Open source**. The UI posts `pangular:reveal-element` or `pangular:open-source` with a `requestId`, the `pageId` and the instance `id` to its parent. `panel-bridge.js` accepts them only from the UI frame and its own origin, and `panel-actions.js` handles them:
+
+| Request                   | What the extension does                                                                                                                                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pangular:reveal-element` | Evaluates `inspect()` on the host element in the inspected page.                                                                                                                                                        |
+| `pangular:open-source`    | Looks up the `file` among `chrome.devtools.inspectedWindow.getResources()` by path suffix and calls `chrome.devtools.panels.openResource` at `line - 1`. If no resource matches, it evaluates `inspect()` on the class. |
+
+It answers with `pangular:panel-action-result`, carrying the same `requestId` and `ok`. The UI gives up after 3 seconds.
 
 ## Where to next
 

@@ -84,11 +84,16 @@ describe('overlay collectors', () => {
   it('install the Elements-panel lookup only with the components inspector', async () => {
     await start();
     expect(window.__pangularComponentOf).toBeTypeOf('function');
+    expect(window.__pangularHostOf).toBeTypeOf('function');
+    expect(window.__pangularClassOf).toBeTypeOf('function');
     stops.splice(0).forEach((stop) => stop());
     expect(window.__pangularComponentOf).toBeUndefined();
+    expect(window.__pangularHostOf).toBeUndefined();
+    expect(window.__pangularClassOf).toBeUndefined();
 
     await start({ inspectors: { components: false } });
     expect(window.__pangularComponentOf).toBeUndefined();
+    expect(window.__pangularHostOf).toBeUndefined();
   });
 
   it('only tell the server to forget pages for enabled inspectors', async () => {

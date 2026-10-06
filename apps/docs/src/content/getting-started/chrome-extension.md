@@ -113,6 +113,19 @@ While the **Components** tab is open, select an element in the Chrome **Elements
 
 This needs the overlay on the page, since the overlay answers which component hosts the element.
 
+### Reveal and open source
+
+When you select a component in the **Components** tab, its header has two buttons:
+
+| Button                 | What it does                                                                                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Reveal in Elements** | Selects the host element in the **Elements** panel.                                                                                               |
+| **Open source**        | Opens the component file in the **Sources** panel at the class line. If the source maps don't list the file, it opens the compiled class instead. |
+
+The file and line come from the debug info Angular adds in development builds. If **Open source** finds neither the file nor the class, the panel shows the file and line so you can open it in your editor.
+
+Both buttons work only for components on the tab DevTools inspects. If the **Components** tab shows another page, they say so.
+
 ## Permissions
 
 ### Host access
@@ -155,6 +168,9 @@ The content scripts are wider. Two of them run on every page. They check for an 
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Selecting an element does not select a component">
     Open the <strong>Components</strong> tab first, and check that the overlay is loaded. Elements outside any component select nothing.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Open source opens compiled code">
+    The source maps of the page don't list the component file, so the panel opened the class from the bundle. Turn on source maps for your development build.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Does the floating button go away?">
     No. The overlay still adds the button to the page. Use the button or the panel, whichever you prefer.

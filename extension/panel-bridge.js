@@ -21,6 +21,7 @@ const PROBE_TIMEOUT_MS = 1500;
 const REFUSED_TEXT_LIMIT = 200;
 const PAGE_ID_WAIT_MS = 5000;
 const PAGE_ID_POLL_MS = 250;
+const OPEN_RESOURCE_TIMEOUT_MS = 1000;
 const DETECTING = 'Detecting Angular app…';
 const PAGE_ID = `typeof window.__pangularPageId === 'string' ? window.__pangularPageId : null`;
 const STORED_PAGE_ID = `(() => {
@@ -186,6 +187,23 @@ chrome.devtools.panels.elements.onSelectionChanged.addListener(async () => {
   const id = await evalInPage('window.__pangularComponentOf?.($0) ?? null');
   if (typeof id !== 'string') return;
   frame.contentWindow?.postMessage({ type: 'pangular:inspect-component', id }, location.origin);
+});
+
+const handlePanelAction = createPanelActions({
+  evalInPage,
+  getResources: () =>
+    new Promise((resolve) => chrome.devtools.inspectedWindow.getResources(resolve)),
+  openResource: (url, line) =>
+    new Promise((resolve) => {
+      setTimeout(() => resolve(false), OPEN_RESOURCE_TIMEOUT_MS);
+      chrome.devtools.panels.openResource(url, line, (response) => resolve(!response?.isError));
+    }),
+});
+
+window.addEventListener('message', async (event) => {
+  if (event.source !== frame.contentWindow || event.origin !== location.origin) return;
+  const reply = await handlePanelAction(event.data);
+  if (reply) frame.contentWindow?.postMessage(reply, location.origin);
 });
 
 // Start detection after a short delay to let the page settle
