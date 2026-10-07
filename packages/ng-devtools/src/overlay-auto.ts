@@ -1,12 +1,14 @@
 import { initOverlay } from './overlay.ts';
+import { showOverlayPopup } from './overlay-popup.ts';
+import { insideDevtoolsPanel } from './panel-frame.ts';
 
 export * from './overlay.ts';
 
-// Auto-init when loaded as a script (skip during test environment)
 if (
   typeof document !== 'undefined' &&
-  !(typeof process !== 'undefined' && process.env?.['VITEST'])
+  !(typeof process !== 'undefined' && process.env?.['VITEST']) &&
+  !insideDevtoolsPanel()
 ) {
   initOverlay().catch(console.error);
-  import('./popup.ts').then((m) => m.createDevtoolsPopup()).catch(console.error);
+  showOverlayPopup();
 }

@@ -1,0 +1,18 @@
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { withComponentInputBinding } from '@angular/router';
+import { provideContent, withMarkdownRenderer } from '@analogjs/content';
+import { provideFileRouter, requestContextInterceptor } from '@analogjs/router';
+import { provideNgDevtoolsHttp } from '@santoshyadavdev/ng-devtools/http';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideFileRouter(withComponentInputBinding()),
+    provideHttpClient(withFetch(), withInterceptors([requestContextInterceptor])),
+    provideClientHydration(withEventReplay()),
+    provideContent(withMarkdownRenderer()),
+    provideNgDevtoolsHttp(),
+  ],
+};

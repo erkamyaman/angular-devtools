@@ -3,27 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#0b0b0e" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <script src="./theme-init.js"></script>
     <title>Angular DevTools</title>
-    <style>
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-      }
-      :root {
-        /* Angular brand, from the wordmark on angular.dev. */
-        --accent: #ff6b85;
-      }
-      body {
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-        background: #0f0f11;
-        color: #e4e4e7;
-      }
-    </style>
+    <link rel="stylesheet" href="./src/styles/main.scss" />
   </head>
   <body>
     <app-root></app-root>

@@ -1,4 +1,4 @@
-import { readFileSync, realpathSync, statSync } from 'node:fs';
+import { lstatSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 // Helpers shared by the RPC functions that read information out of source
@@ -197,21 +197,25 @@ export interface ClassScope {
   start: number;
   end: number;
   component?: string;
-  /** Which of the two decorators it carries, when it carries one. */
-  kind?: 'component' | 'directive';
+  /** The `name` a `@Pipe` decorator gives it, when it carries one. */
+  pipeName?: string;
+  /** The class's own name, whatever decorator it carries. */
+  className?: string;
+  /** Which decorator it carries, when it carries one. */
+  kind?: 'component' | 'directive' | 'pipe';
   /** That decorator's argument list, parentheses included. */
   decoratorArgs?: string;
 }
 
-const DECORATOR = /@(Component|Directive)\s*\(/g;
+const DECORATOR = /@(Component|Directive|Pipe)\s*\(/g;
 
 /**
  * The span of every class in the file, each with the selector of the
- * `@Component` or `@Directive` decorating it.
+ * `@Component`/`@Directive`, or the name of the `@Pipe`, decorating it.
  */
 export function classScopes(code: string, source: string): ClassScope[] {
   const scopes: ClassScope[] = [];
-  const declaration = /\bclass\s+\w+/g;
+  const declaration = /\bclass\s+(\w+)/g;
   let previousEnd = 0;
   let match: RegExpExecArray | null;
   // `code` has string contents masked out, so a class written inside a
@@ -223,6 +227,7 @@ export function classScopes(code: string, source: string): ClassScope[] {
     scopes.push({
       start: match.index,
       end,
+      className: match[1],
       ...decoratorOf(code.slice(previousEnd, match.index), source.slice(previousEnd, match.index)),
     });
     previousEnd = end;
@@ -256,30 +261,35 @@ function classBodyStart(code: string, from: number): number {
  * the unmasked copy, where it survives.
  */
 /**
- * The `@Component` or `@Directive` that precedes a class, read once. Matching
- * the decorator name with a word boundary keeps `@ComponentMeta()` from being
- * taken for `@Component`, and returning its arguments here means no caller has
- * to look the decorator up a second time and disagree about which one it is.
+ * The `@Component`, `@Directive` or `@Pipe` that precedes a class, read once.
+ * Matching the decorator name with a word boundary keeps `@ComponentMeta()`
+ * from being taken for `@Component`, and returning its arguments here means no
+ * caller has to look the decorator up a second time and disagree about which
+ * one it is.
  */
 function decoratorOf(
   code: string,
   source: string,
-): Pick<ClassScope, 'component' | 'kind' | 'decoratorArgs'> {
+): Pick<ClassScope, 'component' | 'pipeName' | 'kind' | 'decoratorArgs'> {
   let open = -1;
-  let kind: 'component' | 'directive' | undefined;
+  let kind: 'component' | 'directive' | 'pipe' | undefined;
   for (const match of code.matchAll(DECORATOR)) {
     open = match.index + match[0].length - 1;
-    kind = match[1] === 'Directive' ? 'directive' : 'component';
+    kind = match[1] === 'Directive' ? 'directive' : match[1] === 'Pipe' ? 'pipe' : 'component';
   }
   if (open === -1) return {};
 
   const close = matchDelimiter(code, open, '(', ')');
   const args = code.slice(open, close);
   const decoratorArgs = code.slice(open, close + 1);
-  const key = /\bselector\s*:\s*['"`]/.exec(args);
+  // A pipe is named by `name`, a component or directive by `selector`.
+  const key = (kind === 'pipe' ? /\bname\s*:\s*['"`]/ : /\bselector\s*:\s*['"`]/).exec(args);
   if (!key) return { kind, decoratorArgs };
   const quote = open + key.index + key[0].length - 1;
-  return { component: source.slice(quote + 1, skipString(source, quote)), kind, decoratorArgs };
+  const value = source.slice(quote + 1, skipString(source, quote));
+  return kind === 'pipe'
+    ? { pipeName: value, kind, decoratorArgs }
+    : { component: value, kind, decoratorArgs };
 }
 
 /** Index of the delimiter that closes the one at `open`. */
@@ -397,6 +407,43 @@ export const IGNORED_DIRS = new Set([
 ]);
 
 /**
+ * Calls `visit` with the path and name of every file under `dir`, skipping
+ * `IGNORED_DIRS` and unreadable entries. Symbolic links are not followed: a
+ * link can point anywhere, including outside the workspace. `visit` returns
+ * `false` to end the walk, and `maxDepth` bounds how many directory levels
+ * below `dir` are read.
+ */
+export function walkFiles(
+  dir: string,
+  visit: (full: string, name: string) => boolean | void,
+  maxDepth = Infinity,
+): boolean {
+  let entries: string[];
+  try {
+    entries = readdirSync(dir);
+  } catch {
+    return true;
+  }
+  for (const entry of entries) {
+    const full = join(dir, entry);
+    try {
+      const stats = lstatSync(full);
+      if (stats.isSymbolicLink()) continue;
+      if (stats.isDirectory()) {
+        if (maxDepth > 0 && !IGNORED_DIRS.has(entry.toLowerCase())) {
+          if (!walkFiles(full, visit, maxDepth - 1)) return false;
+        }
+        continue;
+      }
+    } catch {
+      continue;
+    }
+    if (visit(full, entry) === false) return false;
+  }
+  return true;
+}
+
+/**
  * JSONC as plain JSON: comments gone and trailing commas dropped. The commas
  * are located in a masked copy, so a `,}` inside a path stays untouched.
  */
@@ -418,12 +465,12 @@ function parseJsonc(source: string): string {
  * Whether a relative path leaves its base. A plain `startsWith('..')` also
  * matches a child named `..foo`, which does not.
  */
-function escapes(rel: string): boolean {
+export function escapes(rel: string): boolean {
   return rel === '..' || rel.startsWith('..' + sep);
 }
 
 /** The path with symlinks resolved, or the path itself when it does not exist. */
-function realPath(path: string): string {
+export function realPath(path: string): string {
   try {
     return realpathSync(path);
   } catch {

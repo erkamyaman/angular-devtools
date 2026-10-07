@@ -1,16 +1,16 @@
 import { defineRpcFunction } from 'devframe';
 import * as v from 'valibot';
 import { describable } from './agent-schema.ts';
-import { lstatSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { relative } from 'node:path';
 import {
   ANNOTATION,
-  IGNORED_DIRS,
   classScopes,
   lineCounter,
   maskStrings,
   sourceRoots,
   stripComments,
+  walkFiles,
 } from './source-scan.ts';
 
 const SignalEntrySchema = v.object({
@@ -25,11 +25,12 @@ export const getSignals = defineRpcFunction({
   name: 'get-signals',
   type: 'query',
   jsonSerializable: true,
+  snapshot: true,
   args: [],
   returns: describable(v.array(SignalEntrySchema)),
   agent: {
     description:
-      'Scan source files for signal(), computed(), linkedSignal(), and effect() declarations. Returns name, kind, file, and line number. Call this to understand the reactive architecture before suggesting changes.',
+      'Scan source files for signal(), computed(), linkedSignal(), effect(), toSignal() and resource declarations (resource, httpResource, rxResource), plus signal inputs, models and queries. Returns name, kind, file, and line number. Call this to understand the reactive architecture before suggesting changes.',
     title: 'List Angular signals from source',
   },
   setup: (ctx) => ({
@@ -51,8 +52,10 @@ const KINDS: Record<string, string> = {
   linkedSignal: 'linkedSignal',
   effect: 'effect',
   resource: 'resource',
+  httpResource: 'httpResource',
+  rxResource: 'rxResource',
+  toSignal: 'toSignal',
   input: 'input (signal)',
-  output: 'output (signal)',
   model: 'model (signal)',
   viewChild: 'viewChild (signal)',
   viewChildren: 'viewChildren (signal)',
@@ -69,46 +72,23 @@ const KINDS: Record<string, string> = {
 const SIGNAL_CALL = new RegExp(
   String.raw`(?<![\w$#.])(?:this\.)?(#?[$\w]+)\s*` +
     ANNOTATION +
-    String.raw`=\s*(${Object.keys(KINDS).join('|')})(\.required)?\s*[<(]`,
+    String.raw`=\s*(${Object.keys(KINDS).join('|')})(\.(?:required|text|blob|arrayBuffer))?\s*[<(]`,
   'g',
 );
 
 function scanSignals(cwd: string): SignalEntry[] {
   const entries: SignalEntry[] = [];
-  for (const root of sourceRoots(cwd)) walk(root, cwd, entries);
-  return entries;
-}
-
-function walk(dir: string, cwd: string, out: SignalEntry[]) {
-  let items: string[];
-  try {
-    items = readdirSync(dir);
-  } catch {
-    return;
-  }
-
-  for (const item of items) {
-    const full = join(dir, item);
-    try {
-      const stats = lstatSync(full);
-      // Not followed: a link can point anywhere, including outside the workspace.
-      if (stats.isSymbolicLink()) continue;
-      if (stats.isDirectory()) {
-        if (!IGNORED_DIRS.has(item.toLowerCase())) walk(full, cwd, out);
-        continue;
+  for (const root of sourceRoots(cwd)) {
+    walkFiles(root, (full, item) => {
+      if (!item.endsWith('.ts') || item.endsWith('.spec.ts') || item.endsWith('.d.ts')) return;
+      try {
+        entries.push(...signalsIn(readFileSync(full, 'utf-8'), relative(cwd, full)));
+      } catch {
+        // skip
       }
-    } catch {
-      continue;
-    }
-
-    if (!item.endsWith('.ts') || item.endsWith('.spec.ts') || item.endsWith('.d.ts')) continue;
-
-    try {
-      out.push(...signalsIn(readFileSync(full, 'utf-8'), relative(cwd, full)));
-    } catch {
-      // skip
-    }
+    });
   }
+  return entries;
 }
 
 function signalsIn(content: string, relPath: string): SignalEntry[] {
@@ -127,7 +107,7 @@ function signalsIn(content: string, relPath: string): SignalEntry[] {
     const [, name, fn, required] = match;
     entries.push({
       name,
-      kind: required ? `${fn}.required (signal)` : KINDS[fn],
+      kind: required === '.required' ? `${fn}.required (signal)` : KINDS[fn],
       file: relPath,
       line: lineAt(at),
       component: scopes.find((scope) => at >= scope.start && at < scope.end)?.component,

@@ -1,4 +1,12 @@
 import { Routes } from '@angular/router';
+import {
+  adminGuard,
+  brokenResolver,
+  lockedGuard,
+  loopAGuard,
+  loopBGuard,
+  userResolver,
+} from './route-guards';
 
 /**
  * Deliberately varied: children, grandchildren, a redirect, route data and a
@@ -22,6 +30,11 @@ export const examplesRoutes: Routes = [
     data: { title: 'Components', inspector: 'components' },
   },
   {
+    path: 'pipes',
+    loadComponent: () => import('./pipes-example').then((m) => m.PipesExample),
+    data: { title: 'Pipes', inspector: 'pipes' },
+  },
+  {
     path: 'di',
     loadComponent: () => import('./di-example').then((m) => m.DiExample),
     data: { title: 'Injectors', inspector: 'injectors' },
@@ -42,12 +55,63 @@ export const examplesRoutes: Routes = [
         loadComponent: () => import('./route-panel').then((m) => m.RoutePanel),
         data: { title: 'Details', depth: 3 },
       },
+      {
+        path: 'users/:id',
+        loadComponent: () => import('./route-panel').then((m) => m.RoutePanel),
+        data: { title: 'User', depth: 3 },
+        resolve: { user: userResolver },
+      },
+      {
+        path: 'admin',
+        loadComponent: () => import('./route-panel').then((m) => m.RoutePanel),
+        canActivate: [adminGuard],
+        data: { title: 'Admin' },
+      },
+      {
+        path: 'locked',
+        loadComponent: () => import('./route-panel').then((m) => m.RoutePanel),
+        canActivate: [lockedGuard],
+        data: { title: 'Locked' },
+      },
+      {
+        path: 'broken',
+        loadComponent: () => import('./route-panel').then((m) => m.RoutePanel),
+        resolve: { report: brokenResolver },
+        data: { title: 'Broken' },
+      },
+      {
+        path: 'loop-a',
+        loadComponent: () => import('./route-panel').then((m) => m.RoutePanel),
+        canActivate: [loopAGuard],
+        data: { title: 'Guard loop A' },
+      },
+      {
+        path: 'loop-b',
+        loadComponent: () => import('./route-panel').then((m) => m.RoutePanel),
+        canActivate: [loopBGuard],
+        data: { title: 'Guard loop B' },
+      },
     ],
   },
   {
     path: 'forms',
     loadComponent: () => import('./forms-example').then((m) => m.FormsExample),
     data: { title: 'Forms', inspector: 'forms' },
+  },
+  {
+    path: 'http',
+    loadComponent: () => import('./http-example').then((m) => m.HttpExample),
+    data: { title: 'SSR & HTTP', inspector: 'network' },
+  },
+  {
+    path: 'store',
+    loadComponent: () => import('./store-example').then((m) => m.StoreExample),
+    data: { title: 'NgRx', inspector: 'store' },
+  },
+  {
+    path: 'defer',
+    loadComponent: () => import('./defer-example').then((m) => m.DeferExample),
+    data: { title: 'Defer blocks', inspector: 'components' },
   },
   { path: 'injectors', redirectTo: 'di', pathMatch: 'full' },
 ];
