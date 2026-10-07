@@ -38,6 +38,7 @@ import { createSignalHistory, installSignalWriteHook } from './signal-history.ts
 export { installSignalWriteHook } from './signal-history.ts';
 import { collectComponentTree, componentHostOf } from './component-tree.ts';
 import { startComponentPick } from './component-pick.ts';
+import { installSourceHelpers } from './component-source.ts';
 import { createDeferTracker } from './defer-blocks.ts';
 import { elementById, elementId } from './element-id.ts';
 import {
@@ -615,6 +616,7 @@ async function startOverlay(options: OverlayOptions, own: (cleanup: () => void) 
     own(() => {
       if (window.__pangularComponentOf === componentOf) delete window.__pangularComponentOf;
     });
+    own(installSourceHelpers(pageId, getNg));
   }
 
   const forget = (inspector: keyof typeof on, name: string) => {
