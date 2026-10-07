@@ -11,7 +11,7 @@ const source = readFileSync(
 interface Actions {
   createPanelActions: (deps: {
     evalInPage: (expression: string) => Promise<unknown>;
-    getResources: () => Promise<{ url: string }[]>;
+    getResources: () => Promise<{ url: string; type?: string }[]>;
     openResource: (url: string, line: number) => Promise<boolean>;
   }) => (message: unknown) => Promise<Record<string, unknown> | null>;
   findSourceResource: (urls: string[], file: string) => string | null;
@@ -25,6 +25,7 @@ function load(): Actions {
 
 function setup({
   urls = [] as string[],
+  resources = urls.map((url) => ({ url })) as { url: string; type?: string }[],
   opens = true,
   page = (_expression: string): unknown => null,
 } = {}) {
@@ -33,7 +34,7 @@ function setup({
   const openResource = vi.fn(async () => opens);
   const handle = createPanelActions({
     evalInPage,
-    getResources: async () => urls.map((url) => ({ url })),
+    getResources: async () => resources,
     openResource,
   });
   return { handle, evalInPage, openResource };
@@ -80,6 +81,24 @@ describe('extension panel actions', () => {
       ok: true,
       opened: 'file',
     });
+  });
+
+  it('skips component style sheets that share the source path', async () => {
+    const { handle, openResource, evalInPage } = setup({
+      resources: [
+        {
+          url: 'http://localhost:4200/angular:styles/component:css;abc/src/app/card.ts',
+          type: 'sm-stylesheet',
+        },
+      ],
+      page: (expression) => expression.includes('__pangularClassOf'),
+    });
+    const reply = await handle(
+      request('pangular:open-source', { file: 'src/app/card.ts', line: 12 }),
+    );
+    expect(openResource).not.toHaveBeenCalled();
+    expect(evalInPage).toHaveBeenCalledOnce();
+    expect(reply).toMatchObject({ ok: true, opened: 'class' });
   });
 
   it('falls back to inspecting the class when the file is not in Sources', async () => {

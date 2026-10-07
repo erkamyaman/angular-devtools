@@ -158,10 +158,10 @@ The overlay also defines `window.__pangularHostOf(pageId, id)` and `window.__pan
 
 Inside the extension (a `chrome-extension:` frame), the **Components** detail header shows **Reveal in Elements** and **Open source**. The UI posts `pangular:reveal-element` or `pangular:open-source` with a `requestId`, the `pageId` and the instance `id` to its parent. `panel-bridge.js` accepts them only from the UI frame and its own origin, and `panel-actions.js` handles them:
 
-| Request                   | What the extension does                                                                                                                                                                                                 |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pangular:reveal-element` | Evaluates `inspect()` on the host element in the inspected page.                                                                                                                                                        |
-| `pangular:open-source`    | Looks up the `file` among `chrome.devtools.inspectedWindow.getResources()` by path suffix and calls `chrome.devtools.panels.openResource` at `line - 1`. If no resource matches, it evaluates `inspect()` on the class. |
+| Request                   | What the extension does                                                                                                                                                                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pangular:reveal-element` | Evaluates `inspect()` on the host element in the inspected page.                                                                                                                                                                                              |
+| `pangular:open-source`    | Looks up the `file` among the scripts in `chrome.devtools.inspectedWindow.getResources()` by path suffix, skipping style sheets and calls `chrome.devtools.panels.openResource` at `line - 1`. If no resource matches, it evaluates `inspect()` on the class. |
 
 It answers with `pangular:panel-action-result`, carrying the same `requestId` and `ok`. The UI gives up after 3 seconds.
 

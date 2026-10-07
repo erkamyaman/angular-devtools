@@ -42,7 +42,9 @@ function createPanelActions({ evalInPage, getResources, openResource }) {
     if (typeof file === 'string' && Number.isInteger(line) && line > 0) {
       const resources = await getResources().catch(() => []);
       const url = findSourceResource(
-        resources.map((resource) => resource?.url),
+        resources
+          .filter((resource) => !/stylesheet$/.test(resource?.type ?? ''))
+          .map((resource) => resource?.url),
         file,
       );
       if (url && (await openResource(url, line - 1))) return { ok: true, opened: 'file' };
