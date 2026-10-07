@@ -149,7 +149,7 @@ const NO_ANGULAR_NATIVE: ComingSoonInfo = {
   ],
   link: {
     label: 'Set up Angular Native',
-    href: 'https://pangular-inspector.dev/getting-started/angular-native/',
+    href: 'https://pangular-inspector.dev/guides/angular-native/',
   },
 };
 

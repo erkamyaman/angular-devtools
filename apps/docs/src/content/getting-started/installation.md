@@ -57,6 +57,7 @@ MCP agent support (`@devframes/agentic`) is included. You don't install it separ
 | `@pangular-inspector/devtools/vite`                   | The Vite plugin for Analog apps.                                                     |
 | `@pangular-inspector/devtools/overlay`                | The browser script that collects live data from your page.                           |
 | `@pangular-inspector/devtools/overlay-angular-native` | The overlay for an Angular Native app. See [Angular Native](./angular-native.md).    |
+| `@pangular-inspector/devtools/overlay-nativescript`   | The overlay for a NativeScript Angular app. See [NativeScript](./nativescript.md).   |
 | `@pangular-inspector/devtools/popup`                  | The floating button and panel on your page.                                          |
 | `@pangular-inspector/devtools/http`                   | The HTTP interceptor and hydration hooks for the SSR & HTTP tab.                     |
 | `@pangular-inspector/devtools/config`                 | The `PangularConfig` type and its defaults. See [Configuration](./configuration.md). |
