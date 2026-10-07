@@ -163,7 +163,7 @@ Inside the extension (a `chrome-extension:` frame), the **Components** detail he
 | `pangular:reveal-element` | Evaluates `inspect()` on the host element in the inspected page.                                                                                                                                                                                              |
 | `pangular:open-source`    | Looks up the `file` among the scripts in `chrome.devtools.inspectedWindow.getResources()` by path suffix, skipping style sheets and calls `chrome.devtools.panels.openResource` at `line - 1`. If no resource matches, it evaluates `inspect()` on the class. |
 
-It answers with `pangular:panel-action-result`, carrying the same `requestId` and `ok`. The UI gives up after 3 seconds.
+It answers with `pangular:panel-action-result`, carrying the same `requestId` and `ok`. The UI gives up after 6 seconds.
 
 ## Where to next
 
