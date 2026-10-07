@@ -32,7 +32,7 @@ This guide adds the devtools to an *Analog app. Everything runs on the *Vite dev
 
 <ngmd-workflow>
   <ngmd-step title="Install the package">
-    Add <code>@santoshyadavdev/ng-devtools</code> and <code>devframe</code>.
+    Add <code>@pangular-inspector/devtools</code> and <code>devframe</code>.
   </ngmd-step>
   <ngmd-step title="Add the Vite plugin">
     Register it next to <code>analog()</code> in <code>vite.config.ts</code>.
@@ -48,19 +48,19 @@ This guide adds the devtools to an *Analog app. Everything runs on the *Vite dev
 ## Step 1: Install
 
 ```bash group="install" name="pnpm" image="https://cdn.simpleicons.org/pnpm/F69220" active
-pnpm add @santoshyadavdev/ng-devtools devframe
+pnpm add @pangular-inspector/devtools devframe
 ```
 
 ```bash group="install" name="npm" image="https://cdn.simpleicons.org/npm/CB3837"
-npm install @santoshyadavdev/ng-devtools devframe
+npm install @pangular-inspector/devtools devframe
 ```
 
 ```bash group="install" name="yarn" image="https://cdn.simpleicons.org/yarn/2C8EBB"
-yarn add @santoshyadavdev/ng-devtools devframe
+yarn add @pangular-inspector/devtools devframe
 ```
 
 ```bash group="install" name="bun" image="https://bun.sh/logo.svg"
-bun add @santoshyadavdev/ng-devtools devframe
+bun add @pangular-inspector/devtools devframe
 ```
 
 ## Step 2: Add the Vite plugin
@@ -70,11 +70,11 @@ Add the plugin after `analog()`:
 ```ts {3,7}
 // vite.config.ts
 import analog from '@analogjs/platform';
-import ngDevtools from '@santoshyadavdev/ng-devtools/vite';
+import pangular from '@pangular-inspector/devtools/vite';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => ({
-  plugins: [analog(), ngDevtools()],
+  plugins: [analog(), pangular()],
 }));
 ```
 
@@ -106,7 +106,7 @@ import {App} from './app/app';
 import {appConfig} from './app/app.config';
 
 bootstrapApplication(App, appConfig).then(() => {
-  if (import.meta.env.DEV) void import('@santoshyadavdev/ng-devtools/overlay');
+  if (import.meta.env.DEV) void import('@pangular-inspector/devtools/overlay');
 });
 ```
 
@@ -130,27 +130,27 @@ Open the **Analog** dock to see file routes, server calls, render modes, content
 
 ## Catch hydration errors from the first load
 
-The overlay loads after the first render, so it misses hydration errors (`NG0500` to `NG0506`) logged during the first load. `provideNgDevtoolsHttp()` starts listening for them when the app starts. The Analog dock lists them under **Hydration error** in **Lint**, and the `analog-current-page` tool returns them.
+The overlay loads after the first render, so it misses hydration errors (`NG0500` to `NG0506`) logged during the first load. `providePangularHttp()` starts listening for them when the app starts. The Analog dock lists them under **Hydration error** in **Lint**, and the `analog-current-page` tool returns them.
 
-Analog's own `load()` fetches and API calls show in the Analog dock without extra setup. `withNgDevtools()` also records `HttpClient` calls in the **SSR & HTTP** tab.
+Analog's own `load()` fetches and API calls show in the Analog dock without extra setup. `withPangular()` also records `HttpClient` calls in the **SSR & HTTP** tab.
 
 ```ts {5,10-11}
 // src/app/app.config.ts
 import {provideHttpClient, withFetch} from '@angular/common/http';
 import {ApplicationConfig} from '@angular/core';
 import {provideFileRouter} from '@analogjs/router';
-import {provideNgDevtoolsHttp, withNgDevtools} from '@santoshyadavdev/ng-devtools/http';
+import {providePangularHttp, withPangular} from '@pangular-inspector/devtools/http';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideFileRouter(),
-    provideHttpClient(withFetch(), withNgDevtools()),
-    provideNgDevtoolsHttp(),
+    provideHttpClient(withFetch(), withPangular()),
+    providePangularHttp(),
   ],
 };
 ```
 
-`provideNgDevtoolsHttp()` and `withNgDevtools()` do nothing in production builds. See [Set up SSR & HTTP](./ssr-http.md) for the interceptor order.
+`providePangularHttp()` and `withPangular()` do nothing in production builds. See [Set up SSR & HTTP](./ssr-http.md) for the interceptor order.
 
 ## Try the demo
 
@@ -164,7 +164,7 @@ pnpm analog:dev
 The script builds the devtools package first, then starts the Vite dev server.
 
 <ngmd-alert severity="helpful">
-  The demo aliases <code>@santoshyadavdev/ng-devtools/overlay</code> to the built package in its <code>vite.config.ts</code>. Your app does not need that alias.
+  The demo aliases <code>@pangular-inspector/devtools/overlay</code> to the built package in its <code>vite.config.ts</code>. Your app does not need that alias.
 </ngmd-alert>
 
 ## Where to next

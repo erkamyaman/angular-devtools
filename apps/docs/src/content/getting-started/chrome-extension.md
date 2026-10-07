@@ -4,12 +4,12 @@ description: Open the devtools as a panel inside Chrome DevTools.
 ---
 
 <ngmd-hero title="Chrome extension" logo="https://cdn.simpleicons.org/googlechrome/4285F4" gradient>
-  An Angular DevTools panel inside Chrome DevTools. It loads the devtools UI and connects it to the dev server of the page you inspect.
+  A Pangular Inspector panel inside Chrome DevTools. It loads the devtools UI and connects it to the dev server of the page you inspect.
 </ngmd-hero>
 
 # Chrome extension
 
-The Chrome extension adds a panel named **Angular DevTools** to Chrome DevTools. The panel loads the devtools UI and connects it to the dev server of the page you are inspecting.
+The Chrome extension adds a panel named **Pangular Inspector** to Chrome DevTools. The panel loads the devtools UI and connects it to the dev server of the page you are inspecting.
 
 <ngmd-callout type="info" title="An extra, not a setup">
   The page still needs the devtools mounted on its server and the <a href="./overlay.md">overlay</a> loaded. The extension is one more way to open the devtools. It does not replace the setup. Start with <a href="./express.md">Angular CLI and Express</a> or <a href="./vite.md">Vite and Analog</a>.
@@ -47,15 +47,15 @@ The Chrome extension adds a panel named **Angular DevTools** to Chrome DevTools.
     Click <strong>Load unpacked</strong> and select the <code>extension/</code> directory.
   </ngmd-step>
   <ngmd-step title="Open DevTools on an Angular app">
-    The <strong>Angular DevTools</strong> panel appears next to the built-in panels.
+    The <strong>Pangular Inspector</strong> panel appears next to the built-in panels.
   </ngmd-step>
 </ngmd-workflow>
 
 ### Commands
 
 ```bash
-git clone https://github.com/santoshyadavdev/angular-devtools.git
-cd angular-devtools
+git clone https://github.com/pangular-inspector/devtools.git
+cd devtools
 pnpm install
 pnpm extension:build
 ```
@@ -72,16 +72,20 @@ A content script checks each page for Angular: an `ng-version` attribute or a `w
 
 The panel looks for the devtools server on the origin of the inspected page. It tries these paths in order:
 
-| Path                        | Mounted by                            |
-| --------------------------- | ------------------------------------- |
-| `/__ng-devtools/`           | A panel mounted with `initDevframe()` |
-| `/__devframes/ng-devtools/` | The Express hub or the Vite plugin    |
-| `/__devframe/`              | A bare devframe mount                 |
-| `/`                         | A devframe served at the root         |
+| Path                     | Mounted by                            |
+| ------------------------ | ------------------------------------- |
+| `/__pangular/`           | A panel mounted with `initDevframe()` |
+| `/__devframes/pangular/` | The Express hub or the Vite plugin    |
+| `/__devframe/`           | A bare devframe mount                 |
+| `/`                      | A devframe served at the root         |
 
 Under each path it asks for `__devframe/__connection.json`, then `__connection.json`. It connects the UI to the first path that answers with a connection file. Each request times out after 1.5 seconds.
 
-If no path answers, the panel says "No devtools server answered", lists every URL it tried and links to the setup instructions.
+If no path answers, the panel says "No devtools server answered" and lists every URL it tried, each with the HTTP status it got or "no answer". It links to the setup instructions.
+
+If any URL got `401` or `403`, the panel says the server refused the request instead, and shows the start of the response text. The Vite plugin answers `403` to requests that do not come from your machine, for example when you open the app by its LAN IP. The panel then links to [Answers only your machine](./vite.md#answers-only-your-machine).
+
+Both messages have a **Try again** button. Click it after you start or fix the server, and the panel looks for the server again without a page reload.
 
 The panel only connects to pages served over `http` or `https`. On other pages it says so and stops.
 
@@ -91,7 +95,9 @@ The extension can reach loopback hosts from the start. For any other host, such 
 
 ### The inspected tab
 
-The overlay gives each page an id. The panel passes the id of the page it inspects to the UI. If several tabs run the same app, the panel shows the tab you inspect, not the one that reported last.
+The overlay gives each page an id and exposes it on the page as `window.__pangularPageId`. The panel passes the id of the page it inspects to the UI. If several tabs run the same app, the panel shows the tab you inspect, not the one that reported last.
+
+The overlay claims the id after it connects to the server, so it can come later than the server answers. The panel waits up to five seconds for the id. If no id appears in that time, it uses the id the tab kept from an earlier load, if there is one. Without any id, it loads the UI and shows the page that reported last.
 
 ### Navigation
 
@@ -106,6 +112,19 @@ The panel follows the DevTools theme. If you switch DevTools between light and d
 While the **Components** tab is open, select an element in the Chrome **Elements** panel. The Components tab selects the component that hosts that element (the element itself, or the nearest ancestor that is a component host). It expands the parent rows, clears the filter if it hides the row, and scrolls the row into view. On other tabs, the Elements selection does nothing. It also does nothing when `inspectors.components` is `false` in the [configuration](./configuration.md).
 
 This needs the overlay on the page, since the overlay answers which component hosts the element.
+
+### Reveal and open source
+
+When you select a component in the **Components** tab, its header has two buttons:
+
+| Button                 | What it does                                                                                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Reveal in Elements** | Selects the host element in the **Elements** panel.                                                                                               |
+| **Open source**        | Opens the component file in the **Sources** panel at the class line. If the source maps don't list the file, it opens the compiled class instead. |
+
+The file and line come from the debug info Angular adds in development builds. If **Open source** finds neither the file nor the class, the panel shows the file and line so you can open it in your editor.
+
+Both buttons work only for components on the tab DevTools inspects. If the **Components** tab shows another page, they say so.
 
 ## Permissions
 
@@ -123,7 +142,27 @@ Other hosts are optional host permissions. **Allow access** asks Chrome for the 
 
 Granting the extension a host doesn't change what the devtools server accepts. The server still applies its own checks. The Vite plugin, for example, only answers requests from a loopback address. See [Access and redaction](../security.md).
 
-The Vite plugin and the Express hub accept the extension's `chrome-extension://` origin by default. If your Express hub passes its own `allowedOrigins` list, add `chrome-extension://<id>` to it. The ID is on the extension card in `chrome://extensions`.
+### Server origin
+
+The panel sends requests from its own origin, `chrome-extension://<id>`. Any installed extension can send requests to a loopback host, so the Vite plugin and the Express hub trust only the extension IDs they know.
+
+The `key` in `extension/manifest.json` fixes the ID of this extension to `dcogniffeelebaolkkfbopmjcblhblfk`, wherever you load it from. The Vite plugin and the Express hub trust `chrome-extension://dcogniffeelebaolkkfbopmjcblhblfk` by default, so the panel works with no `allowedOrigins` setting. They refuse every other extension origin.
+
+If you build the extension with another `key`, or without one, Chrome gives it another ID. Copy that ID from the extension card in `chrome://extensions` and add its origin to `allowedOrigins`:
+
+```ts
+// vite.config.ts
+pangular({allowedOrigins: ['chrome-extension://<id>']});
+```
+
+```ts
+// src/server.ts
+const devtools = initPangularHub({
+  allowedOrigins: ['chrome-extension://<id>'],
+});
+```
+
+In the Vite plugin, an extension entry does not turn the one-time code on. If the server refuses a build with another ID, the panel names its own origin in the message. See [Access and redaction](../security.md#chrome-extension).
 
 ### Content scripts
 
@@ -139,10 +178,19 @@ The content scripts are wider. Two of them run on every page. They check for an 
     The page is not on a loopback host. Click <strong>Allow access</strong> to let the extension reach that host. Chrome asks you to confirm.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="The panel lists the URLs it tried">
-    None of them served a connection file. Check that the server of the page mounts the devtools and that the server accepts the request. See <a href="../security.md">Access and redaction</a>.
+    None of them served a connection file. The status next to each URL shows what the server answered. Check that the server of the page mounts the devtools and that the server accepts the request, then click <strong>Try again</strong>. See <a href="../security.md">Access and redaction</a>.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="The panel says the server refused the request">
+    The server answered <code>401</code> or <code>403</code>. If you built the extension with another ID, the server refuses its origin until you add it to <code>allowedOrigins</code>. On <code>403</code>, the message names the origin to add. See <a href="#server-origin">Server origin</a>. The Vite plugin also refuses requests that do not come from your machine. Open the app on <code>localhost</code>, or see <a href="./vite.md#answers-only-your-machine">Answers only your machine</a>.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="The panel shows another tab">
+    The overlay on the inspected page did not report its page id within five seconds, so the panel loaded without it. Check that the overlay starts on that page, then close and reopen DevTools.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Selecting an element does not select a component">
     Open the <strong>Components</strong> tab first, and check that the overlay is loaded. Elements outside any component select nothing.
+  </ngmd-accordion-item>
+  <ngmd-accordion-item title="Open source opens compiled code">
+    The source maps of the page don't list the component file, so the panel opened the class from the bundle. Turn on source maps for your development build.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Does the floating button go away?">
     No. The overlay still adds the button to the page. Use the button or the panel, whichever you prefer.

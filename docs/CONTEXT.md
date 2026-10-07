@@ -1,6 +1,6 @@
-# Angular DevTools
+# Pangular Inspector
 
-Angular DevTools inspects a running Angular app and serves what it finds to a panel and to AI agents over MCP. This glossary fixes the words the project uses for its own concepts, so that a name means one thing in the code, the docs, issues and commit messages. Each entry gives the term, what it means here, and the words to avoid for it.
+Pangular Inspector inspects a running Angular app and serves what it finds to a panel and to AI agents over MCP. This glossary fixes the words the project uses for its own concepts, so that a name means one thing in the code, the docs, issues and commit messages. Each entry gives the term, what it means here, and the words to avoid for it.
 
 ## Language
 
@@ -17,7 +17,7 @@ The short id a page claims when the overlay starts, kept in `sessionStorage` so 
 _Avoid_: tab id, session id, client id
 
 **Overlay**:
-The script the app imports in `main.ts` in development only (`@santoshyadavdev/ng-devtools/overlay`). It finds the server, starts the collectors and adds the floating button. It reads the page; it never changes it on its own.
+The script the app imports in `main.ts` in development only (`@pangular-inspector/devtools/overlay`). It finds the server, starts the collectors and adds the floating button. It reads the page; it never changes it on its own.
 _Avoid_: content script, agent, injected script
 
 **Collector**:
@@ -33,19 +33,19 @@ A report a collector sends to the server over RPC, such as `push-component-tree`
 _Avoid_: sync, upload, post
 
 **Inspector**:
-One area the devtools can look at: `components`, `injectors`, `signals`, `ngrx`, `forms`, `router`, `pipes`, `http` and `analog` (`NG_DEVTOOLS_INSPECTORS` in `config.ts`). An inspector owns a collector, its RPC functions, its agent tools and its view in the panel, and `inspectors` in the config turns all of them off together.
+One area the devtools can look at: `components`, `injectors`, `signals`, `ngrx`, `forms`, `router`, `pipes`, `http` and `analog` (`PANGULAR_INSPECTORS` in `config.ts`). An inspector owns a collector, its RPC functions, its agent tools and its view in the panel, and `inspectors` in the config turns all of them off together.
 _Avoid_: plugin, module, feature
 
 **Devframe**:
-The framework the devtools are built on (`devframe`). One definition, `packages/ng-devtools/src/devframe.ts`, declares the RPC functions, shared state and agent tools, and Devframe serves it as the embedded panel, the standalone CLI, the static report and the MCP server.
+The framework the devtools are built on (`devframe`). One definition, `packages/devtools/src/devframe.ts`, declares the RPC functions, shared state and agent tools, and Devframe serves it as the embedded panel, the standalone CLI, the static report and the MCP server.
 _Avoid_: framework, runtime, backend
 
 **Hub**:
-The server part an app mounts: `initNgDevtoolsHub()` for Express, or the Vite plugin. It is built on `@devframes/hub`, serves the panel and the connection file under `/__devframes/`, and lets other Devframe tools join the same dock.
+The server part an app mounts: `initPangularHub()` for Express, or the Vite plugin. It is built on `@devframes/hub`, serves the panel and the connection file under `/__devframes/`, and lets other Devframe tools join the same dock.
 _Avoid_: server (too broad), middleware, proxy
 
 **Dock**:
-The rail of entries the hub shows (Angular, NgRx, Analog, Angular Native, and the Coming Soon placeholders), each opening a view of the panel (`hub-docks.ts`).
+The rail of entries the hub shows (Angular, NgRx, Analog, Angular Native, NativeScript and Capacitor), each opening a view of the panel (`hub-docks.ts`).
 _Avoid_: sidebar, menu, tab bar
 
 **Panel**:
@@ -73,7 +73,7 @@ Anything that changes the app or the server rather than reading it: setting a fo
 _Avoid_: mutation, command, write tool
 
 **Resource**:
-Live state an agent reads as JSON over MCP, such as `ng-devtools:component-tree`. It holds what the connected pages reported, so it is empty when no page is connected.
+Live state an agent reads as JSON over MCP, such as `pangular:component-tree`. It holds what the connected pages reported, so it is empty when no page is connected.
 _Avoid_: snapshot, feed, state dump
 
 **Source scan**:
@@ -81,7 +81,7 @@ What the devtools read from the project's source files rather than the running p
 _Avoid_: static analysis, AST pass, crawl
 
 **Static report**:
-An offline HTML build of the panel over the source scan, written by `ng-devtools build --outDir <dir>`. No page connects to it.
+An offline HTML build of the panel over the source scan, written by `pangular build --outDir <dir>`. No page connects to it.
 _Avoid_: export, snapshot, static site
 
 **Redaction**:

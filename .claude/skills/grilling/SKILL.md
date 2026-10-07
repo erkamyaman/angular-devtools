@@ -15,7 +15,7 @@ Interview the user about every part of the plan until you reach a shared underst
 
 ## Facts versus decisions
 
-- Look up facts yourself instead of asking. Read the code, the docs, the issue and its comments (`gh issue view <n> --repo santoshyadavdev/angular-devtools --comments`), `git log`, and Angular's own source in `node_modules/@angular/*`. Quote what you found when it shapes a question.
+- Look up facts yourself instead of asking. Read the code, the docs, the issue and its comments (`gh issue view <n> --repo pangular-inspector/devtools --comments`), `git log`, and Angular's own source in `node_modules/@angular/*`. Quote what you found when it shapes a question.
 - Put every decision to the user and wait. A decision is anything about behaviour, scope, naming, defaults, security or what the project supports. Don't settle one because it looks obvious.
 - Use the words in `docs/CONTEXT.md`. If a question needs a word that isn't there, say so; the answer may belong in the glossary.
 

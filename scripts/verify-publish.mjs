@@ -4,11 +4,11 @@
  * package into it from that registry, wire the documented setup, build it, and check the hub
  * answers.
  *
- * The workspace links `@santoshyadavdev/ng-devtools` to its TypeScript sources, so nothing else
+ * The workspace links `@pangular-inspector/devtools` to its TypeScript sources, so nothing else
  * here checks what npm actually gets: `publishConfig.exports`, the `files` list, the bundled panel
  * in `dist/public`, and dependencies that resolve by version from a registry.
  *
- * Nothing reaches npmjs. A throwaway Verdaccio serves `@santoshyadavdev/*` itself, with no uplink
+ * Nothing reaches npmjs. A throwaway Verdaccio serves `@pangular-inspector/*` itself, with no uplink
  * for the scope, so a package that failed to publish cannot be quietly satisfied by the real one.
  * Everything else is proxied to npmjs.
  *
@@ -45,7 +45,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const packageDir = path.join(root, 'packages/ng-devtools');
+const packageDir = path.join(root, 'packages/devtools');
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const manifest = readJson(path.join(packageDir, 'package.json'));
 
@@ -56,7 +56,7 @@ const REGISTRY = `http://localhost:${registryPort}`;
 const arg = (name) =>
   process.argv.find((value) => value.startsWith(`--${name}=`))?.slice(name.length + 3);
 
-const work = mkdtempSync(path.join(tmpdir(), 'ng-devtools-verify-'));
+const work = mkdtempSync(path.join(tmpdir(), 'pangular-verify-'));
 const children = new Set();
 
 function stopAll() {
@@ -156,7 +156,7 @@ uplinks:
     url: https://registry.npmjs.org/
 max_body_size: 200mb
 packages:
-  '@santoshyadavdev/*':
+  '@pangular-inspector/*':
     access: $all
     publish: $authenticated
     # No proxy: the package under test must come from this registry or not at all.
@@ -248,14 +248,14 @@ function newest(name, range) {
 const OVERLAY_CLI = `bootstrapApplication(App, appConfig)
   .then(() => {
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
-      return import('@santoshyadavdev/ng-devtools/overlay');
+      return import('@pangular-inspector/devtools/overlay');
     }
     return undefined;
   })
   .catch((err) => console.error(err));`;
 
 const OVERLAY_VITE = `bootstrapApplication(App, appConfig).then(() => {
-  if (import.meta.env.DEV) void import('@santoshyadavdev/ng-devtools/overlay');
+  if (import.meta.env.DEV) void import('@pangular-inspector/devtools/overlay');
 });`;
 
 /** The hub answers its connection file and serves the panel the package bundles. */
@@ -267,10 +267,10 @@ async function checkHub(base, child, logFile) {
   } catch {
     throw new Error(`__connection.json is not JSON:\n${text.slice(0, 500)}`);
   }
-  const panelUrl = `${base}/__devframes/ng-devtools/`;
+  const panelUrl = `${base}/__devframes/pangular/`;
   const panel = await fetch(panelUrl);
   const html = await panel.text();
-  if (!panel.ok || !html.includes('<title>Angular DevTools</title>')) {
+  if (!panel.ok || !html.includes('<title>Pangular Inspector</title>')) {
     throw new Error(`the panel did not load (${panel.status}):\n${html.slice(0, 500)}`);
   }
   const script = /<script[^>]+src="([^"]+\.js)"/.exec(html)?.[1];
@@ -308,12 +308,12 @@ async function angularCli(version) {
   replaceIn(
     server,
     "import express from 'express';",
-    "import express from 'express';\nimport { initNgDevtoolsHub } from '@santoshyadavdev/ng-devtools/hub';",
+    "import express from 'express';\nimport { initPangularHub } from '@pangular-inspector/devtools/hub';",
   );
   replaceIn(
     server,
     'const app = express();',
-    'const app = express();\nconst devtools = initNgDevtoolsHub({ ws: false });\napp.use(devtools.nodeMiddleware);',
+    'const app = express();\nconst devtools = initPangularHub({ ws: false });\napp.use(devtools.nodeMiddleware);',
   );
   replaceIn(
     path.join(app, 'src/main.ts'),
@@ -352,9 +352,9 @@ async function analog(version) {
   replaceIn(
     config,
     "import analog from '@analogjs/platform';",
-    "import analog from '@analogjs/platform';\nimport ngDevtools from '@santoshyadavdev/ng-devtools/vite';",
+    "import analog from '@analogjs/platform';\nimport pangular from '@pangular-inspector/devtools/vite';",
   );
-  replaceIn(config, 'analog(),', 'analog(),\n    ngDevtools(),');
+  replaceIn(config, 'analog(),', 'analog(),\n    pangular(),');
   replaceIn(path.join(app, 'src/main.ts'), 'bootstrapApplication(App, appConfig);', OVERLAY_VITE);
 
   console.log('vite build');

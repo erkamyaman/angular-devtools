@@ -18,6 +18,7 @@ import { LimitNote } from '../ui/limit-note';
 import { FormsFieldDetail } from './forms-field-detail';
 import { FormsLint, FormsSubmit } from './forms-report';
 import { FormsTimeline } from './forms-timeline';
+import { FormsWebMcp } from './forms-webmcp';
 import {
   FORMS_STYLES,
   KIND_LABELS,
@@ -30,6 +31,7 @@ import {
   type FormEvent,
   type FormFieldError,
   type FormFieldNode,
+  type WebMcpPage,
 } from './forms-types';
 
 type Tab = 'fields' | 'timeline' | 'submit' | 'lint';
@@ -70,6 +72,7 @@ interface FormsSnapshot {
   events?: FormEvent[];
   instrumented?: string[];
   dropped?: Record<string, number>;
+  webMcp?: WebMcpPage[];
 }
 
 interface FieldRow {
@@ -88,7 +91,15 @@ function countFields(node: FormFieldNode): number {
 
 @Component({
   selector: 'app-forms-inspector',
-  imports: [JsonPipe, FormsFieldDetail, FormsTimeline, FormsSubmit, FormsLint, LimitNote],
+  imports: [
+    JsonPipe,
+    FormsFieldDetail,
+    FormsTimeline,
+    FormsSubmit,
+    FormsLint,
+    FormsWebMcp,
+    LimitNote,
+  ],
   host: { '(keydown.escape)': 'cancelPick()' },
   template: `
     @if (!rpc()) {
@@ -220,6 +231,11 @@ function countFields(node: FormFieldNode): number {
                 </ul>
               </details>
             }
+            <app-forms-webmcp
+              [tool]="form.webMcp"
+              [page]="webMcpPage(form.id)"
+              [signalForm]="form.kind === 'signal'"
+            />
 
             <div class="action-bar">
               <div class="actions" role="group" aria-label="Form actions">
@@ -1250,6 +1266,7 @@ export class FormsInspector {
   readonly focusHandled = output<void>();
 
   readonly forms = signal<CollectedForm[]>([]);
+  readonly webMcp = signal<WebMcpPage[]>([]);
   readonly events = signal<FormEvent[]>([]);
   readonly loading = signal(true);
   readonly failed = signal(false);
@@ -1278,6 +1295,11 @@ export class FormsInspector {
   readonly message = signal('');
   readonly armed = signal<string | null>(null);
   readonly snapshot = signal<string | null>(null);
+
+  webMcpPage(formId: string): WebMcpPage | undefined {
+    const page = pageOf(formId);
+    return this.webMcp().find((entry) => entry.pageId === page);
+  }
   readonly picking = signal<string | null>(null);
   private pickSeq = 0;
 
@@ -1380,7 +1402,7 @@ export class FormsInspector {
     this.loading.set(true);
     this.failed.set(false);
     try {
-      const state = await client.scope('ng-devtools').rpc.sharedState('forms');
+      const state = await client.scope('pangular').rpc.sharedState('forms');
       if (this.destroyRef.destroyed) return;
       const apply = (value: unknown) => {
         const snapshot = value as FormsSnapshot | undefined;
@@ -1388,6 +1410,7 @@ export class FormsInspector {
         this.events.set(snapshot?.events ?? []);
         this.instrumented.set(snapshot?.instrumented ?? []);
         this.dropped.set(snapshot?.dropped ?? {});
+        this.webMcp.set(snapshot?.webMcp ?? []);
         this.version.update((v) => v + 1);
       };
       apply(state.value());
@@ -1520,7 +1543,7 @@ export class FormsInspector {
     const client = this.rpc();
     if (!client) return;
     void client
-      .scope('ng-devtools')
+      .scope('pangular')
       .rpc.callEvent('request-form-highlight', formId ? { formId, path } : null);
   }
 

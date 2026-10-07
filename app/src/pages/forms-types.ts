@@ -56,7 +56,29 @@ export interface CollectedForm {
   submit?: { hasAction: boolean; willRun: boolean; submitting: boolean };
   submitDom?: { reasons: string[] };
   errorSummary?: { path: string; kind: string; message: string }[];
+  webMcp?: WebMcpTool;
   root: FormFieldNode;
+}
+
+export interface WebMcpTool {
+  name: string;
+  description: string;
+  status: 'registering' | 'registered' | 'failed';
+  seen: 'register' | 'list' | 'error';
+  error?: string;
+  inputs?: string[];
+  required?: string[];
+  requiredChanged?: { path: string; now: boolean }[];
+  blocking?: { path: string; reason: string }[];
+  duplicate?: boolean;
+  calls?: { at: number; ms?: number; outcome: string; fields?: string[]; detail?: string }[];
+}
+
+export interface WebMcpPage {
+  pageId?: string;
+  modelContext: boolean;
+  provided?: boolean;
+  tools: WebMcpTool[];
 }
 
 export function pageOf(formId: string): string {
@@ -132,8 +154,7 @@ export function redactLabel(reason: string): string {
   return REDACT_LABELS[reason] ?? reason;
 }
 
-export const UNMASK_DOCS_URL =
-  'https://github.com/santoshyadavdev/angular-devtools/blob/main/apps/docs/src/content/security.md#opt-fields-in-or-out';
+export const UNMASK_DOCS_URL = 'https://pangular-inspector.dev/security/#opt-fields-in-or-out';
 
 export async function formAction(
   client: DevframeRpcClient | null,

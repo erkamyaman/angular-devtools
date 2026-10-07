@@ -15,6 +15,7 @@ import {
   untracked,
 } from '@angular/core';
 import type { DevframeRpcClient } from 'devframe/client';
+import { ExtensionBridge, type SourceLocation } from '../extension-bridge';
 import { hostPageId } from '../page-id';
 import { pickPage } from '../live-pages';
 import { isAngularNativePage } from '../native-page';
@@ -70,6 +71,7 @@ interface Detail {
   name: string;
   tag: string;
   path: string;
+  source?: SourceLocation;
   changeDetection?: string;
   encapsulation?: string;
   inputs: Prop[];
@@ -279,8 +281,17 @@ function bare(name: string): string {
               <span class="badge">component</span>
               <h2 id="ct-detail-title" class="mono">{{ sel.name }}</h2>
               <span class="mono muted">&lt;{{ sel.tag }}&gt;</span>
+              @if (whereOf(sel); as where) {
+                <p class="where mono">{{ where.file }}:{{ where.line }}</p>
+              }
+              @if (devtoolsActions()) {
+                <div class="actions" role="group" aria-label="Chrome DevTools">
+                  <button type="button" (click)="revealInElements(sel)">Reveal in Elements</button>
+                  <button type="button" (click)="openSource(sel)">Open source</button>
+                </div>
+                <p class="where action-message" role="status">{{ actionMessage() }}</p>
+              }
               @if (sourceFor(sel); as src) {
-                <p class="where mono">{{ src.file }}:{{ src.line }}</p>
                 @if (formsIn(src.file).length) {
                   <div class="actions">
                     @for (form of formsIn(src.file); track form.formId) {
@@ -576,7 +587,7 @@ function bare(name: string): string {
           <p class="state-title">Could not load components</p>
           <p class="state-hint">
             @if (staticReport()) {
-              Run <code>ng-devtools build</code> again to rebuild the report.
+              Run <code>pangular build</code> again to rebuild the report.
             } @else {
               Check that the dev server is running, then try again.
             }
@@ -1347,6 +1358,11 @@ export class ComponentTree {
   private pickPageId: string | null = null;
   private pickSeq = 0;
   readonly focusId = signal<string | null>(null);
+  private readonly bridge = inject(ExtensionBridge);
+  readonly actionMessage = linkedSignal<string | null, string>({
+    source: this.selectedId,
+    computation: () => '',
+  });
   readonly collapsed = signal<ReadonlySet<string>>(new Set());
   readonly openKey = signal<string | null>(null);
   private readonly outlets = signal<OutletInfo[]>([]);
@@ -1381,6 +1397,9 @@ export class ComponentTree {
 
   readonly live = computed(() => (this.page()?.roots.length ?? 0) > 0);
   readonly native = computed(() => isAngularNativePage(this.page()));
+  readonly devtoolsActions = computed(
+    () => this.bridge.available && !!this.page() && !this.native() && !this.staticReport(),
+  );
 
   private readonly cdPages = signal<Record<string, CdPage>>({});
   readonly cdPage = computed(() => {
@@ -1526,7 +1545,7 @@ export class ComponentTree {
 
   private async watch(client: DevframeRpcClient) {
     for (const cleanup of this.cleanups.splice(0)) cleanup();
-    const my = client.scope('ng-devtools');
+    const my = client.scope('pangular');
     try {
       const tree = await my.rpc.sharedState('component-tree');
       if (this.destroyRef.destroyed) return;
@@ -1574,7 +1593,7 @@ export class ComponentTree {
     const client = this.rpc();
     if (!client) return;
     this.loading.set(true);
-    const my = client.scope('ng-devtools');
+    const my = client.scope('pangular');
     try {
       this.source.set((await my.rpc.call('get-components')) as SourceComponent[]);
       this.error.set(false);
@@ -1593,6 +1612,38 @@ export class ComponentTree {
 
   formsIn(file: string) {
     return this.formOwners().filter((form) => form.file === file);
+  }
+
+  whereOf(node: LiveNode): SourceLocation | null {
+    return this.detail()?.source ?? this.sourceFor(node);
+  }
+
+  async revealInElements(node: LiveNode) {
+    const pageId = this.page()?.pageId;
+    if (!pageId) return;
+    this.actionMessage.set('');
+    const result = await this.bridge.reveal(pageId, node.id);
+    if (this.selectedId() !== node.id) return;
+    this.actionMessage.set(
+      result.ok
+        ? ''
+        : 'Could not reveal it. The component must be rendered in the tab these DevTools inspect.',
+    );
+  }
+
+  async openSource(node: LiveNode) {
+    const pageId = this.page()?.pageId;
+    if (!pageId) return;
+    const where = this.whereOf(node);
+    this.actionMessage.set('');
+    const result = await this.bridge.openSource(pageId, node.id, where);
+    if (this.selectedId() !== node.id) return;
+    if (result.ok) return;
+    this.actionMessage.set(
+      where
+        ? `Not found in Sources. Open ${where.file}:${where.line} in your editor.`
+        : 'Could not open the source. The component must be rendered in the tab these DevTools inspect.',
+    );
   }
 
   sourceFor(node: LiveNode): SourceComponent | null {
@@ -1677,7 +1728,7 @@ export class ComponentTree {
     this.picking.set(true);
     this.say('Click a component in the app. Press Escape to cancel.');
     const result = (await client
-      .scope('ng-devtools')
+      .scope('pangular')
       .rpc.call('request-component-pick', { pageId: this.pickPageId ?? undefined })
       .catch(() => ({ ok: false, error: 'Could not reach the devtools server.' }))) as PickResult;
     if (seq !== this.pickSeq) return;
@@ -1697,7 +1748,7 @@ export class ComponentTree {
     const client = this.rpc();
     if (!client || !this.picking()) return;
     void client
-      .scope('ng-devtools')
+      .scope('pangular')
       .rpc.call('cancel-component-pick', { pageId: this.pickPageId ?? undefined })
       .catch(() => {});
   }
@@ -1718,7 +1769,7 @@ export class ComponentTree {
     const client = this.rpc();
     if (!client) return;
     void client
-      .scope('ng-devtools')
+      .scope('pangular')
       .rpc.call('select-component', { pageId: this.page()?.pageId, id })
       .catch(() => {});
   }
@@ -1769,7 +1820,7 @@ export class ComponentTree {
     if (!client) return;
     const target = id ? { pageId: this.page()?.pageId, id } : null;
     void client
-      .scope('ng-devtools')
+      .scope('pangular')
       .rpc.call('request-page-highlight', target)
       .catch(() => {});
   }

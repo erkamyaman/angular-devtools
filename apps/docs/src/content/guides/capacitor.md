@@ -32,13 +32,13 @@ This guide adds the devtools to an Ionic or Capacitor *Angular app. The app runs
 
 <ngmd-workflow>
   <ngmd-step title="Install the package">
-    Add <code>&#64;santoshyadavdev/ng-devtools</code> to the app.
+    Add <code>&#64;pangular-inspector/devtools</code> to the app.
   </ngmd-step>
   <ngmd-step title="Start the overlay">
-    Call <code>initOverlay()</code> from <code>&#64;santoshyadavdev/ng-devtools/overlay/manual</code> in <code>src/main.ts</code>, with the server's address and connection info.
+    Call <code>initOverlay()</code> from <code>&#64;pangular-inspector/devtools/overlay-manual</code> in <code>src/main.ts</code>, with the server's address and connection info.
   </ngmd-step>
   <ngmd-step title="Run the devtools server">
-    Start <code>ng-devtools dev --no-auth</code> in the app's folder.
+    Start <code>npx &#64;pangular-inspector/devtools dev --no-auth</code> in the app's folder.
   </ngmd-step>
   <ngmd-step title="Run the app">
     Run the app on the simulator, the emulator or a device, and open the devtools UI in your desktop browser.
@@ -48,24 +48,24 @@ This guide adds the devtools to an Ionic or Capacitor *Angular app. The app runs
 ## Step 1: Install
 
 ```bash group="install" name="npm" image="https://cdn.simpleicons.org/npm/CB3837" active
-npm install -D @santoshyadavdev/ng-devtools
+npm install -D @pangular-inspector/devtools
 ```
 
 ```bash group="install" name="pnpm" image="https://cdn.simpleicons.org/pnpm/F69220"
-pnpm add -D @santoshyadavdev/ng-devtools
+pnpm add -D @pangular-inspector/devtools
 ```
 
 ```bash group="install" name="yarn" image="https://cdn.simpleicons.org/yarn/2C8EBB"
-yarn add -D @santoshyadavdev/ng-devtools
+yarn add -D @pangular-inspector/devtools
 ```
 
 ```bash group="install" name="bun" image="https://bun.sh/logo.svg"
-bun add -d @santoshyadavdev/ng-devtools
+bun add -d @pangular-inspector/devtools
 ```
 
 ## Step 2: Start the overlay
 
-Import `initOverlay` from `@santoshyadavdev/ng-devtools/overlay/manual` after bootstrap, in development only:
+Import `initOverlay` from `@pangular-inspector/devtools/overlay-manual` after bootstrap, in development only:
 
 ```ts {7-13}
 // src/main.ts
@@ -76,7 +76,7 @@ import {appConfig} from './app/app.config';
 bootstrapApplication(App, appConfig)
   .then(async () => {
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
-      const {initOverlay} = await import('@santoshyadavdev/ng-devtools/overlay/manual');
+      const {initOverlay} = await import('@pangular-inspector/devtools/overlay-manual');
       await initOverlay({
         baseURL: 'http://localhost:9999/',
         connectionMeta: {backend: 'websocket', websocket: {path: '__ws'}},
@@ -88,7 +88,7 @@ bootstrapApplication(App, appConfig)
 
 ### Why the manual entry
 
-`@santoshyadavdev/ng-devtools/overlay` starts an overlay on import and looks for the server next to the page. In a WebView that page is `capacitor://localhost` or `https://localhost`, so that attempt fails, and it also adds the floating button to the app. `@santoshyadavdev/ng-devtools/overlay/manual` exports the same functions and starts nothing until you call `initOverlay`. It adds no floating button, so you open the devtools in your desktop browser instead.
+`@pangular-inspector/devtools/overlay` starts an overlay on import and looks for the server next to the page. In a WebView that page is `capacitor://localhost` or `https://localhost`, so that attempt fails, and it also adds the floating button to the app. `@pangular-inspector/devtools/overlay-manual` exports the same functions and starts nothing until you call `initOverlay`. It adds no floating button, so you open the devtools in your desktop browser instead.
 
 ### Why `connectionMeta`
 
@@ -137,7 +137,7 @@ Run the server in the app's folder, so the source scanners read its `src/`:
 
 ```bash
 cd my-ionic-app
-npx @santoshyadavdev/ng-devtools dev --no-auth
+npx @pangular-inspector/devtools dev --no-auth
 ```
 
 The server listens on `localhost` only, which the iOS simulator reaches, and the Android emulator reaches through `adb reverse` or `10.0.2.2`. `--no-auth` is needed because the app cannot enter the one-time code the server asks for.
@@ -150,7 +150,7 @@ The server listens on `localhost` only, which the iOS simulator reaches, and the
 A device on Wi-Fi reaches your machine over the network, so the server has to listen on an interface the device can reach:
 
 ```bash
-npx @santoshyadavdev/ng-devtools dev --host 192.168.1.20 --no-auth
+npx @pangular-inspector/devtools dev --host 192.168.1.20 --no-auth
 ```
 
 <ngmd-alert severity="warning" label="Trusted networks only">
@@ -167,7 +167,7 @@ Build and run the app as usual, for example with `npx cap run ios` or `npx cap r
 
 <ngmd-accordion>
   <ngmd-accordion-item title="The app shows no data in the devtools" open>
-    Inspect the WebView (Safari's <strong>Develop</strong> menu for iOS, <code>chrome://inspect</code> for Android) and look for a <code>[ng-devtools]</code> error in the console. <strong>No devtools server found</strong> means the address is wrong for where the app runs, or the server is not running. A blocked <code>__connection.json</code> request means <code>connectionMeta</code> is missing.
+    Inspect the WebView (Safari's <strong>Develop</strong> menu for iOS, <code>chrome://inspect</code> for Android) and look for a <code>[pangular]</code> error in the console. <strong>No devtools server found</strong> means the address is wrong for where the app runs, or the server is not running. A blocked <code>__connection.json</code> request means <code>connectionMeta</code> is missing.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Does the WebSocket pass the server's origin check?">
     Yes. The app's origin is <code>capacitor://localhost</code> or <code>https://localhost</code>, and the server accepts loopback origins by default.

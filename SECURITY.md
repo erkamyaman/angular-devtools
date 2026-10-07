@@ -2,13 +2,13 @@
 
 ## Supported versions
 
-Angular DevTools is in early development. Only the latest published release of
-`@santoshyadavdev/ng-devtools` is supported. There are no older release lines to backport a fix to.
+Pangular Inspector is in early development. Only the latest published release of
+`@pangular-inspector/devtools` is supported. There are no older release lines to backport a fix to.
 
 ## Reporting a vulnerability
 
 Report a vulnerability privately through GitHub's
-[private vulnerability reporting](https://github.com/santoshyadavdev/angular-devtools/security/advisories/new)
+[private vulnerability reporting](https://github.com/pangular-inspector/devtools/security/advisories/new)
 ("Report a vulnerability" on the repository's Security tab). Don't open a public issue for a
 security report.
 

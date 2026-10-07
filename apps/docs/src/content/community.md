@@ -9,15 +9,15 @@ description: Where to ask questions, report bugs and support the project.
 
 # Get involved
 
-Angular DevTools is open source under the MIT license. Here is where to reach the people behind it, and how to help.
+Pangular Inspector is open source under the MIT license. Here is where to reach the people behind it, and how to help.
 
 ## Maintainers
 
 <ngmd-card-grid columns="2">
-  <ngmd-card avatar image="https://github.com/santoshyadavdev.png?size=96" title="Santosh Yadav" link="https://github.com/santoshyadavdev" cta="GitHub">
-    Maintainer.
-  </ngmd-card>
   <ngmd-card avatar image="https://github.com/erkamyaman.png?size=96" title="Erkam Yaman" link="https://github.com/erkamyaman" cta="GitHub">
+    Lead maintainer.
+  </ngmd-card>
+  <ngmd-card avatar image="https://github.com/santoshyadavdev.png?size=96" title="Santosh Yadav" link="https://github.com/santoshyadavdev" cta="GitHub">
     Maintainer.
   </ngmd-card>
 </ngmd-card-grid>
@@ -28,13 +28,13 @@ Angular DevTools is open source under the MIT license. Here is where to reach th
   <ngmd-card icon="sparkles" title="Discord" link="https://discord.gg/YRTyJd6Qx" cta="Join">
     Join the conversation, ask questions, and share feedback.
   </ngmd-card>
-  <ngmd-card icon="shield" title="Bug reports" link="https://github.com/santoshyadavdev/angular-devtools/issues" cta="Open an issue">
+  <ngmd-card icon="shield" title="Bug reports" link="https://github.com/pangular-inspector/devtools/issues" cta="Open an issue">
     File an issue when something doesn't work as documented.
   </ngmd-card>
-  <ngmd-card icon="lightbulb" title="Feature requests" link="https://github.com/santoshyadavdev/angular-devtools/issues" cta="Suggest">
+  <ngmd-card icon="lightbulb" title="Feature requests" link="https://github.com/pangular-inspector/devtools/issues" cta="Suggest">
     Propose a new inspector, agent tool or setup.
   </ngmd-card>
-  <ngmd-card icon="code" title="Pull requests" link="https://github.com/santoshyadavdev/angular-devtools/pulls" cta="Contribute">
+  <ngmd-card icon="code" title="Pull requests" link="https://github.com/pangular-inspector/devtools/pulls" cta="Contribute">
     Fixes, docs and features.
   </ngmd-card>
 </ngmd-card-grid>
@@ -43,7 +43,7 @@ Angular DevTools is open source under the MIT license. Here is where to reach th
 
 A good bug report saves a round-trip. Include:
 
-- your Angular version and the version of `@santoshyadavdev/ng-devtools`,
+- your Angular version and the version of `@pangular-inspector/devtools`,
 - your setup: Angular CLI and Express, Vite and Analog, or the standalone CLI,
 - the tab that misbehaves, and what you expected to see,
 - a small reproduction, if you can.
@@ -86,5 +86,5 @@ Thanks to everyone who sponsors the project. The [Sponsors page](/sponsors) list
 <ngmd-pill-row>
   <ngmd-pill href="/sponsors" title="Sponsors"></ngmd-pill>
   <ngmd-pill href="/contributing/development" title="Development setup"></ngmd-pill>
-  <ngmd-pill href="https://github.com/santoshyadavdev/angular-devtools" title="View on GitHub"></ngmd-pill>
+  <ngmd-pill href="https://github.com/pangular-inspector/devtools" title="View on GitHub"></ngmd-pill>
 </ngmd-pill-row>
