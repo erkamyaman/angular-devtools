@@ -9,7 +9,7 @@ description: Send live components, signals, injectors and NgRx stores from an An
 
 # Angular Native
 
-[Angular Native](https://ng-native.com) renders *Angular onto React Native's Fabric renderer, so the app has no DOM for the [browser overlay](./overlay.md) to walk. The `@santoshyadavdev/ng-devtools/overlay-angular-native` entry point walks Angular Native's own node tree instead and sends the same live data to a devtools server that runs on your machine.
+[Angular Native](https://ng-native.com) renders *Angular onto React Native's Fabric renderer, so the app has no DOM for the [browser overlay](./overlay.md) to walk. The `@pangular-inspector/devtools/overlay-angular-native` entry point walks Angular Native's own node tree instead and sends the same live data to a devtools server that runs on your machine.
 
 This page describes what the overlay shows and how it works. To add it to an app, follow [Set up Angular Native](../guides/angular-native.md).
 
@@ -80,7 +80,7 @@ The server's [configuration](./configuration.md) applies to the app: inspectors 
 
 <ngmd-accordion>
   <ngmd-accordion-item title="The live tabs stay empty" open>
-    Check the Metro log for a <code>[ng-devtools]</code> line. A warning about <code>--no-auth</code> means the server asked for a code. A warning about reaching the server means the address is wrong for where the app runs. See <a href="../guides/angular-native.md#where-the-overlay-connects">where the overlay connects</a>. A release build has no <code>ng</code> global, so nothing is collected there.
+    Check the Metro log for a <code>[pangular]</code> line. A warning about <code>--no-auth</code> means the server asked for a code. A warning about reaching the server means the address is wrong for where the app runs. See <a href="../guides/angular-native.md#where-the-overlay-connects">where the overlay connects</a>. A release build has no <code>ng</code> global, so nothing is collected there.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="The Providers list of an injector is empty">
     Angular records providers only when a <code>window</code> global exists as <code>mount()</code> creates the platform. If the list stays empty, check that <code>window</code> is defined before <code>mount()</code> runs.

@@ -1,8 +1,8 @@
 {
-  "name": "angular-devtools-docs",
+  "name": "pangular-inspector-docs",
   "version": "0.0.0",
   "private": true,
-  "description": "Documentation site for Angular DevTools",
+  "description": "Documentation site for Pangular Inspector",
   "license": "MIT",
   "type": "module",
   "engines": {

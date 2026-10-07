@@ -10,22 +10,22 @@ const retryButton = document.getElementById('status-retry');
 const docsLink = document.getElementById('status-docs');
 const SETUP_DOCS = { href: docsLink.href, text: docsLink.textContent };
 const REFUSED_DOCS = {
-  href: 'https://github.com/santoshyadavdev/angular-devtools/blob/main/apps/docs/src/content/getting-started/vite.md#answers-only-your-machine',
+  href: 'https://github.com/pangular-inspector/devtools/blob/main/apps/docs/src/content/getting-started/vite.md#answers-only-your-machine',
   text: 'Why the devtools server refuses requests',
 };
 
 // Where devframe may be mounted.
-const PATHS = ['/__ng-devtools/', '/__devframes/ng-devtools/', '/__devframe/', '/'];
+const PATHS = ['/__pangular/', '/__devframes/pangular/', '/__devframe/', '/'];
 const CONNECTION_FILES = ['__devframe/__connection.json', '__connection.json'];
 const PROBE_TIMEOUT_MS = 1500;
 const REFUSED_TEXT_LIMIT = 200;
 const PAGE_ID_WAIT_MS = 5000;
 const PAGE_ID_POLL_MS = 250;
 const DETECTING = 'Detecting Angular app…';
-const PAGE_ID = `typeof window.__ngDevtoolsPageId === 'string' ? window.__ngDevtoolsPageId : null`;
+const PAGE_ID = `typeof window.__pangularPageId === 'string' ? window.__pangularPageId : null`;
 const STORED_PAGE_ID = `(() => {
   try {
-    return sessionStorage.getItem('ng-devtools-page-id');
+    return sessionStorage.getItem('pangular-page-id');
   } catch {
     return null;
   }
@@ -43,7 +43,7 @@ applyTheme(themeName);
 chrome.devtools.panels.setThemeChangeHandler?.((name) => {
   applyTheme(name);
   frame.contentWindow?.postMessage(
-    { type: 'ng-devtools:theme-change', theme: name },
+    { type: 'pangular:theme-change', theme: name },
     chrome.runtime.getURL(''),
   );
 });
@@ -70,7 +70,7 @@ async function detectConnection() {
   const page = toURL(await evalInPage('location.origin'));
   if (run !== detection) return;
   if (!page || !['http:', 'https:'].includes(page.protocol)) {
-    showStatus('Angular DevTools connects to pages served over http or https.');
+    showStatus('Pangular Inspector connects to pages served over http or https.');
     return;
   }
 
@@ -79,7 +79,7 @@ async function detectConnection() {
   const granted = await chrome.permissions.contains(access);
   if (run !== detection) return;
   if (!granted) {
-    showStatus(`Allow Angular DevTools to reach the devtools server on ${page.host}.`, {
+    showStatus(`Allow Pangular Inspector to reach the devtools server on ${page.host}.`, {
       allow: async () => {
         if (await chrome.permissions.request(access)) detectConnection();
       },
@@ -183,9 +183,9 @@ function loadPanel(baseURL, pageId) {
 }
 
 chrome.devtools.panels.elements.onSelectionChanged.addListener(async () => {
-  const id = await evalInPage('window.__ngDevtoolsComponentOf?.($0) ?? null');
+  const id = await evalInPage('window.__pangularComponentOf?.($0) ?? null');
   if (typeof id !== 'string') return;
-  frame.contentWindow?.postMessage({ type: 'ng-devtools:inspect-component', id }, location.origin);
+  frame.contentWindow?.postMessage({ type: 'pangular:inspect-component', id }, location.origin);
 });
 
 // Start detection after a short delay to let the page settle

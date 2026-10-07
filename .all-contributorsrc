@@ -74,6 +74,6 @@
   "skipCi": true,
   "repoType": "github",
   "repoHost": "https://github.com",
-  "projectName": "angular-devtools",
-  "projectOwner": "santoshyadavdev"
+  "projectName": "devtools",
+  "projectOwner": "pangular-inspector"
 }

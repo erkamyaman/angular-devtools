@@ -1,4 +1,4 @@
-# Contributing to Angular DevTools
+# Contributing to Pangular Inspector
 
 Thanks for your interest in contributing. This guide covers the rules a change follows and how to get it merged. For setup, the project structure, the commands and what CI runs, see [Development setup](./apps/docs/src/content/contributing/development.md) on the docs site.
 
@@ -25,7 +25,7 @@ By taking part you agree to the [Code of Conduct](./CODE_OF_CONDUCT.md). Report 
 
 ## Make changes
 
-- **A new inspector or a data fix:** follow [Reading data from the page](docs/contributing/coding-standards.md#reading-data-from-the-page-packagesng-devtools). Collection goes in its own module, reports carry a `pageId`, and the server expires and forgets pages.
+- **A new inspector or a data fix:** follow [Reading data from the page](docs/contributing/coding-standards.md#reading-data-from-the-page-packagesdevtools). Collection goes in its own module, reports carry a `pageId`, and the server expires and forgets pages.
 - **A new tab, RPC function or agent tool:** follow the steps in [Development setup](./apps/docs/src/content/contributing/development.md). Describe what an agent tool returns and when it is empty, and add tests.
 - **UI changes:** follow the [UI guidelines](docs/contributing/ui-guidelines.md). Use the theme variables, the SCSS mixins and the shared dropdown.
 - **Docs changes:** follow the [writing guide](./apps/docs/src/content/contributing/writing-docs.md). Run the docs site with `pnpm docs:dev`.

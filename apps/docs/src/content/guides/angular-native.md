@@ -32,13 +32,13 @@ This guide adds the devtools to an [Angular Native](https://ng-native.com) app. 
 
 <ngmd-workflow>
   <ngmd-step title="Install the packages">
-    Add <code>&#64;santoshyadavdev/ng-devtools</code> and <code>devframe</code>. A bare React Native app also needs a <code>URL</code> polyfill.
+    Add <code>&#64;pangular-inspector/devtools</code> and <code>devframe</code>. A bare React Native app also needs a <code>URL</code> polyfill.
   </ngmd-step>
   <ngmd-step title="Start the overlay">
     Call <code>initAngularNativeOverlay()</code> in <code>src/main.ts</code>, after <code>mount()</code>, with the root node it returns.
   </ngmd-step>
   <ngmd-step title="Run the devtools server">
-    Start <code>ng-devtools dev --no-auth</code> in the app's folder.
+    Start <code>pangular dev --no-auth</code> in the app's folder.
   </ngmd-step>
   <ngmd-step title="Open the panel">
     Open the <strong>Angular Native apps</strong> URL the server prints. The live tabs fill once the app connects.
@@ -48,19 +48,19 @@ This guide adds the devtools to an [Angular Native](https://ng-native.com) app. 
 ## Step 1: Install
 
 ```bash group="install" name="npm" image="https://cdn.simpleicons.org/npm/CB3837" active
-npm install @santoshyadavdev/ng-devtools devframe
+npm install @pangular-inspector/devtools devframe
 ```
 
 ```bash group="install" name="pnpm" image="https://cdn.simpleicons.org/pnpm/F69220"
-pnpm add @santoshyadavdev/ng-devtools devframe
+pnpm add @pangular-inspector/devtools devframe
 ```
 
 ```bash group="install" name="yarn" image="https://cdn.simpleicons.org/yarn/2C8EBB"
-yarn add @santoshyadavdev/ng-devtools devframe
+yarn add @pangular-inspector/devtools devframe
 ```
 
 ```bash group="install" name="bun" image="https://bun.sh/logo.svg"
-bun add @santoshyadavdev/ng-devtools devframe
+bun add @pangular-inspector/devtools devframe
 ```
 
 ### WebSocket and URL
@@ -78,7 +78,7 @@ Start the overlay after `mount()` from `@ng-native/platform`, and pass the root 
 import {AppRegistry, Image, Platform, processColor} from 'react-native';
 import {mount} from '@ng-native/platform';
 import {getFabricUIManager, registerPlatformComponents} from '@ng-native/fabric';
-import {initAngularNativeOverlay} from '@santoshyadavdev/ng-devtools/overlay-angular-native';
+import {initAngularNativeOverlay} from '@pangular-inspector/devtools/overlay-angular-native';
 import {App} from './app/app.ts';
 
 registerPlatformComponents(Platform.OS);
@@ -112,7 +112,7 @@ Run the server in the app's folder, so the source scanners read its `src/`:
 
 ```bash
 cd my-angular-native-app
-npx @santoshyadavdev/ng-devtools dev --no-auth
+npx @pangular-inspector/devtools dev --no-auth
 ```
 
 The server listens on `localhost` only, which the iOS simulator reaches directly and an Android emulator reaches through `adb reverse`. `--no-auth` is needed because the app cannot enter the one-time code the panel asks for. Without it, the overlay logs a warning in the Metro log that names the flag and keeps retrying.
@@ -120,7 +120,7 @@ The server listens on `localhost` only, which the iOS simulator reaches directly
 When it is ready, the server prints the Angular Native view on its own line:
 
 ```text
-  ng-devtools v0.0.6
+  pangular v0.0.7
   Panel: http://localhost:9999/
   Angular Native apps: http://localhost:9999/?view=angular-native
   MCP:   http://localhost:9999/__mcp
@@ -129,7 +129,7 @@ When it is ready, the server prints the Angular Native view on its own line:
 A physical device over Wi-Fi reaches your machine over the network, so the server has to listen on an interface the device can reach:
 
 ```bash
-npx @santoshyadavdev/ng-devtools dev --host 192.168.1.20 --no-auth
+npx @pangular-inspector/devtools dev --host 192.168.1.20 --no-auth
 ```
 
 <ngmd-alert severity="warning" label="Trusted networks only">
@@ -142,7 +142,7 @@ See [Standalone CLI](../getting-started/cli.md) for the other server options and
 
 Open `http://localhost:9999/?view=angular-native` on your machine. The **Angular Native** view shows the tabs an app on a device fills: **Components**, **Signals**, **Injectors**, **Store** and **Pipes**. With no app connected, it says **No Angular Native app is connected**.
 
-When the app connects, the Metro log shows `[ng-devtools] Connected to the devtools server at http://localhost:9999/` and the tabs fill. Hover a component in the tree to outline its view on the device.
+When the app connects, the Metro log shows `[pangular] Connected to the devtools server at http://localhost:9999/` and the tabs fill. Hover a component in the tree to outline its view on the device.
 
 If the app reports to a hub (Express or the Vite plugin) instead, pick the **Angular Native** dock in the side rail. See [Where it shows in the panel](../getting-started/angular-native.md#where-it-shows-in-the-panel).
 
@@ -170,7 +170,7 @@ adb reverse tcp:9999 tcp:9999
 npm run android
 ```
 
-After a change in `packages/ng-devtools`, run `npm run devtools:pack` and then `npm install ./ng-devtools.tgz`, since a plain `npm install` keeps the tarball its lockfile pins. See [Angular Native demo](../contributing/demo-apps.md#angular-native-demo) for what each file covers.
+After a change in `packages/devtools`, run `npm run devtools:pack` and then `npm install ./pangular-inspector-devtools.tgz`, since a plain `npm install` keeps the tarball its lockfile pins. See [Angular Native demo](../contributing/demo-apps.md#angular-native-demo) for what each file covers.
 
 ## Where to next
 

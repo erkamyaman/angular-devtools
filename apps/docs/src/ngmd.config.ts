@@ -109,6 +109,7 @@ export interface NgmdConfig {
    *  paths route in-app; `http(s)` URLs open in a new tab. Leave undefined
    *  for no header links. */
   headerNav?: NavItem[];
+  footerNav?: NavItem[];
   /** Sponsors listed by `<app-sponsor-list>`. Leave undefined to render
    *  nothing. */
   sponsors?: Sponsor[];
@@ -133,12 +134,12 @@ export interface NgmdConfig {
 
 const config: NgmdConfig = {
   site: {
-    name: 'Angular DevTools',
+    name: 'Pangular Inspector',
     description:
       'Inspect Angular components, signals, dependency injection, routes, forms and stores. In the page, from the CLI, or through a coding agent over MCP.',
-    tagline: 'Devtools for Angular apps and coding agents',
-    url: 'https://santoshyadavdev.github.io/angular-devtools',
-    githubUrl: 'https://github.com/santoshyadavdev/angular-devtools',
+    tagline: 'The unified Angular devtools',
+    url: 'https://pangular-inspector.dev',
+    githubUrl: 'https://github.com/pangular-inspector/devtools',
     githubDir: 'apps/docs',
     links: {
       discord: 'https://discord.gg/YRTyJd6Qx',
@@ -151,6 +152,8 @@ const config: NgmdConfig = {
     {label: 'Inspectors', href: '/inspectors/dashboard'},
     {label: 'Agents', href: '/agents/mcp-server'},
   ],
+
+  footerNav: [{label: 'Press kit', href: '/press-kit'}],
 
   sponsors: [
     {name: 'CodeRabbit', login: 'coderabbitai'},
@@ -227,6 +230,7 @@ const config: NgmdConfig = {
       items: [
         {label: 'Get involved', href: '/community'},
         {label: 'Sponsors', href: '/sponsors'},
+        {label: 'Press kit', href: '/press-kit'},
       ],
     },
     {

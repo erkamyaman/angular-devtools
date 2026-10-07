@@ -65,7 +65,7 @@ The result of **Go** and **Read lazy** shows under the row you clicked.
 
 ### Setup
 
-How the router is set up: `provideRouter` or `forRoot`, the effective options with **set** or **default** badges, the enabled features, the strategies, the base href and hydration.
+How the router is set up (`provideRouter`, `forRoot or other` or `unknown`), the effective options with **set** or **default** badges, the enabled features, the strategies, the base href and hydration.
 
 `initialNavigation` shows the mode that `withEnabledBlockingInitialNavigation()`, `withDisabledInitialNavigation()` or the `forRoot` option sets. The features map to these router features:
 
@@ -97,7 +97,7 @@ Route config mistakes, each with a fix:
 
 Each finding says whether Angular throws, warns or does not warn. The lint skips lazy routes that have not loaded. It runs again after each navigation and config change, and keeps the current findings on screen while it does. Click **Check again** to rerun it.
 
-If no check could run, the view says **No checks ran** and why: the page runs in events-only mode, or it has not reported its route config yet. If the DevTools server does not answer, the view shows an error with **Retry**.
+If no check could run, the view says **No checks ran** and why: the page runs in events-only mode, or it has not reported its route config yet. If the devtools server does not answer, the view shows an error with **Retry**.
 
 ### Source route config
 
@@ -181,18 +181,18 @@ Without that recording, the guards listed for a navigation are candidates: the `
 
 ## Agent tools
 
-| Tool or resource                  | What it does                                                                                                                                                                       |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ng-devtools:explain-navigation`  | Why a navigation failed or redirected, with any loop and the cause of each hop. Pass `url` or `id` to narrow it, `limit` for more than the last 5, or `perf` for the slowest ones. |
-| `ng-devtools:inspect-route`       | The route the page is on. Pass `selector` (a component class, tag or link text) for the route a component was rendered for, or a link state.                                       |
-| `ng-devtools:list-routes`         | The live config with source files and example URLs. `match` predicts a URL, `audit` lists the guards of each page.                                                                 |
-| `ng-devtools:lint-routes`         | The lint findings, including redirect loops seen at runtime.                                                                                                                       |
-| `ng-devtools:router-config`       | The setup, including whether guard recording is on.                                                                                                                                |
-| `ng-devtools:export-navigation`   | A markdown repro, with any loop the navigation is part of. Defaults to the latest navigation that did not succeed.                                                                 |
-| `ng-devtools:explain-render-mode` | Which render mode a URL gets, from `*.routes.server.ts`.                                                                                                                           |
-| `ng-devtools:get-routes`          | Routes from your source files.                                                                                                                                                     |
-| `ng-devtools:navigate`            | Acts on the router: `navigate`, `abort`, `replay`, `probe`, `instrument` and `resolve-lazy`.                                                                                       |
-| `ng-devtools:router` (resource)   | The active route tree and recent navigations of each page.                                                                                                                         |
+| Tool or resource               | What it does                                                                                                                                                                       |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pangular:explain-navigation`  | Why a navigation failed or redirected, with any loop and the cause of each hop. Pass `url` or `id` to narrow it, `limit` for more than the last 5, or `perf` for the slowest ones. |
+| `pangular:inspect-route`       | The route the page is on. Pass `selector` (a component class, tag or link text) for the route a component was rendered for, or a link state.                                       |
+| `pangular:list-routes`         | The live config with source files and example URLs. `match` predicts a URL, `audit` lists the guards of each page.                                                                 |
+| `pangular:lint-routes`         | The lint findings, including redirect loops seen at runtime.                                                                                                                       |
+| `pangular:router-config`       | The setup, including whether guard recording is on.                                                                                                                                |
+| `pangular:export-navigation`   | A markdown repro, with any loop the navigation is part of. Defaults to the latest navigation that did not succeed.                                                                 |
+| `pangular:explain-render-mode` | Which render mode a URL gets, from `*.routes.server.ts`.                                                                                                                           |
+| `pangular:get-routes`          | Routes from your source files.                                                                                                                                                     |
+| `pangular:navigate`            | Acts on the router: `navigate`, `abort`, `replay`, `probe`, `instrument` and `resolve-lazy`.                                                                                       |
+| `pangular:router` (resource)   | The active route tree and recent navigations of each page.                                                                                                                         |
 
 `navigate` only accepts same-origin relative URLs that start with `/`. `resolve-lazy` needs a `routeId`. With [`actions.router`](../getting-started/configuration.md#actions) set to `false`, the tool refuses `navigate`, `abort`, `replay` and `probe`, and keeps `instrument` and `resolve-lazy`. See [Tools](../agents/tools.md).
 
@@ -204,7 +204,7 @@ Without that recording, the guards listed for a navigation are candidates: the `
 
 ### Setup kind on Angular 20.0 to 20.3.4
 
-**Set up with** tells `provideRouter` from `forRoot` by the `ng.ɵgetRouterInstance` helper. Angular 20.0 to 20.3.4 never publish it, so on those versions the row shows `unknown`.
+**Set up with** tells `provideRouter` from `forRoot` by the `ng.ɵgetRouterInstance` helper. Angular 20.0 to 20.3.4 never publish it, so on those versions the overlay reads the root providers instead. The `RouterModule.forRoot()` guard token means `forRoot or other`, and the `ROUTES` token without that guard means `provideRouter`. If neither is there, the row shows `unknown`.
 
 ### Abort and probe need Angular 20.2
 
@@ -212,7 +212,7 @@ Aborting and probing use the `currentNavigation` signal and `Navigation.abort()`
 
 ### Navigations before the devtools connected
 
-The tab lists only the last one, marked **before DevTools connected**, without timing or guard details. It also lists a navigation still running at that moment.
+The tab lists only the last one, marked **before Pangular Inspector connected**, without timing or guard details. It also lists a navigation still running at that moment.
 
 ### Redaction
 
@@ -220,7 +220,7 @@ The devtools replace query, matrix and fragment values with secret-looking keys 
 
 ### History and config caps
 
-The page keeps the last 50 navigations and 50 preloads. Set the navigation count with [`limits.navigations`](../getting-started/configuration.md#limits). Once older navigations are dropped, the **Navigations** view and `explain-navigation` say how many. The live config lists at most 200 routes per level (a route's children and its loaded lazy routes count as one level) and 1000 routes in total. The **Routes** view and `ng-devtools:list-routes` say how many routes were left out.
+The page keeps the last 50 navigations and 50 preloads. Set the navigation count with [`limits.navigations`](../getting-started/configuration.md#limits). Once older navigations are dropped, the **Navigations** view and `explain-navigation` say how many. The live config lists at most 200 routes per level (a route's children and its loaded lazy routes count as one level) and 1000 routes in total. The **Routes** view and `pangular:list-routes` say how many routes were left out.
 
 ## FAQ
 

@@ -25,8 +25,8 @@ The repository is an Nx workspace with pnpm. It holds the npm package, the devto
 ## Set up the repository
 
 ```bash
-git clone https://github.com/santoshyadavdev/angular-devtools.git
-cd angular-devtools
+git clone https://github.com/pangular-inspector/devtools.git
+cd devtools
 pnpm install
 ```
 
@@ -36,10 +36,10 @@ pnpm install
 
 `pnpm install` sets `core.hooksPath` to `.githooks` and `commit.template` to `.gitmessage`. If you already set either one yourself, it keeps your value.
 
-| Hook         | What it does                                                                                                                                                                                                               |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pre-commit` | Formats the staged files with Prettier and stages the result. It skips a file that also has unstaged changes, so hunks you left out with `git add -p` stay out of the commit.                                              |
-| `commit-msg` | Checks the message against the [commit message guidelines](https://github.com/santoshyadavdev/angular-devtools/blob/main/docs/contributing/commit-message-guidelines.md). It prints a warning and never blocks the commit. |
+| Hook         | What it does                                                                                                                                                                                                          |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pre-commit` | Formats the staged files with Prettier and stages the result. It skips a file that also has unstaged changes, so hunks you left out with `git add -p` stay out of the commit.                                         |
+| `commit-msg` | Checks the message against the [commit message guidelines](https://github.com/pangular-inspector/devtools/blob/main/docs/contributing/commit-message-guidelines.md). It prints a warning and never blocks the commit. |
 
 ## Project structure
 
@@ -49,7 +49,7 @@ app/                          # Devtools UI SPA (Angular + Vite)
   src/pages/                  # One component per tab
   vite.config.ts              # Vite config with the Analog Angular plugin
 packages/
-  ng-devtools/                # Publishable npm package
+  devtools/                   # Publishable npm package
     src/devframe.ts           # defineDevframe(): the tool definition
     src/overlay.ts            # Client script running in the user's page
     src/rpc/                  # Node-side RPC functions and agent tools
@@ -62,12 +62,12 @@ src/                          # Angular Travel, the host demo app
 
 ### Nx projects
 
-| Project                        | Root                   | Targets                          |
-| ------------------------------ | ---------------------- | -------------------------------- |
-| `angular-devtools`             | `.` (`project.json`)   | `build`, `serve`, `test`         |
-| `@santoshyadavdev/ng-devtools` | `packages/ng-devtools` | `build`                          |
-| `analog-demo`                  | `examples/analog`      | `dev`, `build`, `preview`        |
-| `angular-devtools-docs`        | `apps/docs`            | `dev`, `build`, `test`, and more |
+| Project                        | Root                 | Targets                          |
+| ------------------------------ | -------------------- | -------------------------------- |
+| `pangular-inspector`           | `.` (`project.json`) | `build`, `serve`, `test`         |
+| `@pangular-inspector/devtools` | `packages/devtools`  | `build`                          |
+| `analog-demo`                  | `examples/analog`    | `dev`, `build`, `preview`        |
+| `pangular-inspector-docs`      | `apps/docs`          | `dev`, `build`, `test`, and more |
 
 Run `pnpm exec nx show projects` to list them. Package projects get their targets from their `package.json` scripts.
 
@@ -90,13 +90,13 @@ The scripts call Nx. You can also run a target on a project directly:
 
 ```bash group="nx" name="Build" active
 pnpm exec nx build                              # Angular Travel
-pnpm exec nx build @santoshyadavdev/ng-devtools # The npm package
-pnpm exec nx build angular-devtools-docs        # This site
+pnpm exec nx build @pangular-inspector/devtools # The npm package
+pnpm exec nx build pangular-inspector-docs        # This site
 ```
 
 ```bash group="nx" name="Test"
 pnpm exec nx test                        # Angular Travel
-pnpm exec nx test angular-devtools-docs  # This site
+pnpm exec nx test pangular-inspector-docs  # This site
 ```
 
 ```bash group="nx" name="Serve"
@@ -116,14 +116,14 @@ pnpm exec nx affected -t test build
 
 ### Ports
 
-| Command                                                                                  | Port | Notes                                                                                                                                          |
-| ---------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm start`                                                                             | 4200 | `ng serve` with SSR and hot reload. The popup and live data work without a separate server.                                                    |
-| `pnpm build --configuration development && node dist/angular-devtools/server/server.mjs` | 4000 | The demo app as an SSR server.                                                                                                                 |
-| `pnpm devtools:dev`                                                                      | 5173 | The devtools UI with hot reload and its own RPC. Source-scan data only; live tabs need an app page connected, so use the SSR server for those. |
+| Command                                                                                    | Port | Notes                                                                                                                                          |
+| ------------------------------------------------------------------------------------------ | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm start`                                                                               | 4200 | `ng serve` with SSR and hot reload. The popup and live data work without a separate server.                                                    |
+| `pnpm build --configuration development && node dist/pangular-inspector/server/server.mjs` | 4000 | The demo app as an SSR server.                                                                                                                 |
+| `pnpm devtools:dev`                                                                        | 5173 | The devtools UI with hot reload and its own RPC. Source-scan data only; live tabs need an app page connected, so use the SSR server for those. |
 
 <ngmd-callout type="warning" title="Refresh the bundled UI">
-  The SSR server serves the UI built into <code>packages/ng-devtools/dist/public</code>. Run <code>pnpm devtools:build-pkg</code> to refresh it after you change <code>app/</code>.
+  The SSR server serves the UI built into <code>packages/devtools/dist/public</code>. Run <code>pnpm devtools:build-pkg</code> to refresh it after you change <code>app/</code>.
 </ngmd-callout>
 
 ## Run the checks
@@ -179,10 +179,10 @@ A separate `axe` job in the same workflow installs Chromium and runs `pnpm test:
 
 Two more workflows run on pull requests. Both only warn. They never fail the pull request.
 
-| Workflow         | File                                   | What it checks                                                                                                                                                     |
-| ---------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Commit message` | `.github/workflows/commit-message.yml` | The pull request title and every commit message. The title becomes the commit on `main` when the pull request is squash merged.                                    |
-| `Docs check`     | `.github/workflows/docs-check.yml`     | That a change to `packages/ng-devtools/src/`, `app/src/` or the top-level files in `extension/` also changes a page in `apps/docs/src/content`. Tests don't count. |
+| Workflow         | File                                   | What it checks                                                                                                                                                  |
+| ---------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Commit message` | `.github/workflows/commit-message.yml` | The pull request title and every commit message. The title becomes the commit on `main` when the pull request is squash merged.                                 |
+| `Docs check`     | `.github/workflows/docs-check.yml`     | That a change to `packages/devtools/src/`, `app/src/` or the top-level files in `extension/` also changes a page in `apps/docs/src/content`. Tests don't count. |
 
 If a code change needs no docs change, add the `no-docs` label to the pull request and say why in the description. The `Docs check` workflow then skips the warning.
 
@@ -190,9 +190,9 @@ If a code change needs no docs change, add the `no-docs` label to the pull reque
 
 ### Add an RPC function
 
-1. Create the function in `packages/ng-devtools/src/rpc/`.
-2. Register it in `packages/ng-devtools/src/devframe.ts`.
-3. Map it to its inspector in `RPC_INSPECTOR` in `packages/ng-devtools/src/config.ts`, so turning the inspector off removes it.
+1. Create the function in `packages/devtools/src/rpc/`.
+2. Register it in `packages/devtools/src/devframe.ts`.
+3. Map it to its inspector in `RPC_INSPECTOR` in `packages/devtools/src/config.ts`, so turning the inspector off removes it.
 4. Call it from the UI in `app/src/pages/`.
 
 ### Add a tab
@@ -205,7 +205,7 @@ If a code change needs no docs change, add the `no-docs` label to the pull reque
 
 Add `agent: { description }` to an RPC function, or call `ctx.agent.registerTool()` in the devframe setup. List the tool on the [Tools](../agents/tools.md) page.
 
-Map a registered tool to its inspector in `AGENT_INSPECTOR` in `packages/ng-devtools/src/config.ts`, so `inspectors` and `agent.tools` can hide it. A tool that acts on the page sets `safety: 'action'`, so `agent.readOnly` drops it. See [Configuration](../getting-started/configuration.md).
+Map a registered tool to its inspector in `AGENT_INSPECTOR` in `packages/devtools/src/config.ts`, so `inspectors` and `agent.tools` can hide it. A tool that acts on the page sets `safety: 'action'`, so `agent.readOnly` drops it. See [Configuration](../getting-started/configuration.md).
 
 <ngmd-callout type="tip" title="Changed app/?">
   Run <code>pnpm extension:build</code> and commit <code>extension/ui</code>. CI fails when it is stale. See <a href="./chrome-extension.md">Build the extension</a>.

@@ -9,7 +9,7 @@ description: Send live components, signals, injectors and NgRx stores from a Nat
 
 # NativeScript
 
-A NativeScript Angular app renders into `@nativescript/core` views, so it has no DOM for the [browser overlay](./overlay.md) to walk. The `@santoshyadavdev/ng-devtools/overlay-nativescript` entry point walks the NativeScript view tree instead and sends live data to a devtools server that runs on your machine.
+A NativeScript Angular app renders into `@nativescript/core` views, so it has no DOM for the [browser overlay](./overlay.md) to walk. The `@pangular-inspector/devtools/overlay-nativescript` entry point walks the NativeScript view tree instead and sends live data to a devtools server that runs on your machine.
 
 This page describes what the overlay shows and how it works. To add it to an app, follow [Set up NativeScript](../guides/nativescript.md).
 
@@ -94,7 +94,7 @@ The overlay sends no platform marker, so `list-pages` lists a NativeScript app w
 
 <ngmd-accordion>
   <ngmd-accordion-item title="The live tabs stay empty" open>
-    Check the app log for a <code>[ng-devtools]</code> line. A warning about a missing <code>WebSocket</code> global means <code>&#64;valor/nativescript-websockets</code> is not imported first in <code>src/polyfills.ts</code>. A warning about reaching the server means the address is wrong for where the app runs; see <a href="../guides/nativescript.md#where-the-overlay-connects">where the overlay connects</a>. A release build has no <code>ng</code> global, so nothing is collected there.
+    Check the app log for a <code>[pangular]</code> line. A warning about a missing <code>WebSocket</code> global means <code>&#64;valor/nativescript-websockets</code> is not imported first in <code>src/polyfills.ts</code>. A warning about reaching the server means the address is wrong for where the app runs; see <a href="../guides/nativescript.md#where-the-overlay-connects">where the overlay connects</a>. A release build has no <code>ng</code> global, so nothing is collected there.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="The Providers list of an injector is empty">
     The overlay has to start before <code>runNativeScriptAngularApp()</code> creates the platform. Call <code>initNativeScriptOverlay()</code> above it in <code>src/main.ts</code>.

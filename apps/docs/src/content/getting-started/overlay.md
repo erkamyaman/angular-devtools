@@ -26,7 +26,7 @@ import {appConfig} from './app/app.config';
 bootstrapApplication(App, appConfig)
   .then(() => {
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
-      return import('@santoshyadavdev/ng-devtools/overlay');
+      return import('@pangular-inspector/devtools/overlay');
     }
     return undefined;
   })
@@ -40,7 +40,7 @@ import {App} from './app/app';
 import {appConfig} from './app/app.config';
 
 bootstrapApplication(App, appConfig).then(() => {
-  if (import.meta.env.DEV) void import('@santoshyadavdev/ng-devtools/overlay');
+  if (import.meta.env.DEV) void import('@pangular-inspector/devtools/overlay');
 });
 ```
 
@@ -77,8 +77,8 @@ The overlay reads `window.ng`, Angular's debug API. Production builds remove it,
 
 The overlay looks for the devframe connection next to the page first. Then it tries these paths in order:
 
-1. `/__ng-devtools/`
-2. `/__devframes/ng-devtools/`
+1. `/__pangular/`
+2. `/__devframes/pangular/`
 
 It also adds the [floating button](./popup-and-hub.md). With the hub mounted, the button opens the whole hub, with every dock in a side rail.
 
@@ -106,7 +106,7 @@ import {appConfig} from './app/app.config';
 
 bootstrapApplication(App, appConfig).then(async () => {
   if (typeof ngDevMode === 'undefined' || ngDevMode) {
-    const {initOverlay} = await import('@santoshyadavdev/ng-devtools/overlay');
+    const {initOverlay} = await import('@pangular-inspector/devtools/overlay');
     const dispose = await initOverlay({baseURL: '/__my-devtools/'});
   }
 });
@@ -114,7 +114,7 @@ bootstrapApplication(App, appConfig).then(async () => {
 
 `baseURL` takes one path or a list of paths to try in order. `initOverlay` resolves to a function that stops the overlay it started and removes its hooks.
 
-The floating button follows the path the overlay connected to. If that path is `<base>ng-devtools/` and a hub answers at `<base>`, the button opens the hub. Otherwise it opens the devtools panel at that path.
+The floating button follows the path the overlay connected to. If that path is `<base>pangular/` and a hub answers at `<base>`, the button opens the hub. Otherwise it opens the devtools panel at that path.
 
 ### One overlay per page
 
@@ -128,7 +128,7 @@ Call `disposeOverlay` to turn the overlay off:
 
 ```ts
 // src/app/devtools-toggle.ts
-import {disposeOverlay} from '@santoshyadavdev/ng-devtools/overlay';
+import {disposeOverlay} from '@pangular-inspector/devtools/overlay';
 
 export async function stopDevtools() {
   await disposeOverlay();
@@ -152,7 +152,7 @@ import {appConfig} from './app/app.config';
 bootstrapApplication(App, appConfig).then(() => {
   if (typeof ngDevMode === 'undefined' || ngDevMode) {
     return Promise.all([
-      import('@santoshyadavdev/ng-devtools/overlay'),
+      import('@pangular-inspector/devtools/overlay'),
       import('@ngrx/signals'),
     ]).then(([devtools, {patchState, watchState}]) =>
       devtools.registerNgrxSignals({patchState, watchState}),
@@ -166,11 +166,11 @@ See [Restore NgRx signal state](../guides/ngrx-signals-restore.md).
 
 ## No devtools server found
 
-If no path answers, the overlay logs an error that starts with `[ng-devtools] No devtools server found` and lists the paths it tried. The floating button still appears, and its panel says **No devtools server found** with a link to the setup guide.
+If no path answers, the overlay logs an error that starts with `[pangular] No devtools server found` and lists the paths it tried. The floating button still appears, and its panel says **No devtools server found** with a link to the setup guide.
 
 Common causes:
 
-- No server part is mounted, for example plain `ng serve` without `initNgDevtoolsHub()` in `server.ts`.
+- No server part is mounted, for example plain `ng serve` without `initPangularHub()` in `server.ts`.
 - The hub is mounted after `express.static` or the SSR handler, so the app answers first.
 - The hub runs on a custom `base`, and the overlay still uses the default paths. Pass the path to [`initOverlay`](#a-custom-mount-path).
 

@@ -3,7 +3,7 @@ title: Introduction
 description: What the devtools inspect, and the ways you can run them.
 ---
 
-<ngmd-hero title="Angular DevTools" logo="/logo-mark.svg" gradient>
+<ngmd-hero title="Pangular Inspector" logo="/logo-mark-light.svg" logo-dark="/logo-mark-dark.svg" gradient>
   Inspect components, signals, injectors, routes, forms, pipes, NgRx stores and HTTP calls. In the page, from the command line, or through a coding agent.
 </ngmd-hero>
 
@@ -14,7 +14,7 @@ The devtools inspect a running *Angular app. They read components, signals, inje
 The same tool runs in several places. It is built with *Devframe, so one definition powers every mode.
 
 <ngmd-callout type="info" title="One package">
-  Everything ships in <code>&#64;santoshyadavdev/ng-devtools</code>: the server side, the browser overlay, the in-page popup, the CLI and the built UI. See <a href="./installation.md">Installation</a>.
+  Everything ships in <code>&#64;pangular-inspector/devtools</code>: the server side, the browser overlay, the in-page popup, the CLI and the built UI. See <a href="./installation.md">Installation</a>.
 </ngmd-callout>
 
 ## What it inspects
@@ -73,8 +73,8 @@ Your app's server hosts the devtools, and a script in the page sends live data t
 
 | Setup                      | Server part             | Guide                                      |
 | -------------------------- | ----------------------- | ------------------------------------------ |
-| Angular CLI with SSR       | `initNgDevtoolsHub()`   | [Angular CLI and Express](./express.md)    |
-| SSR on Hono, h3 or Fastify | `initNgDevtoolsHub()`   | [Hono, h3 and Fastify](./other-servers.md) |
+| Angular CLI with SSR       | `initPangularHub()`     | [Angular CLI and Express](./express.md)    |
+| SSR on Hono, h3 or Fastify | `initPangularHub()`     | [Hono, h3 and Fastify](./other-servers.md) |
 | Analog                     | The Vite plugin         | [Vite and Analog](./vite.md)               |
 | Chrome DevTools (extra)    | One of the setups above | [Chrome extension](./chrome-extension.md)  |
 
@@ -86,7 +86,7 @@ Your app's server hosts the devtools, and a script in the page sends live data t
 | Static report  | An offline HTML build of the source scan.                        |
 | MCP server     | Every inspector exposed to coding agents over stdio.             |
 
-All three come from the `ng-devtools` binary. See [Standalone CLI](./cli.md).
+All three come from the `pangular` binary. See [Standalone CLI](./cli.md).
 
 ## Built on Devframe
 
@@ -134,7 +134,7 @@ The devtools are a <a href="https://devfra.me" target="_blank" rel="noopener nor
     No. The overlay adds a floating button to your page and opens the devtools in a panel. The <a href="./chrome-extension.md">Chrome extension</a> is optional. It adds the same UI as a panel in Chrome DevTools.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Does it work without SSR?">
-    The devtools need a server part. An Angular CLI app mounts it in its Express <code>server.ts</code>. An Analog app gets it from the Vite plugin. Without either, the <a href="./cli.md">standalone CLI</a> serves the source scan.
+    Yes. The devtools need a server part, but it doesn't have to be your app's. An Angular CLI app with SSR mounts it in its Express <code>server.ts</code>, and an Analog app gets it from the Vite plugin. A client-only Angular CLI app runs the <a href="./cli.md">standalone CLI</a> next to <code>ng serve</code> and proxies <code>/__pangular/</code> to it. See <a href="./installation.md#client-only-angular-cli-app">Client-only Angular CLI app</a>.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="Does it ship in my production bundle?">
     Not if you follow the setup guides. They load the overlay with a dynamic import that only runs in development builds.

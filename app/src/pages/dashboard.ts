@@ -10,9 +10,9 @@ import {
 } from '@angular/core';
 import type { DevframeRpcClient } from 'devframe/client';
 import {
-  summarizeNgDevtoolsConfig,
-  type ResolvedNgDevtoolsConfig,
-} from '@santoshyadavdev/ng-devtools/config';
+  summarizePangularConfig,
+  type ResolvedPangularConfig,
+} from '@pangular-inspector/devtools/config';
 import { hostPageId } from '../page-id';
 import { injectorTreeFor, signalGraphFor } from '../live-pages';
 import { isStaticReport } from '../rpc';
@@ -167,7 +167,7 @@ export function storeCard(rows: Row[]): Card {
         @if (metaState() === 'error') {
           <p class="hint">
             @if (staticReport()) {
-              Run <code>ng-devtools build</code> again to rebuild the report.
+              Run <code>pangular build</code> again to rebuild the report.
             } @else {
               Check that the dev server is running, then reload the panel.
             }
@@ -514,7 +514,7 @@ export class Dashboard {
   protected readonly stats = computed(() =>
     this.rpc() ? STATS.filter((stat) => tabEnabled(stat.tab, this.config())) : [],
   );
-  protected readonly configItems = computed(() => summarizeNgDevtoolsConfig(this.config()));
+  protected readonly configItems = computed(() => summarizePangularConfig(this.config()));
   protected readonly metaState = signal<LoadState>('loading');
   protected readonly states = signal<Partial<Record<StatTab, LoadState>>>({});
   private readonly rows = signal<Partial<Record<StatTab, Row[]>>>({});
@@ -592,7 +592,7 @@ export class Dashboard {
       const client = this.rpc();
       if (!client) return;
 
-      const my = client.scope('ng-devtools');
+      const my = client.scope('pangular');
       this.metaState.set('loading');
       this.states.set({});
       this.rows.set({});
@@ -632,9 +632,9 @@ export class Dashboard {
       .catch(() => mark('error'));
   }
 
-  private async watchLive(client: DevframeRpcClient, config: ResolvedNgDevtoolsConfig) {
+  private async watchLive(client: DevframeRpcClient, config: ResolvedPangularConfig) {
     this.unwatch();
-    const rpc = client.scope('ng-devtools').rpc;
+    const rpc = client.scope('pangular').rpc;
     const follow = async <T>(
       name: 'injector-tree' | 'signal-graph',
       target: (value: T) => void,
