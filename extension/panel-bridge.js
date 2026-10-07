@@ -18,6 +18,7 @@ const REFUSED_DOCS = {
 const PATHS = ['/__pangular/', '/__devframes/pangular/', '/__devframe/', '/'];
 const CONNECTION_FILES = ['__devframe/__connection.json', '__connection.json'];
 const PROBE_TIMEOUT_MS = 1500;
+const PINNED_ORIGIN = 'chrome-extension://dcogniffeelebaolkkfbopmjcblhblfk';
 const REFUSED_TEXT_LIMIT = 200;
 const PAGE_ID_WAIT_MS = 5000;
 const PAGE_ID_POLL_MS = 250;
@@ -98,8 +99,13 @@ async function detectConnection() {
     const tried = probes.map(({ url, status }) => `${url} (${status ?? 'no answer'})`);
     if (refused) {
       const reason = refused.text ? ` It said: "${refused.text}"` : '';
+      const extension = chrome.runtime.getURL('').replace(/\/$/, '');
+      const hint =
+        refused.status === 403 && extension !== PINNED_ORIGIN
+          ? ` If the page runs on this machine, add ${extension} to allowedOrigins to trust this extension. That does not change the rule that the server only answers this machine.`
+          : '';
       showStatus(
-        `The devtools server on ${page.origin} refused the request (${refused.status}).${reason} Tried:`,
+        `The devtools server on ${page.origin} refused the request (${refused.status}).${reason}${hint} Tried:`,
         { tried, retry: true, docs: REFUSED_DOCS },
       );
     } else {

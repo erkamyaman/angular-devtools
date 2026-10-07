@@ -142,7 +142,27 @@ Other hosts are optional host permissions. **Allow access** asks Chrome for the 
 
 Granting the extension a host doesn't change what the devtools server accepts. The server still applies its own checks. The Vite plugin, for example, only answers requests from a loopback address. See [Access and redaction](../security.md).
 
-The Vite plugin and the Express hub accept the extension's `chrome-extension://` origin by default. If your Express hub passes its own `allowedOrigins` list, add `chrome-extension://<id>` to it. The ID is on the extension card in `chrome://extensions`.
+### Server origin
+
+The panel sends requests from its own origin, `chrome-extension://<id>`. Any installed extension can send requests to a loopback host, so the Vite plugin and the Express hub trust only the extension IDs they know.
+
+The `key` in `extension/manifest.json` fixes the ID of this extension to `dcogniffeelebaolkkfbopmjcblhblfk`, wherever you load it from. The Vite plugin and the Express hub trust `chrome-extension://dcogniffeelebaolkkfbopmjcblhblfk` by default, so the panel works with no `allowedOrigins` setting. They refuse every other extension origin.
+
+If you build the extension with another `key`, or without one, Chrome gives it another ID. Copy that ID from the extension card in `chrome://extensions` and add its origin to `allowedOrigins`:
+
+```ts
+// vite.config.ts
+pangular({allowedOrigins: ['chrome-extension://<id>']});
+```
+
+```ts
+// src/server.ts
+const devtools = initPangularHub({
+  allowedOrigins: ['chrome-extension://<id>'],
+});
+```
+
+In the Vite plugin, an extension entry does not turn the one-time code on. If the server refuses a build with another ID, the panel names its own origin in the message. See [Access and redaction](../security.md#chrome-extension).
 
 ### Content scripts
 
@@ -161,7 +181,7 @@ The content scripts are wider. Two of them run on every page. They check for an 
     None of them served a connection file. The status next to each URL shows what the server answered. Check that the server of the page mounts the devtools and that the server accepts the request, then click <strong>Try again</strong>. See <a href="../security.md">Access and redaction</a>.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="The panel says the server refused the request">
-    The server answered <code>401</code> or <code>403</code>. The Vite plugin refuses requests that do not come from your machine. Open the app on <code>localhost</code>, or see <a href="./vite.md#answers-only-your-machine">Answers only your machine</a>.
+    The server answered <code>401</code> or <code>403</code>. If you built the extension with another ID, the server refuses its origin until you add it to <code>allowedOrigins</code>. On <code>403</code>, the message names the origin to add. See <a href="#server-origin">Server origin</a>. The Vite plugin also refuses requests that do not come from your machine. Open the app on <code>localhost</code>, or see <a href="./vite.md#answers-only-your-machine">Answers only your machine</a>.
   </ngmd-accordion-item>
   <ngmd-accordion-item title="The panel shows another tab">
     The overlay on the inspected page did not report its page id within five seconds, so the panel loaded without it. Check that the overlay starts on that page, then close and reopen DevTools.
