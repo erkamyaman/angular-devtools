@@ -4,7 +4,7 @@ import { attachAnalog } from './analog-runtime.ts';
 import { attachForms } from './forms-collector.ts';
 import { attachPipes } from './pipes-collector.ts';
 import { attachHttp } from './http-overlay.ts';
-import { httpRegistry, storeRules } from './http-rules.ts';
+import { allowClientRules, httpRegistry } from './http-rules.ts';
 import { attachNgrx } from './ngrx-overlay.ts';
 import { collectInjectorTree } from './injector-tree.ts';
 import {
@@ -197,7 +197,7 @@ async function startOverlay(options: OverlayOptions, own: (cleanup: () => void) 
   const devtoolsConfig = configFromConnection(rpc.connectionMeta);
   const on = devtoolsConfig.inspectors;
   const limits = devtoolsConfig.limits;
-  if (!on.http) storeRules([]);
+  allowClientRules(on.http && devtoolsConfig.actions.http);
   setRedaction(devtoolsConfig.redaction);
   setNavigationLimit(limits.navigations);
   if (on.http) httpRegistry().maxCalls = limits.httpCalls;
