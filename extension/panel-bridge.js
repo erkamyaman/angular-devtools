@@ -22,7 +22,7 @@ const PINNED_ORIGIN = 'chrome-extension://dcogniffeelebaolkkfbopmjcblhblfk';
 const REFUSED_TEXT_LIMIT = 200;
 const PAGE_ID_WAIT_MS = 5000;
 const PAGE_ID_POLL_MS = 250;
-const OPEN_RESOURCE_TIMEOUT_MS = 1000;
+const OPEN_RESOURCE_TIMEOUT_MS = 3000;
 const DETECTING = 'Detecting Angular app…';
 const PAGE_ID = `typeof window.__pangularPageId === 'string' ? window.__pangularPageId : null`;
 const STORED_PAGE_ID = `(() => {
@@ -201,8 +201,11 @@ const handlePanelAction = createPanelActions({
     new Promise((resolve) => chrome.devtools.inspectedWindow.getResources(resolve)),
   openResource: (url, line) =>
     new Promise((resolve) => {
-      setTimeout(() => resolve(false), OPEN_RESOURCE_TIMEOUT_MS);
-      chrome.devtools.panels.openResource(url, line, (response) => resolve(!response?.isError));
+      const timer = setTimeout(() => resolve(false), OPEN_RESOURCE_TIMEOUT_MS);
+      chrome.devtools.panels.openResource(url, line, (response) => {
+        clearTimeout(timer);
+        resolve(!response?.isError);
+      });
     }),
 });
 
