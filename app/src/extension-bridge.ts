@@ -17,7 +17,7 @@ type BridgeWindow = Pick<
 >;
 
 const RESULT = 'pangular:panel-action-result';
-const TIMEOUT_MS = 3000;
+const TIMEOUT_MS = 6000;
 let seq = 0;
 
 export function insideExtension(win: BridgeWindow = window): boolean {

@@ -194,7 +194,7 @@ describe('extension bridge requests', () => {
     try {
       const { win, listeners } = fakeWindow();
       const pending = requestPanelAction({ type: 'pangular:open-source' }, win);
-      await vi.advanceTimersByTimeAsync(3000);
+      await vi.advanceTimersByTimeAsync(6000);
       await expect(pending).resolves.toEqual({ ok: false, error: 'timeout' });
       expect(listeners.size).toBe(0);
     } finally {
