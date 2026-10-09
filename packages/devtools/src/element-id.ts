@@ -2,12 +2,18 @@ const ids = new WeakMap<object, string>();
 const byId = new Map<string, WeakRef<object>>();
 const load = Math.random().toString(36).slice(2, 6).padEnd(4, '0');
 let nextId = 0;
+const FIRST_SWEEP = 512;
+let sweepAt = FIRST_SWEEP;
 
 type Connected = (host: object) => boolean;
 
 const isConnected: Connected = (host) => (host as { isConnected?: unknown }).isConnected === true;
 
+const notDisconnected: Connected = (host) =>
+  (host as { isConnected?: unknown }).isConnected !== false;
+
 export function elementId(el: object): string {
+  if (byId.size >= sweepAt) sweep(notDisconnected);
   let id = ids.get(el);
   if (!id) {
     id = `c${load}-${++nextId}`;
@@ -29,8 +35,17 @@ export function elementById(id: string, connected: Connected = isConnected): obj
 }
 
 export function pruneElementIds(connected: Connected = isConnected) {
+  sweep(connected);
+}
+
+export function elementIdCount(): number {
+  return byId.size;
+}
+
+function sweep(connected: Connected) {
   for (const [id, ref] of byId) {
     const el = ref.deref();
     if (!el || !connected(el)) byId.delete(id);
   }
+  sweepAt = Math.max(FIRST_SWEEP, byId.size * 2);
 }
