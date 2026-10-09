@@ -9,10 +9,11 @@ type Connected = (host: object) => boolean;
 
 const isConnected: Connected = (host) => (host as { isConnected?: unknown }).isConnected === true;
 
-let lastConnected: Connected = isConnected;
+const notDisconnected: Connected = (host) =>
+  (host as { isConnected?: unknown }).isConnected !== false;
 
 export function elementId(el: object): string {
-  if (byId.size >= sweepAt) sweep(lastConnected);
+  if (byId.size >= sweepAt) sweep(notDisconnected);
   let id = ids.get(el);
   if (!id) {
     id = `c${load}-${++nextId}`;
@@ -34,7 +35,6 @@ export function elementById(id: string, connected: Connected = isConnected): obj
 }
 
 export function pruneElementIds(connected: Connected = isConnected) {
-  lastConnected = connected;
   sweep(connected);
 }
 
