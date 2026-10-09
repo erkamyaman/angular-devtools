@@ -205,6 +205,88 @@ describe('http redaction', () => {
     expect(page.calls[0].error).not.toContain('s3cr3t');
   });
 
+  it('redacts response previews on client and SSR calls', async () => {
+    vi.useFakeTimers();
+    const { push, state } = await boot({ redaction: { secretNames: ['tenant'] } });
+    const preview = JSON.stringify({
+      access_token: 'eyJhbGciOi.eyJzdWIi.sigsig',
+      password: 'hunter2',
+      note: 'Bearer abc.def123',
+      tenant: 'acme',
+      ok: 1,
+    });
+    const payload = { found: false, size: 0, entries: [] };
+    await push('push-http', report('a', { payload, calls: [call('/api/login', { preview })] }));
+    httpRegistry().record?.(call('http://api.local/me', { side: 'server', preview }) as never);
+    await vi.advanceTimersByTimeAsync(150);
+    const current = await state();
+    for (const text of [current.pages[0].calls[0].preview!, current.serverCalls[0].preview!]) {
+      expect(text).not.toMatch(/eyJhbGci|hunter2|abc\.def123|acme/);
+      expect(text).toContain('"ok":1');
+    }
+    const clipped = `{"password":"hunter2","items":[${'1,'.repeat(1200)}`;
+    await push(
+      'push-http',
+      report('b', { payload, calls: [call('/api/x', { preview: clipped })] }),
+    );
+    const b = (await state()).pages.find((p) => p.pageId === 'b')!;
+    expect(b.calls[0].preview).not.toContain('hunter2');
+  });
+
+  it('redacts secret query pairs inside value strings and clipped escaped keys', async () => {
+    vi.useFakeTimers();
+    const { push, state, payloads } = await boot();
+    const payload = {
+      found: true,
+      size: 1,
+      entries: [{ key: 'k', size: 1, value: { next: '/callback?token=abc123&tab=1' } }],
+    };
+    const preview = JSON.stringify({ next: '/cb?code=qrs456&tab=1' });
+    const clipped = `{"pass\\u0077ord":"hunter2","items":[${'1,'.repeat(1200)}`;
+    await push(
+      'push-http',
+      report('a', {
+        payload,
+        calls: [call('/a', { preview }), call('/b', { id: 'c2', preview: clipped })],
+      }),
+    );
+    expect(JSON.stringify((await payloads()).pages['a'])).not.toContain('abc123');
+    const [first, second] = (await state()).pages[0].calls;
+    expect(first.preview).not.toContain('qrs456');
+    expect(first.preview).toContain('tab=1');
+    expect(second.preview).not.toContain('hunter2');
+  });
+
+  it('redacts TransferState payload values, URLs and keys', async () => {
+    const { push, payloads } = await boot({ redaction: { secretNames: ['tenant'] } });
+    await push(
+      'push-http',
+      report('a', {
+        payload: {
+          found: true,
+          size: 10,
+          entries: [
+            {
+              key: 'GET./api/me?access_token=abc123',
+              size: 1,
+              value: { access_token: 'eyJhbGciOi.eyJzdWIi.sigsig', tenant: 'acme', name: 'ada' },
+              http: { url: '/api?access_token=abc123', status: 200 },
+            },
+          ],
+        },
+      }),
+    );
+    const [entry] = (await payloads()).pages['a'].entries;
+    const text = JSON.stringify(entry);
+    expect(text).not.toMatch(/eyJhbGci|acme|abc123/);
+    expect(entry.value).toMatchObject({
+      access_token: '[redacted]',
+      tenant: '[redacted]',
+      name: 'ada',
+    });
+    expect(entry.http?.url).toBe('/api?access_token=[redacted]');
+  });
+
   it('redacts SSR calls before they reach the timeline', async () => {
     vi.useFakeTimers();
     const { state } = await boot();
