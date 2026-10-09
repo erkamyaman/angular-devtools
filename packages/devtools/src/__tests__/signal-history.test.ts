@@ -249,6 +249,30 @@ describe('createSignalHistory', () => {
     expect(full['a'].map((c) => c.epoch)).toEqual([0, 2]);
     expect(full['b']).toHaveLength(1);
   });
+
+  it('resends the changes of a push that failed once the cursor is rolled back', () => {
+    let at = 0;
+    const h = createSignalHistory(identity, () => ++at);
+    h.collectDelta([graphNode('a', 'count', 0, 0)]);
+    const { changes: lost, rollback } = h.collectDeltaWithRollback([graphNode('a', 'count', 2, 2)]);
+    expect(lost['a'].map((c) => c.epoch)).toEqual([2]);
+    rollback();
+    const retry = h.collectDelta([graphNode('a', 'count', 3, 3)]);
+    expect(retry['a'].map((c) => c.epoch)).toEqual([2, 3]);
+    expect(h.collectDelta([graphNode('a', 'count', 3, 3)])).toEqual({});
+  });
+
+  it('resends what an older overlapping push lost even when the newer push succeeded', () => {
+    let at = 0;
+    const h = createSignalHistory(identity, () => ++at);
+    h.collectDelta([graphNode('a', 'count', 0, 0)]);
+    const older = h.collectDeltaWithRollback([graphNode('a', 'count', 2, 2)]);
+    const newer = h.collectDeltaWithRollback([graphNode('a', 'count', 3, 3)]);
+    expect(newer.changes['a'].map((c) => c.epoch)).toEqual([3]);
+    older.rollback();
+    const retry = h.collectDelta([graphNode('a', 'count', 3, 3)]);
+    expect(retry['a'].map((c) => c.epoch)).toEqual([2, 3]);
+  });
 });
 
 describe('installSignalWriteHook', () => {

@@ -147,14 +147,20 @@ export function createSignalHistory(
     return totals.get(id) ?? 0;
   }
 
-  function collectDelta(nodes: SignalGraphNode[], full = false): Record<string, SignalChange[]> {
+  function collectDeltaWithRollback(
+    nodes: SignalGraphNode[],
+    full = false,
+  ): { changes: Record<string, SignalChange[]>; rollback: () => void } {
     const out: Record<string, SignalChange[]> = {};
+    const advanced = new Map<string, { before: number | undefined }>();
     for (const [id, list] of Object.entries(collect(nodes))) {
       const last = full ? -Infinity : (sent.get(id) ?? -Infinity);
       const fresh = list.filter((change) => change.epoch > last);
       if (list.length) {
+        const after = list.at(-1)!.epoch;
+        advanced.set(id, { before: sent.get(id) });
         sent.delete(id);
-        sent.set(id, list.at(-1)!.epoch);
+        sent.set(id, after);
       }
       if (fresh.length) out[id] = fresh;
     }
@@ -162,10 +168,21 @@ export function createSignalHistory(
       if (sent.size <= MAX_NODES) break;
       sent.delete(id);
     }
-    return out;
+    const rollback = () => {
+      for (const [id, { before }] of advanced) {
+        const now = sent.get(id);
+        if (before === undefined) sent.delete(id);
+        else if (now === undefined || before < now) sent.set(id, before);
+      }
+    };
+    return { changes: out, rollback };
   }
 
-  return { onWrite, collect, collectDelta, changesOf };
+  function collectDelta(nodes: SignalGraphNode[], full = false): Record<string, SignalChange[]> {
+    return collectDeltaWithRollback(nodes, full).changes;
+  }
+
+  return { onWrite, collect, collectDelta, collectDeltaWithRollback, changesOf };
 }
 
 type SignalSetHook = ((node: RawSignalNode) => void) | null;

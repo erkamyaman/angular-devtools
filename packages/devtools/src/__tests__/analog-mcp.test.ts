@@ -71,6 +71,22 @@ beforeAll(async () => {
         devtools: req.headers['x-pangular'] as string,
       });
       res.setHeader('content-type', 'application/json');
+      if (req.url === '/api/v1/plain') {
+        res.setHeader('content-type', 'text/plain');
+        res.end('apiKey=sk-live-123 user=ada\npassword: hunter2');
+        return;
+      }
+      if (req.url === '/api/v1/session') {
+        res.end(
+          JSON.stringify({
+            token: 'eyJhbGciOiJI.eyJzdWIiOiIx.c2lnbmF0dXJl',
+            apiKey: 'sk-live-123',
+            note: 'Bearer abc.def',
+            user: 'ada',
+          }),
+        );
+        return;
+      }
       res.end(JSON.stringify({ ok: true, method: req.method }));
     });
   });
@@ -274,6 +290,23 @@ describe('Analog MCP tools', () => {
     expect(await call('analog-call-api', { path: '/x', method: 'TRACE' })).toContain(
       'Unsupported method',
     );
+  });
+
+  it('analog-call-api masks secrets in the response body', async () => {
+    const { call } = await boot(makeProject(BASE_FILES));
+    setDevOrigin(`${origin}/`);
+    const text = await call('analog-call-api', { path: '/api/v1/session' });
+    expect(text).toContain('GET /api/v1/session: 200');
+    expect(text).toContain('"user":"ada"');
+    expect(text).not.toMatch(/eyJhbGciOiJI|sk-live-123|abc\.def/);
+  });
+
+  it('analog-call-api masks secret key value pairs in a plain-text body', async () => {
+    const { call } = await boot(makeProject(BASE_FILES));
+    setDevOrigin(`${origin}/`);
+    const text = await call('analog-call-api', { path: '/api/v1/plain' });
+    expect(text).toContain('user=ada');
+    expect(text).not.toMatch(/sk-live-123|hunter2/);
   });
 
   it('analog-render-modes and analog-prerender-plan read config, build output and requests', async () => {

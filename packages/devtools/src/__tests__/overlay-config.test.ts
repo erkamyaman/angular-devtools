@@ -18,6 +18,7 @@ import { noteFailedCall, setNavigationLimit, type NavigationRecord } from '../ro
 
 const calls: string[] = [];
 const sentArgs = new Map<string, unknown>();
+const failOnce = new Set<string>();
 const replies = new Map<string, unknown>();
 let configs: Record<string, unknown> | undefined;
 
@@ -29,6 +30,7 @@ vi.mock('devframe/client', () => ({
         call: async (name: string, arg?: unknown) => {
           calls.push(name);
           sentArgs.set(name, arg);
+          if (failOnce.delete(name)) throw new Error('socket closed');
           return replies.get(name);
         },
         register: () => {},
@@ -171,6 +173,26 @@ describe('overlay collectors', () => {
     } finally {
       vi.unstubAllGlobals();
       document.body.innerHTML = '';
+    }
+  });
+
+  it('push the signal graph again after a push failed, instead of waiting for it to change', async () => {
+    document.body.innerHTML = '<app-root></app-root>';
+    vi.stubGlobal('ng', {
+      ɵgetSignalGraph: () => ({ nodes: [], edges: [] }),
+      getInjector: () => ({}),
+      getComponent: (el: Element) => (el.tagName === 'APP-ROOT' ? {} : null),
+    });
+    try {
+      failOnce.add('push-signal-graph');
+      await start({ limits: { refreshMs: 500 } });
+      calls.length = 0;
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      expect(calls).toContain('push-signal-graph');
+    } finally {
+      vi.unstubAllGlobals();
+      document.body.innerHTML = '';
+      failOnce.clear();
     }
   });
 

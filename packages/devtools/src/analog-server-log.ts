@@ -5,6 +5,8 @@ const JWT = /\beyJ[\w-]{5,}\.[\w-]{5,}\.[\w-]{5,}/g;
 const BEARER = /\bBearer\s+[\w.~+/=-]+/gi;
 const SECRET_QUERY = /([?&][^=&#]*(?:token|secret|password|key|code|session)[^=&#]*=)[^&#]*/gi;
 
+const SECRET_PAIR = /([A-Za-z_][\w.-]*)(\s*[=:]\s*)[^\s&,;"']+/g;
+
 export function redactMessage(text: string): string {
   return text
     .replace(JWT, '[redacted]')
@@ -154,16 +156,22 @@ function redactJsonText(text: string): string {
   return out;
 }
 
-export function previewOf(body: string, type: string | undefined): string | undefined {
-  if (!body) return undefined;
-  if (type && !/json|text\/plain/.test(type)) return undefined;
+export function redactBody(body: string): string {
   let text = body;
   try {
     text = JSON.stringify(redactJson(JSON.parse(body)));
   } catch {
-    text = redactJsonText(body);
+    text = redactJsonText(body).replace(SECRET_PAIR, (whole, key: string, sep: string) =>
+      isSecretJsonKey(key) ? `${key}${sep}[redacted]` : whole,
+    );
   }
-  text = redactMessage(text);
+  return redactMessage(text);
+}
+
+export function previewOf(body: string, type: string | undefined): string | undefined {
+  if (!body) return undefined;
+  if (type && !/json|text\/plain/.test(type)) return undefined;
+  const text = redactBody(body);
   return text.length > MAX_PREVIEW ? `${text.slice(0, MAX_PREVIEW)}…` : text;
 }
 
