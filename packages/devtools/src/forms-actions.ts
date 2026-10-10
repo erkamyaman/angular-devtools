@@ -624,11 +624,11 @@ function directiveWith(ctx: ActionContext, element: Element | undefined, method:
 function expressionFor(found: FoundForm, path: string): string {
   if (!path) return '$form';
   const keys = splitPath(path);
-  const quote = (key: string) => `'${key.replace(/'/g, "\\'")}'`;
+  const quote = (key: string) => `'${key.replace(/[\\']/g, '\\$&')}'`;
   if (found.kind === 'signal') {
     return `$form${keys
       .map((key) =>
-        /^\d+$/.test(key) ? `[${key}]` : key.includes('.') ? `[${quote(key)}]` : `.${key}`,
+        /^\d+$/.test(key) ? `[${key}]` : /[.\\]/.test(key) ? `[${quote(key)}]` : `.${key}`,
       )
       .join('')}`;
   }

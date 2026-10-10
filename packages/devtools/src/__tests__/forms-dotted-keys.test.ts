@@ -69,6 +69,27 @@ Component({
   template: `<input id="ab" [formField]="form['a.b']" /><input id="plain" [formField]="form.plain" />`,
 })(SignalDotted);
 
+class Slashed {
+  form = new FormGroup({ 'a\\b': new FormControl(''), 'x.y': new FormControl('') });
+}
+Component({
+  selector: 'slashed-form',
+  imports: [ReactiveFormsModule],
+  template: `<form [formGroup]="form">
+    <input id="ab" [formControlName]="'a\\\\b'" /><input id="xy" [formControlName]="'x.y'" />
+  </form>`,
+})(Slashed);
+
+class SignalSlashed {
+  model = signal({ 'a\\b': '' });
+  form = form(this.model);
+}
+Component({
+  selector: 'signal-slashed-form',
+  imports: [FormField],
+  template: `<input id="ab" [formField]="form['a\\\\b']" />`,
+})(SignalSlashed);
+
 async function render<T>(type: new () => T) {
   const fixture = TestBed.createComponent(type);
   fixture.detectChanges();
@@ -281,5 +302,53 @@ export class Account {
 `;
     expect(formSourceIn(file, 'a.ts', 'Account', 'account', 'a\\.b')?.rules).toEqual([]);
     expect(formSourceIn(file, 'a.ts', 'Account', 'account', 'b')?.rules).toHaveLength(1);
+  });
+
+  it('matches single and double quoted dotted keys in the source', () => {
+    const file = `
+export class Account {
+  account = new FormGroup({
+    'a.b': new FormControl('', Validators.required),
+    "c.d": new FormControl('', Validators.required),
+    b: new FormControl(''),
+  });
+}
+`;
+    expect(
+      formSourceIn(file, 'a.ts', 'Account', 'account', 'a\\.b')?.rules.map((r) => r.line),
+    ).toEqual([4]);
+    expect(
+      formSourceIn(file, 'a.ts', 'Account', 'account', 'c\\.d')?.rules.map((r) => r.line),
+    ).toEqual([5]);
+  });
+});
+
+describe('stored-global expressions with backslashes in keys', () => {
+  it('writes a backslash as an escaped character in the reactive expression', async () => {
+    const fixture = await render(Slashed);
+    const ctx = contextFor(fixture.nativeElement);
+    const slash = await runFormAction(ctx, {
+      action: 'store-as-global',
+      formId: 'form-1',
+      path: 'a\\\\b',
+    });
+    expect(slash.expression).toBe(String.raw`$form.get('a\\b')`);
+    const mixed = await runFormAction(ctx, {
+      action: 'store-as-global',
+      formId: 'form-1',
+      path: 'x\\.y',
+    });
+    expect(mixed.expression).toBe("$form.get(['x.y'])");
+  });
+
+  it('uses bracket notation with an escaped backslash for Signal Forms', async () => {
+    const fixture = await render(SignalSlashed);
+    const ctx = contextFor(fixture.nativeElement);
+    const result = await runFormAction(ctx, {
+      action: 'store-as-global',
+      formId: 'form-1',
+      path: 'a\\\\b',
+    });
+    expect(result.expression).toBe(String.raw`$form['a\\b']`);
   });
 });
