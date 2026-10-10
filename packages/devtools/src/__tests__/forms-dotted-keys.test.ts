@@ -323,6 +323,22 @@ export class Account {
   });
 });
 
+describe('source lookup of keys with a backslash', () => {
+  it('matches a key whose source literal escapes the backslash', () => {
+    const file = [
+      'export class Account {',
+      '  account = new FormGroup({',
+      "    'a\\\\b': new FormControl('', Validators.required),",
+      "    b: new FormControl(''),",
+      '  });',
+      '}',
+    ].join('\n');
+    expect(
+      formSourceIn(file, 'a.ts', 'Account', 'account', 'a\\\\b')?.rules.map((r) => r.line),
+    ).toEqual([3]);
+  });
+});
+
 describe('stored-global expressions with backslashes in keys', () => {
   it('writes a backslash as an escaped character in the reactive expression', async () => {
     const fixture = await render(Slashed);

@@ -105,8 +105,9 @@ function fieldRules(
   at: (index: number) => SourceLine,
   out: SourceLine[],
 ) {
+  const literal = key.replace(/\\/g, '\\\\');
   const field = new RegExp(
-    `(\\.${escape(key)}\\b|\\b${escape(key)}\\s*:|(['"])${escape(key)}\\2\\s*:)`,
+    `(\\.${escape(key)}\\b|\\b${escape(key)}\\s*:|(['"])${escape(literal)}\\2\\s*:)`,
   );
   let offset = 0;
   for (const text of scope.split('\n')) {
